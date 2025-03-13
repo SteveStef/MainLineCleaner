@@ -30,8 +30,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import Header from "../Header"
+import { cn } from "@/lib/utils";
+import Header from "../Header";
+
+const timeSlotNames = {
+  "Morning, 8:00AM - 11:00AM": "morning",
+  "Afternoon, 12:00PM - 5:00PM": "afternoon",
+  "Night, 6:00PM - 9:00PM": "night",
+};
 
 // Service types
 const serviceTypes = [
@@ -203,19 +209,18 @@ export default function BookingPage() {
   // Handle final submission
   const handleSubmit = async (orderId:string) => {
     setIsSubmitting(true)
-    const body = {
-      orderId,
-      clientName: userInfo.firstName + " " + userInfo.lastName,
-      email: userInfo.email,
-      phone: userInfo.phone,
-      address: userInfo.address,
-      time: selectedTimeSlot,
-      service: selectedService,
-      notes: userInfo.notes,
-      appointmentDate: selectedDate
-    };
-
     try {
+      const body = {
+        orderId,
+        clientName: userInfo.firstName + " " + userInfo.lastName,
+        email: userInfo.email,
+        phone: userInfo.phone,
+        address: userInfo.address,
+        time: timeSlotNames[selectedTimeSlot],
+        service: selectedService,
+        notes: userInfo.notes,
+        appointmentDate: selectedDate
+      };
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`;
       const options = { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) };
       const response: any = await fetch(url, options);
