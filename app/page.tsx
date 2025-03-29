@@ -12,10 +12,68 @@ import Image from "next/image"
 import Link from "next/link"
 import Header from "./Header"
 
+
 import Clean from "../images/cleanHouse.jpg"
 import Clean2 from "../images/clean.jpg"
 import Clean3 from "../images/spotless.jpeg"
 import Clean4 from "../images/livingroom.jpg"
+
+const testimonialsTest = [
+  {
+    stars: 5,
+    content: "This product is absolutely amazing! I've never been so impressed.",
+    clientName: "Alice Johnson",
+    location: "San Francisco, USA"
+  },
+  {
+    stars: 4,
+    content: "Great service and friendly staff. Would definitely recommend!",
+    clientName: "Bob Smith",
+    location: "London, UK"
+  },
+  {
+    stars: 3,
+    content: "Good experience overall, but there is room for improvement.",
+    clientName: "Charlie Brown",
+    location: "Sydney, Australia"
+  },
+  {
+    stars: 5,
+    content: "Exceptional quality and attention to detail. Exceeded my expectations!",
+    clientName: "Diana Prince",
+    location: "Paris, France"
+  },
+  {
+    stars: 4,
+    content: "Very satisfied with my purchase. Great value for money.",
+    clientName: "Ethan Hunt",
+    location: "Berlin, Germany"
+  },
+  {
+    stars: 2,
+    content: "Not what I expected. Could be better.",
+    clientName: "Fiona Apple",
+    location: "Toronto, Canada"
+  },
+  {
+    stars: 5,
+    content: "Outstanding experience from start to finish!",
+    clientName: "George Michael",
+    location: "Los Angeles, USA"
+  },
+  {
+    stars: 3,
+    content: "Decent, but there are better options available in the market.",
+    clientName: "Hannah Montana",
+    location: "Nashville, USA"
+  },
+  {
+    stars: 4,
+    content: "Pretty good overall, though I encountered minor issues.",
+    clientName: "Ian Fleming",
+    location: "Edinburgh, Scotland"
+  }
+];
 
 export default function MainLineCleaners() {
   const [requestQuoteForm, setRequestQuoteForm] = useState({
@@ -585,7 +643,7 @@ export default function MainLineCleaners() {
             </div>
             <div className="relative mx-auto max-w-5xl py-12">
               <div className="grid gap-6 lg:grid-cols-3">
-{testimonials
+{testimonialsTest
   .slice(currentTestimonialPage * 3, currentTestimonialPage * 3 + 3)
   .map((testimonial, index) => (
     <div
@@ -1009,9 +1067,6 @@ export default function MainLineCleaners() {
             </div>
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} MainLine Cleaners. All rights reserved.
-            </p>
             <div className="flex gap-4">
               <Link href="#" className="text-muted-foreground hover:text-foreground">
                 <svg

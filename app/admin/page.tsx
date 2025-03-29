@@ -132,7 +132,7 @@ export default function AdminDashboard() {
       }
       const options = { method: "POST", headers: {"Content-Type": "application/json", Authorization: "bearer "}, body: JSON.stringify(availabilityObj) };
       const response = await fetch(url, options);
-      console.log(response);
+      //console.log(response);
       if(response.ok) {
         await getAvailability();
         setIsTimeSlotDialogOpen(false);

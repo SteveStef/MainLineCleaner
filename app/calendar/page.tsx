@@ -928,7 +928,7 @@ export default function BookingPage() {
         <div className="container flex flex-col gap-6 py-8 md:py-12">
           <div className="flex flex-col gap-6 md:flex-row md:justify-between">
             <div className="space-y-4">
-              <div className="text-xl font-bold">CleanCo Services</div>
+              <div className="text-xl font-bold">Main Line Cleaners</div>
               <p className="max-w-[350px] text-sm text-muted-foreground">
                 Professional cleaning services for homes and businesses.
               </p>
@@ -997,9 +997,6 @@ export default function BookingPage() {
             </div>
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} CleanCo Services. All rights reserved.
-            </p>
           </div>
         </div>
       </footer>
