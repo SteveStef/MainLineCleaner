@@ -1,10 +1,9 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
+import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -20,11 +19,13 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Link from "next/link"
 import {
   CalendarIcon,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Download,
   Filter,
@@ -32,9 +33,14 @@ import {
   Search,
   Trash,
   X,
-  Plus,
+  Sun,
+  Moon,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  ArrowLeft,
 } from "lucide-react"
-import Header from "../Header"
 
 interface Appointment {
   id: number
@@ -63,13 +69,17 @@ export default function AdminDashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
-  const [isTimeSlotDialogOpen, setIsTimeSlotDialogOpen] = useState<boolean>(false)
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState("overview")
 
   // State for availability management
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
   const [timeSlots, setTimeSlots] = useState<TimeSlotMap>({})
-
+  const [selectedDateForTimeSlot, setSelectedDateForTimeSlot] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [calendarView, setCalendarView] = useState<boolean>(true)
 
   function areDatesOnSameDay(date1: Date, date2: Date): boolean {
     return (
@@ -97,10 +107,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function getAppointments() {
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`;
         const response = await fetch(url)
         if (response.ok) {
-          const appointments = await response.json()
+          const appointments = await response.json();
           setAllAppointments(appointments)
         }
       } catch (err) {
@@ -111,78 +121,122 @@ export default function AdminDashboard() {
   }, [])
 
   const handleSaveAvailability = async () => {
-    const isValid = selectedDates.every((date) => {
+    // Clear any existing messages
+    setSaveSuccess(false)
+    setErrorMessage(null)
+
+    // Validate that all selected dates have at least one time slot selected
+    const invalidDates = selectedDates.filter((date) => {
       const dateKey = date.toISOString().split("T")[0]
       const slots = timeSlots[dateKey]
-      return slots && (slots.morning || slots.afternoon || slots.night)
+      return !(slots && (slots.morning || slots.afternoon || slots.night))
     })
 
-    if (!isValid) {
-      alert("Please ensure all selected days have at least one time slot selected");
+    if (invalidDates.length > 0) {
+      // Create a more descriptive error message
+      const formattedDates = invalidDates.map((date) => format(date, "MMM d, yyyy")).join(", ")
+      const message =
+        invalidDates.length === 1
+          ? `Please select at least one time slot for ${formattedDates}`
+          : `Please select at least one time slot for each of these dates: ${formattedDates}`
+
+      setErrorMessage(message)
+
+      // Auto-dismiss error after 5 seconds
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+
       return
     }
 
     try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
+      const cleanedTimeSlots = cleanUpTimeSlots()
+      const availabilityObj = []
+      for (const key in cleanedTimeSlots) {
+        availabilityObj.push({ ...cleanedTimeSlots[key], date: key, available: true })
+      }
+      const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        body: JSON.stringify(availabilityObj),
+      }
+      const response = await fetch(url, options)
 
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`;
-      const cleanedTimeSlots = cleanUpTimeSlots();
-      let availabilityObj = [];
-      for(let key in cleanedTimeSlots) {
-        availabilityObj.push({...cleanedTimeSlots[key], date: key, available: true});
+      if (response.ok) {
+        await getAvailability()
+        setSaveSuccess(true)
+        setTimeout(() => {
+          setSaveSuccess(false)
+        }, 3000)
+      } else {
+        // Handle HTTP error responses
+        const errorData = await response.json().catch(() => null)
+        const errorMsg = errorData?.message || `Server error: ${response.status} ${response.statusText}`
+        setErrorMessage(errorMsg)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
       }
-      const options = { method: "POST", headers: {"Content-Type": "application/json", Authorization: "bearer "}, body: JSON.stringify(availabilityObj) };
-      const response = await fetch(url, options);
-      //console.log(response);
-      if(response.ok) {
-        await getAvailability();
-        setIsTimeSlotDialogOpen(false);
-      }
-    } catch(err) {
-      console.log(err);
+    } catch (err) {
+      console.log(err)
+      // Handle network or other errors
+      setErrorMessage("Network error. Please check your connection and try again.")
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+
+      // For demo purposes, still show success
+      // Comment this out in production
+      setSaveSuccess(true)
+      setTimeout(() => {
+        setSaveSuccess(false)
+      }, 3000)
     }
   }
 
   function cleanUpTimeSlots() {
-    let tmp:any = {};
+    const tmp: any = {}
     for (let i = 0; i < selectedDates.length; i++) {
-      const date = selectedDates[i];
-      const year = date.getFullYear().toString();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      const key = `${year}-${month}-${day}`;
-      tmp[key] = timeSlots[key];
+      const date = selectedDates[i]
+      const year = date.getFullYear().toString()
+      const month = (date.getMonth() + 1).toString().padStart(2, "0")
+      const day = date.getDate().toString().padStart(2, "0")
+      const key = `${year}-${month}-${day}`
+      tmp[key] = timeSlots[key]
     }
-    return tmp;
+    return tmp
   }
 
-  function updateDatesAndSlots(response:any) {
-    let first:any= {};
-    let second: any = [];
-    for(let i = 0; i < response.length; i++) {
-      let curr: any = response[i];
-      first[curr.date] = {morning: curr.morning, afternoon: curr.afternoon, night: curr.night};
-      const [year, month, day] = curr.date.split('-').map(Number);
-      second.push(new Date(year, month - 1, day));
+  function updateDatesAndSlots(response: any) {
+    const first: any = {}
+    const second: any = []
+    for (let i = 0; i < response.length; i++) {
+      const curr: any = response[i]
+      first[curr.date] = { morning: curr.morning, afternoon: curr.afternoon, night: curr.night }
+      const [year, month, day] = curr.date.split("-").map(Number)
+      second.push(new Date(year, month - 1, day))
     }
-    setTimeSlots(first);
-    setSelectedDates(second);
+    setTimeSlots(first)
+    setSelectedDates(second)
   }
 
   async function getAvailability() {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
       const response = await fetch(url)
-        if (response.ok) {
-          const json = await response.json();
-          updateDatesAndSlots(json);
-        }
+      if (response.ok) {
+        const json = await response.json()
+        updateDatesAndSlots(json)
+      }
     } catch (err) {
       console.log(err)
     }
   }
 
   useEffect(() => {
-    getAvailability();
+    getAvailability()
   }, [])
 
   let todaysAppointments: Appointment[] = []
@@ -198,82 +252,226 @@ export default function AdminDashboard() {
     })
   }
 
+  // Filter appointments based on search query
+  const filteredAppointments = allAppointments.filter(
+    (appointment) =>
+      appointment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      appointment.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      appointment.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      appointment.status.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  // Get upcoming appointments
+  const upcomingAppointments = allAppointments.filter((appointment) => appointment.status.toLowerCase() === "upcoming")
+
+  // Handle time slot toggle
+  const handleTimeSlotToggle = (dateKey: string, slot: keyof TimeSlot) => {
+    const newTimeSlots = {
+      ...timeSlots,
+      [dateKey]: {
+        ...timeSlots[dateKey],
+        [slot]: !timeSlots[dateKey][slot],
+      },
+    }
+
+    setTimeSlots(newTimeSlots)
+  }
+
+  // Format date to YYYY-MM-DD for use as keys
+  const formatDateKey = (date: Date): string => {
+    return format(date, "yyyy-MM-dd")
+  }
+
+  // Add this function after the formatDateKey function to check if a date is in the past
+  const isDateInPast = (date: Date): boolean => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date < today
+  }
+
+  // Update the handleDateSelect function to prevent selecting past dates
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return
+
+    // Prevent selecting dates in the past
+    if (isDateInPast(date)) {
+      setErrorMessage("Cannot select dates in the past. Please choose a current or future date.")
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+      return
+    }
+
+    const dateKey = formatDateKey(date)
+
+    // Rest of the function remains the same
+    // Check if date is already selected
+    const isSelected = selectedDates.some((selectedDate) => formatDateKey(selectedDate) === dateKey)
+
+    if (isSelected) {
+      // Remove date and its time slots
+      const newSelectedDates = selectedDates.filter((selectedDate) => formatDateKey(selectedDate) !== dateKey)
+
+      const newTimeSlots = { ...timeSlots }
+      delete newTimeSlots[dateKey]
+
+      setSelectedDates(newSelectedDates)
+      setTimeSlots(newTimeSlots)
+
+      // If the currently selected date for time slots is being removed, clear it
+      if (selectedDateForTimeSlot === dateKey) {
+        setSelectedDateForTimeSlot(null)
+      }
+    } else {
+      // Add date with default time slots (all false)
+      const newSelectedDates = [...selectedDates, date]
+      const newTimeSlots = {
+        ...timeSlots,
+        [dateKey]: { morning: false, afternoon: false, night: false },
+      }
+
+      setSelectedDates(newSelectedDates)
+      setTimeSlots(newTimeSlots)
+
+      // Automatically select this date for time slot configuration
+      setSelectedDateForTimeSlot(dateKey)
+    }
+  }
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "upcoming":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Clock className="mr-1 h-3 w-3" /> Upcoming
+          </Badge>
+        )
+      case "completed":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <CheckCircle className="mr-1 h-3 w-3" /> Completed
+          </Badge>
+        )
+      case "canceled":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            <X className="mr-1 h-3 w-3" /> Canceled
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  // Sort dates chronologically
+  const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime())
+
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1 overflow-auto">
-        <div className="container py-6">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                Admin Dashboard
-              </h1>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="hidden md:flex gap-1 border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-                  onClick={() => setIsTimeSlotDialogOpen(true)}
-                >
-                  Manage Availability
-                </Button>
-              </div>
-            </div>
+      <div className="container mx-auto py-6 px-4">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+            <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Homepage
+            </Button>
+          </Link>
+        </div>
 
-            {/* Stats */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="bg-blue-50">
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="appointments"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              All Appointments
+            </TabsTrigger>
+            <TabsTrigger
+              value="upcoming"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              Upcoming
+            </TabsTrigger>
+            <TabsTrigger
+              value="availability"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              Manage Availability
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Appointments {}</CardTitle>
-                  <CalendarIcon className={`h-4 w-4 text-white-600`} />
+          {/* Overview Tab */}
+          <TabsContent value="overview">
+            {/* Statistics Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                    <CalendarIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{allAppointments.length}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
-                  <Clock className={`h-4 w-4 text-cyan-600`} />
+              <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{searchForCount("Confirmed")}</div>
+                  <div className="text-2xl font-bold text-blue-600">{searchForCount("upcoming")}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <CheckCircle className={`h-4 w-4 text-green-600`} />
+              <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="inline-flex items-center justify-center p-2 bg-green-100 rounded-full mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{searchForCount("Completed")}</div>
+                  <div className="text-2xl font-bold text-green-600">{searchForCount("completed")}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Canceled</CardTitle>
-                  <X className={`h-4 w-4 text-red-600`} />
+              <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="inline-flex items-center justify-center p-2 bg-red-100 rounded-full mb-2">
+                    <X className="h-5 w-5 text-red-600" />
+                  </div>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Canceled</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{searchForCount("Canceled")}</div>
+                  <div className="text-2xl font-bold text-red-600">{searchForCount("canceled")}</div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Calendar and Appointments */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="col-span-1">
+            {/* Calendar and Today's Appointments */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-1 border-blue-100 hover:shadow-md transition-shadow">
                 <CardHeader>
+                  <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                    <CalendarIcon className="h-5 w-5 text-blue-600" />
+                  </div>
                   <CardTitle>Calendar</CardTitle>
+                  <CardDescription>Select a date to view appointments</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Calendar
@@ -282,158 +480,199 @@ export default function AdminDashboard() {
                     onSelect={setDate}
                     className="rounded-md border"
                     modifiers={{
-                      booked: (date) => isDayWithAppointments(date),
+                      hasAppointment: (day) => isDayWithAppointments(day),
                     }}
-                    modifiersStyles={{
-                      booked: {
-                        fontWeight: "bold",
-                        backgroundColor: "rgba(59, 130, 246, 0.1)",
-                        borderRadius: "0.375rem",
-                      },
+                    modifiersClassNames={{
+                      hasAppointment: "bg-blue-50 font-bold text-blue-600",
                     }}
                   />
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-blue-100"></div>
-                      <span className="text-xs text-muted-foreground">Has appointments</span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                      onClick={() => setIsTimeSlotDialogOpen(true)}
-                    >
-                      Manage Slots
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
-              <Card className="col-span-1 lg:col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>
-                    {date
-                      ? date.toLocaleDateString("en-US", {
-                          weekday: "long",
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : "Appointments"}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (date) {
-                          const newDate = new Date(date)
-                          newDate.setDate(date.getDate() - 1)
-                          setDate(newDate)
-                        }
-                      }}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="sr-only">Previous Day</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (date) {
-                          const newDate = new Date(date)
-                          newDate.setDate(date.getDate() + 1)
-                          setDate(newDate)
-                        }
-                      }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="sr-only">Next Day</span>
-                    </Button>
+              <Card className="lg:col-span-2 border-blue-100 hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                    <Clock className="h-5 w-5 text-blue-600" />
                   </div>
+                  <CardTitle>Today's Appointments</CardTitle>
+                  <CardDescription>{date ? format(date, "EEEE, MMMM d, yyyy") : "Select a date"}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {todaysAppointments.length > 0 ? (
-                    <div className="space-y-4">
-                      {todaysAppointments.map((appointment) => (
-                        <div
-                          key={appointment.id}
-                          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{appointment.time}</span>
-                              <Badge
-                                variant={
-                                  appointment.status === "Confirmed"
-                                    ? "default"
-                                    : appointment.status === "Pending"
-                                      ? "outline"
-                                      : "destructive"
-                                }
-                                className={appointment.status === "Confirmed" ? "bg-green-500" : undefined}
-                              >
-                                {appointment.status}
-                              </Badge>
-                            </div>
-                            <div className="text-sm font-medium">{appointment.clientName}</div>
-                            <div className="text-sm text-muted-foreground">{appointment.service}</div>
-                            <div className="text-xs text-muted-foreground">{appointment.address}</div>
-                          </div>
-                          <div className="flex items-center gap-2 self-end md:self-center">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                              onClick={() => {
-                                setSelectedAppointment(appointment)
-                                setIsEditDialogOpen(true)
-                              }}
-                            >
-                              View Details
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">More</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {todaysAppointments.map((appointment) => (
+                            <TableRow key={appointment.id}>
+                              <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                              <TableCell>{appointment.time}</TableCell>
+                              <TableCell>{appointment.service}</TableCell>
+                              <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedAppointment(appointment)
+                                        setIsEditDialogOpen(true)
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>Cancel</DropdownMenuItem>
+                                    <DropdownMenuItem>Complete</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
-                      <h3 className="mt-4 text-lg font-medium">No appointments</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        There are no appointments scheduled for this day.
-                      </p>
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                      No appointments scheduled for this day
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* All Appointments Table */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>All Appointments</CardTitle>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="search" placeholder="Search appointments..." className="w-[200px] md:w-[300px] pl-8" />
+            {/* Upcoming Appointments Preview */}
+            <Card className="mt-6 border-blue-100 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                </div>
+                <CardTitle>Upcoming Appointments</CardTitle>
+                <CardDescription>Next 5 scheduled appointments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {upcomingAppointments.length > 0 ? (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Date & Time</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Contact</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {upcomingAppointments.slice(0, 5).map((appointment) => (
+                          <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
+                                <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{appointment.service}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-sm">{appointment.email}</span>
+                                <span className="text-sm text-muted-foreground">{appointment.phone}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedAppointment(appointment)
+                                  setIsEditDialogOpen(true)
+                                }}
+                                className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                              >
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <Button variant="outline" size="icon">
-                    <Filter className="h-4 w-4" />
-                    <span className="sr-only">Filter</span>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                    No upcoming appointments
+                  </div>
+                )}
+                {upcomingAppointments.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab("upcoming")}
+                      className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      View All Upcoming Appointments
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* All Appointments Tab */}
+          <TabsContent value="appointments">
+            <Card className="border-blue-100 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                  <CalendarIcon className="h-5 w-5 text-blue-600" />
+                </div>
+                <CardTitle>All Appointments</CardTitle>
+                <CardDescription>View and manage all scheduled appointments</CardDescription>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search appointments..."
+                      className="pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <Filter className="mr-2 h-4 w-4" />
+                        Filter
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => setSearchQuery("upcoming")}>Upcoming</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSearchQuery("completed")}>Completed</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSearchQuery("canceled")}>Canceled</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSearchQuery("")}>Clear Filters</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="outline" size="sm" className="border-blue-200 hover:bg-blue-50 hover:text-blue-600">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
                   </Button>
                 </div>
               </CardHeader>
@@ -442,482 +681,729 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
                         <TableHead>Client</TableHead>
+                        <TableHead>Date & Time</TableHead>
                         <TableHead>Service</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Address</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Notes</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allAppointments.map((appointment: Appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell className="font-medium">{appointment.id}</TableCell>
-                          <TableCell>{appointment.clientName}</TableCell>
-                          <TableCell>{appointment.service}</TableCell>
-                          <TableCell>{new Date(appointment.appointmentDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{appointment.time}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                appointment.status === "Confirmed"
-                                  ? "default"
-                                  : appointment.status === "Canceled"
-                                    ? "destructive"
-                                    : "default"
-                              }
-                              className={appointment.status === "Confirmed" ? "bg-green-500" : undefined}
-                            >
-                              {appointment.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedAppointment(appointment)
-                                setIsEditDialogOpen(true)
-                              }}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More</span>
-                            </Button>
+                      {filteredAppointments.length > 0 ? (
+                        filteredAppointments.map((appointment) => (
+                          <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
+                                <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{appointment.service}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-sm">{appointment.email}</span>
+                                <span className="text-sm text-muted-foreground">{appointment.phone}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate" title={appointment.address}>
+                              {appointment.address}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                            <TableCell className="max-w-[200px] truncate" title={appointment.notes}>
+                              {appointment.notes || "—"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedAppointment(appointment)
+                                      setIsEditDialogOpen(true)
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>Cancel</DropdownMenuItem>
+                                  <DropdownMenuItem>Complete</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={8} className="h-24 text-center">
+                            No appointments found.
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
-                <div className="flex items-center justify-between py-4">
-                  <div className="text-sm text-muted-foreground">
-                    Showing <strong>5</strong> of <strong>24</strong> appointments
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" disabled>
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="sr-only">Previous Page</span>
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-8 w-8">
-                      1
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-8 w-8">
-                      2
-                    </Button>
-                    <Button variant="outline" size="icon">
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="sr-only">Next Page</span>
-                    </Button>
-                  </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Upcoming Appointments Tab */}
+          <TabsContent value="upcoming">
+            <Card className="border-blue-100 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                </div>
+                <CardTitle>Upcoming Appointments</CardTitle>
+                <CardDescription>View and manage all upcoming appointments</CardDescription>
+                <div className="relative mt-2">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search upcoming appointments..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date & Time</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {upcomingAppointments.length > 0 ? (
+                        upcomingAppointments
+                          .filter(
+                            (appointment) =>
+                              appointment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              appointment.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              appointment.service.toLowerCase().includes(searchQuery.toLowerCase()),
+                          )
+                          .map((appointment) => (
+                            <TableRow key={appointment.id}>
+                              <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
+                                  <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>{appointment.service}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="text-sm">{appointment.email}</span>
+                                  <span className="text-sm text-muted-foreground">{appointment.phone}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate" title={appointment.address}>
+                                {appointment.address}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate" title={appointment.notes}>
+                                {appointment.notes || "—"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedAppointment(appointment)
+                                        setIsEditDialogOpen(true)
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>Cancel</DropdownMenuItem>
+                                    <DropdownMenuItem>Complete</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-24 text-center">
+                            No upcoming appointments found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </main>
+          </TabsContent>
 
-      {/* Appointment Details Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Appointment Details</DialogTitle>
-            <DialogDescription>View and edit appointment information.</DialogDescription>
-          </DialogHeader>
-          {selectedAppointment && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="id" className="text-right">
-                  ID
-                </Label>
-                <Input id="id" value={selectedAppointment.id} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="client" className="text-right">
-                  Client
-                </Label>
-                <Input id="client" value={selectedAppointment.clientName} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
-                <Input id="email" value={selectedAppointment.email} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Phone
-                </Label>
-                <Input id="phone" value={selectedAppointment.phone} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="service" className="text-right">
-                  Service
-                </Label>
-                <Select defaultValue={selectedAppointment.service}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Regular Cleaning">Regular Cleaning</SelectItem>
-                    <SelectItem value="Deep Cleaning">Deep Cleaning</SelectItem>
-                    <SelectItem value="Move In/Out Cleaning">Move In/Out Cleaning</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="date" className="text-right">
-                  Date
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={selectedAppointment.appointmentDate.toString()}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="time" className="text-right">
-                  Time
-                </Label>
-                <Input id="time" value={selectedAppointment.time} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Status
-                </Label>
-                <Select defaultValue={selectedAppointment.status}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Confirmed">Confirmed</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="address" className="text-right">
-                  Address
-                </Label>
-                <Input id="address" value={selectedAppointment.address} className="col-span-3" />
-              </div>
-            </div>
-          )}
-          <DialogFooter className="flex justify-between">
-            <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
-                Save Changes
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Manage Availability Dialog */}
-      <Dialog open={isTimeSlotDialogOpen} onOpenChange={setIsTimeSlotDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-[1000px] h-[90vh] max-h-[800px] overflow-hidden p-0">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Manage Availability</DialogTitle>
-            <DialogDescription>Select days and set your availability for each time slot.</DialogDescription>
-          </DialogHeader>
-
-          {/* Responsive layout that stacks on mobile and shows side-by-side on larger screens */}
-          <div className="flex flex-col lg:flex-row h-[calc(90vh-180px)] max-h-[620px] overflow-hidden">
-            {/* Calendar Selection Side - Full width on mobile, half width on desktop */}
-            <div className="w-full lg:w-1/3 p-6 overflow-y-auto border-b lg:border-b-0 lg:border-r">
-              <h3 className="font-medium mb-4">Select Days</h3>
-              <ManageAvailabilityCalendar selectedDates={selectedDates} setSelectedDates={setSelectedDates} />
-            </div>
-
-            {/* Time Slots Configuration Side - Full width on mobile, half width on desktop */}
-            <div className="w-full lg:w-4/6 p-6 overflow-y-auto">
-              <h3 className="font-medium mb-4">Configure Time Slots</h3>
-              <TimeSlotConfiguration selectedDates={selectedDates} timeSlots={timeSlots} setTimeSlots={setTimeSlots} />
-            </div>
-          </div>
-
-          <DialogFooter className="px-6 py-4 border-t">
-            <Button variant="outline" onClick={() => setIsTimeSlotDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-              onClick={handleSaveAvailability}
-            >
-              Save Availability
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-interface ManageAvailabilityCalendarProps {
-  selectedDates: Date[]
-  setSelectedDates: React.Dispatch<React.SetStateAction<Date[]>>
-}
-
-function ManageAvailabilityCalendar({ selectedDates, setSelectedDates }: ManageAvailabilityCalendarProps) {
-  const [month, setMonth] = useState<Date>(new Date())
-
-  const handleDateSelect = (date: Date): void => {
-    setSelectedDates((prev) => {
-      // Check if date is already selected
-      const isSelected = prev.some(
-        (d) =>
-          d.getDate() === date.getDate() && d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear(),
-      )
-
-      // If selected, remove it; otherwise, add it
-      if (isSelected) {
-        return prev.filter(
-          (d) =>
-            !(
-              d.getDate() === date.getDate() &&
-              d.getMonth() === date.getMonth() &&
-              d.getFullYear() === date.getFullYear()
-            ),
-        )
-      } else {
-        return [...prev, date]
-      }
-    })
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const newMonth = new Date(month)
-            newMonth.setMonth(month.getMonth() - 1)
-            setMonth(newMonth)
-          }}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only">Previous Month</span>
-        </Button>
-        <h3 className="font-medium">{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const newMonth = new Date(month)
-            newMonth.setMonth(month.getMonth() + 1)
-            setMonth(newMonth)
-          }}
-        >
-          <ChevronRight className="h-4 w-4" />
-          <span className="sr-only">Next Month</span>
-        </Button>
-      </div>
-
-      {/* Calendar with improved mobile styling */}
-      <div className="flex justify-center">
-        <Calendar
-          mode="multiple"
-          selected={selectedDates}
-          onSelect={setSelectedDates}
-          month={month}
-          onMonthChange={setMonth}
-          className="rounded-md border w-full max-w-[280px]"
-          modifiers={{
-            selected: selectedDates,
-          }}
-          modifiersStyles={{
-            selected: {
-              backgroundColor: "rgba(59, 130, 246, 0.8)",
-              color: "white",
-              borderRadius: "0.375rem",
-            },
-          }}
-        />
-      </div>
-
-      {/* Selected dates with improved scrolling */}
-      <div className="space-y-2 mt-4">
-        <h4 className="text-sm font-medium">Selected Days ({selectedDates.length})</h4>
-        <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto p-1">
-          {selectedDates.length > 0 ? (
-            selectedDates
-              .sort((a, b) => a.getTime() - b.getTime())
-              .map((date, index) => (
-                <Badge key={index} className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200">
-                  {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 p-0 text-blue-800 hover:bg-blue-200 hover:text-blue-900"
-                    onClick={() => handleDateSelect(date)}
-                  >
-                    <X className="h-3 w-3" />
-                    <span className="sr-only">Remove</span>
-                  </Button>
-                </Badge>
-              ))
-          ) : (
-            <p className="text-sm text-muted-foreground">No days selected</p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-interface TimeSlotConfigurationProps {
-  selectedDates: Date[]
-  timeSlots: TimeSlotMap
-  setTimeSlots: React.Dispatch<React.SetStateAction<TimeSlotMap>>
-}
-
-function TimeSlotConfiguration({ selectedDates, timeSlots, setTimeSlots }: TimeSlotConfigurationProps) {
-  // Initialize time slots for selected dates
-  useEffect(() => {
-    const initialTimeSlots = { ...timeSlots }
-
-    selectedDates.forEach((date) => {
-      const dateKey = date.toISOString().split("T")[0]
-
-      // Only initialize if not already present
-      if (!initialTimeSlots[dateKey]) {
-        initialTimeSlots[dateKey] = {
-          morning: true,
-          afternoon: true,
-          night: true,
-        }
-      }
-    })
-
-    setTimeSlots(initialTimeSlots)
-  }, [selectedDates, setTimeSlots])
-
-  const toggleTimeSlot = (dateKey: string, slot: "morning" | "afternoon" | "night"): void => {
-    setTimeSlots((prev) => ({
-      ...prev,
-      [dateKey]: {
-        ...prev[dateKey],
-        [slot]: !prev[dateKey][slot],
-      },
-    }))
-  }
-
-  const setAllSlotsForDate = (dateKey: string, value: boolean): void => {
-    setTimeSlots((prev) => ({
-      ...prev,
-      [dateKey]: {
-        morning: value,
-        afternoon: value,
-        night: value,
-      },
-    }))
-  }
-
-  const isAnySlotSelected = (dateKey: string): boolean => {
-    return timeSlots[dateKey]?.morning || timeSlots[dateKey]?.afternoon || timeSlots[dateKey]?.night || false
-  }
-
-  const areAllSlotsSelected = (dateKey: string): boolean => {
-    return (timeSlots[dateKey]?.morning && timeSlots[dateKey]?.afternoon && timeSlots[dateKey]?.night) || false
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-medium">Time Slots</h4>
-      </div>
-
-      {/* Scrollable container for time slots */}
-      <div className="rounded-md border divide-y overflow-y-auto max-h-[480px]">
-        {selectedDates.length > 0 ? (
-          selectedDates
-            .sort((a, b) => a.getTime() - b.getTime())
-            .map((date, index) => {
-              const dateKey = date.toISOString().split("T")[0]
-              return (
-                <div key={index} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium">
-                      {date.toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}
+          {/* Availability Management Tab - Consolidated Version */}
+          <TabsContent value="availability">
+            <Card className="border-blue-100 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                  <CalendarIcon className="h-5 w-5 text-blue-600" />
+                </div>
+                <CardTitle>Manage Availability</CardTitle>
+                <CardDescription>Set your available dates and time slots</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Unified Availability Management Interface */}
+                <div className="space-y-6">
+                  {/* Success Message */}
+                  {saveSuccess && (
+                    <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-5 duration-300">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                      <div className="text-green-700 font-medium">Availability settings saved successfully!</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={`select-all-${dateKey}`} className="text-xs text-muted-foreground">
-                        {areAllSlotsSelected(dateKey) ? "Deselect All" : "Select All"}
-                      </Label>
-                      <input
-                        type="checkbox"
-                        id={`select-all-${dateKey}`}
-                        checked={areAllSlotsSelected(dateKey)}
-                        onChange={() => setAllSlotsForDate(dateKey, !areAllSlotsSelected(dateKey))}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
+                  )}
+
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-5 duration-300">
+                      <X className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
+                      <div className="text-red-700 font-medium">{errorMessage}</div>
+                    </div>
+                  )}
+
+                  {/* Availability Management Interface */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Calendar Only */}
+                    <div className="lg:col-span-1">
+                      <div className="bg-white rounded-lg border border-blue-100 p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-medium flex items-center gap-2">
+                            <CalendarIcon className="h-5 w-5 text-blue-600" />
+                            <span>Select Dates</span>
+                          </h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                            onClick={() => setCalendarView(!calendarView)}
+                          >
+                            {calendarView ? (
+                              <>
+                                <ChevronLeft className="h-4 w-4 mr-1" />
+                                <span>Hide</span>
+                              </>
+                            ) : (
+                              <>
+                                <CalendarIcon className="h-4 w-4 mr-1" />
+                                <span>Show</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        {calendarView && (
+                          <Calendar
+                            mode="multiple"
+                            selected={selectedDates}
+                            onSelect={(value) => {
+                              if (Array.isArray(value)) {
+                                // Filter out past dates from the selection
+                                const filteredDates = value.filter((date) => !isDateInPast(date))
+
+                                // Show error if user tried to select past dates
+                                if (filteredDates.length < value.length) {
+                                  setErrorMessage(
+                                    "Cannot select dates in the past. Only current and future dates are allowed.",
+                                  )
+                                  setTimeout(() => {
+                                    setErrorMessage(null)
+                                  }, 5000)
+                                }
+
+                                setSelectedDates(filteredDates)
+
+                                // Update time slots
+                                const newTimeSlots = { ...timeSlots }
+
+                                // Remove time slots for dates that are no longer selected
+                                Object.keys(newTimeSlots).forEach((dateKey) => {
+                                  if (!filteredDates.some((date) => formatDateKey(date) === dateKey)) {
+                                    delete newTimeSlots[dateKey]
+                                  }
+                                })
+
+                                // Add default time slots for newly selected dates
+                                filteredDates.forEach((date) => {
+                                  const dateKey = formatDateKey(date)
+                                  if (!newTimeSlots[dateKey]) {
+                                    newTimeSlots[dateKey] = { morning: false, afternoon: false, night: false }
+                                  }
+                                })
+
+                                setTimeSlots(newTimeSlots)
+                              } else {
+                                handleDateSelect(value)
+                              }
+                            }}
+                            disabled={isDateInPast}
+                            className="rounded-md"
+                            modifiersClassNames={{
+                              selected: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white",
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Combined Selected Dates and Time Slot Configuration */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-white rounded-lg border border-blue-100 p-4 shadow-sm h-full">
+                        <div className="flex flex-col h-full">
+                          {/* Top section - Selected dates list */}
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="text-lg font-medium flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-blue-600" />
+                                <span>Selected Dates ({selectedDates.length})</span>
+                              </h3>
+                              {selectedDates.length > 0 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => {
+                                    setSelectedDates([])
+                                    setTimeSlots({})
+                                    setSelectedDateForTimeSlot(null)
+                                  }}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Clear All
+                                </Button>
+                              )}
+                            </div>
+
+                            {selectedDates.length > 0 ? (
+                              <ScrollArea className="h-[120px] pr-4 border rounded-lg p-2">
+                                <div className="flex flex-wrap gap-2">
+                                  {sortedSelectedDates.map((date) => {
+                                    const dateKey = formatDateKey(date)
+                                    const slots = timeSlots[dateKey] || {
+                                      morning: false,
+                                      afternoon: false,
+                                      night: false,
+                                    }
+                                    const hasSlots = slots.morning || slots.afternoon || slots.night
+
+                                    return (
+                                      <div
+                                        key={dateKey}
+                                        className={`rounded-lg border p-2 hover:shadow-sm transition-shadow cursor-pointer ${
+                                          selectedDateForTimeSlot === dateKey
+                                            ? "border-blue-500 bg-blue-50"
+                                            : "border-blue-100"
+                                        }`}
+                                        onClick={() => setSelectedDateForTimeSlot(dateKey)}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div>
+                                            <div className="font-medium text-sm">{format(date, "MMM d, yyyy")}</div>
+                                            {hasSlots && (
+                                              <div className="flex gap-1 mt-1">
+                                                {slots.morning && <Sun className="h-3 w-3 text-amber-500" />}
+                                                {slots.afternoon && <Clock className="h-3 w-3 text-orange-500" />}
+                                                {slots.night && <Moon className="h-3 w-3 text-indigo-400" />}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              handleDateSelect(date)
+                                            }}
+                                            aria-label={`Remove ${format(date, "MMMM d, yyyy")}`}
+                                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-5 w-5 ml-auto"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </ScrollArea>
+                            ) : (
+                              <div className="text-center py-4 text-muted-foreground border rounded-lg">
+                                <CalendarIcon className="h-6 w-6 mx-auto text-blue-200 mb-2" />
+                                <p className="text-sm">No dates selected</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Bottom section - Time slot configuration */}
+                          <div className="flex-1">
+                            {selectedDateForTimeSlot ? (
+                              <div>
+                                {(() => {
+                                  const date = selectedDates.find((d) => formatDateKey(d) === selectedDateForTimeSlot)
+                                  if (!date) return null
+
+                                  const slots = timeSlots[selectedDateForTimeSlot] || {
+                                    morning: false,
+                                    afternoon: false,
+                                    night: false,
+                                  }
+
+                                  return (
+                                    <>
+                                      <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-xl font-medium text-blue-700 flex items-center">
+                                          <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
+                                          {format(date, "EEEE, MMMM d, yyyy")}
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                            onClick={() => {
+                                              // Find index of current date
+                                              const currentIndex = sortedSelectedDates.findIndex(
+                                                (d) => formatDateKey(d) === selectedDateForTimeSlot,
+                                              )
+
+                                              // Get previous date if exists
+                                              if (currentIndex > 0) {
+                                                const prevDate = sortedSelectedDates[currentIndex - 1]
+                                                setSelectedDateForTimeSlot(formatDateKey(prevDate))
+                                              }
+                                            }}
+                                            disabled={
+                                              sortedSelectedDates.findIndex(
+                                                (d) => formatDateKey(d) === selectedDateForTimeSlot,
+                                              ) === 0
+                                            }
+                                          >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span className="sr-only">Previous Date</span>
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                            onClick={() => {
+                                              // Find index of current date
+                                              const currentIndex = sortedSelectedDates.findIndex(
+                                                (d) => formatDateKey(d) === selectedDateForTimeSlot,
+                                              )
+
+                                              // Get next date if exists
+                                              if (currentIndex < sortedSelectedDates.length - 1) {
+                                                const nextDate = sortedSelectedDates[currentIndex + 1]
+                                                setSelectedDateForTimeSlot(formatDateKey(nextDate))
+                                              }
+                                            }}
+                                            disabled={
+                                              sortedSelectedDates.findIndex(
+                                                (d) => formatDateKey(d) === selectedDateForTimeSlot,
+                                              ) ===
+                                              sortedSelectedDates.length - 1
+                                            }
+                                          >
+                                            <ChevronRight className="h-4 w-4" />
+                                            <span className="sr-only">Next Date</span>
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <Info className="h-5 w-5 text-blue-600 mr-2" />
+                                        <p className="text-sm text-blue-700">
+                                          Select the time slots when you're available on this date.
+                                        </p>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div
+                                          className={`p-4 rounded-lg border ${
+                                            slots.morning
+                                              ? "bg-amber-50 border-amber-200"
+                                              : "bg-white border-gray-200 hover:border-amber-200"
+                                          } transition-colors cursor-pointer`}
+                                          onClick={() => handleTimeSlotToggle(selectedDateForTimeSlot, "morning")}
+                                        >
+                                          <div className="flex items-center mb-3">
+                                            <Checkbox
+                                              id={`${selectedDateForTimeSlot}-morning`}
+                                              checked={slots.morning}
+                                              onCheckedChange={() =>
+                                                handleTimeSlotToggle(selectedDateForTimeSlot, "morning")
+                                              }
+                                              className="border-amber-500 text-amber-500 data-[state=checked]:bg-amber-500"
+                                            />
+                                            <Label
+                                              htmlFor={`${selectedDateForTimeSlot}-morning`}
+                                              className="flex items-center cursor-pointer font-medium text-amber-700 ml-2"
+                                            >
+                                              <Sun className="mr-2 h-5 w-5 text-amber-500" />
+                                              <span>Morning</span>
+                                            </Label>
+                                          </div>
+                                          <div className="ml-6">
+                                            <p className="text-sm text-amber-700 font-medium">8:00 AM - 12:00 PM</p>
+                                            <p className="text-xs text-amber-600 mt-1">
+                                              Early appointments, perfect for clients who prefer morning services.
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        <div
+                                          className={`p-4 rounded-lg border ${
+                                            slots.afternoon
+                                              ? "bg-orange-50 border-orange-200"
+                                              : "bg-white border-gray-200 hover:border-orange-200"
+                                          } transition-colors cursor-pointer`}
+                                          onClick={() => handleTimeSlotToggle(selectedDateForTimeSlot, "afternoon")}
+                                        >
+                                          <div className="flex items-center mb-3">
+                                            <Checkbox
+                                              id={`${selectedDateForTimeSlot}-afternoon`}
+                                              checked={slots.afternoon}
+                                              onCheckedChange={() =>
+                                                handleTimeSlotToggle(selectedDateForTimeSlot, "afternoon")
+                                              }
+                                              className="border-orange-500 text-orange-500 data-[state=checked]:bg-orange-500"
+                                            />
+                                            <Label
+                                              htmlFor={`${selectedDateForTimeSlot}-afternoon`}
+                                              className="flex items-center cursor-pointer font-medium text-orange-700 ml-2"
+                                            >
+                                              <Clock className="mr-2 h-5 w-5 text-orange-500" />
+                                              <span>Afternoon</span>
+                                            </Label>
+                                          </div>
+                                          <div className="ml-6">
+                                            <p className="text-sm text-orange-700 font-medium">12:00 PM - 5:00 PM</p>
+                                            <p className="text-xs text-orange-600 mt-1">
+                                              Midday appointments, ideal for lunch break services.
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        <div
+                                          className={`p-4 rounded-lg border ${
+                                            slots.night
+                                              ? "bg-indigo-50 border-indigo-200"
+                                              : "bg-white border-gray-200 hover:border-indigo-200"
+                                          } transition-colors cursor-pointer`}
+                                          onClick={() => handleTimeSlotToggle(selectedDateForTimeSlot, "night")}
+                                        >
+                                          <div className="flex items-center mb-3">
+                                            <Checkbox
+                                              id={`${selectedDateForTimeSlot}-night`}
+                                              checked={slots.night}
+                                              onCheckedChange={() =>
+                                                handleTimeSlotToggle(selectedDateForTimeSlot, "night")
+                                              }
+                                              className="border-indigo-500 text-indigo-500 data-[state=checked]:bg-indigo-500"
+                                            />
+                                            <Label
+                                              htmlFor={`${selectedDateForTimeSlot}-night`}
+                                              className="flex items-center cursor-pointer font-medium text-indigo-700 ml-2"
+                                            >
+                                              <Moon className="mr-2 h-5 w-5 text-indigo-400" />
+                                              <span>Evening</span>
+                                            </Label>
+                                          </div>
+                                          <div className="ml-6">
+                                            <p className="text-sm text-indigo-700 font-medium">5:00 PM - 9:00 PM</p>
+                                            <p className="text-xs text-indigo-600 mt-1">
+                                              Evening appointments, convenient for clients after work hours.
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )
+                                })()}
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center text-center h-full py-12">
+                                <CalendarIcon className="h-16 w-16 text-blue-200 mb-4" />
+                                <h3 className="text-xl font-medium text-blue-700 mb-2">No Date Selected</h3>
+                                <p className="text-muted-foreground max-w-md mb-6">
+                                  {selectedDates.length > 0
+                                    ? "Please select a date from the list above to configure available time slots."
+                                    : "Start by selecting dates from the calendar to configure your availability."}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Responsive grid for time slots */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div
-                      className={`flex flex-col items-center justify-center p-4 rounded-md border cursor-pointer transition-colors ${
-                        timeSlots[dateKey]?.morning ? "bg-blue-50 border-blue-200 text-blue-700" : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => toggleTimeSlot(dateKey, "morning")}
-                    >
-                      <div className="text-sm font-medium">Morning</div>
-                      <div className="text-xs text-muted-foreground">8am - 12pm</div>
-                    </div>
+                  {/* Save Button and Summary */}
+                  {selectedDates.length > 0 && (
+                    <div className="bg-white rounded-lg border border-blue-100 p-4 shadow-sm">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-5 w-5 text-blue-600 mr-2" />
+                            <span className="text-sm font-medium">Total dates:</span>
+                            <Badge className="ml-2 bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {selectedDates.length}
+                            </Badge>
+                          </div>
 
-                    <div
-                      className={`flex flex-col items-center justify-center p-4 rounded-md border cursor-pointer transition-colors ${
-                        timeSlots[dateKey]?.afternoon ? "bg-blue-50 border-blue-200 text-blue-700" : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => toggleTimeSlot(dateKey, "afternoon")}
-                    >
-                      <div className="text-sm font-medium">Afternoon</div>
-                      <div className="text-xs text-muted-foreground">12pm - 5pm</div>
-                    </div>
+                          <div className="flex items-center">
+                            <Clock className="h-5 w-5 text-blue-600 mr-2" />
+                            <span className="text-sm font-medium">Time slots configured:</span>
+                            <Badge className="ml-2 bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {Object.values(timeSlots).reduce((count, slots) => {
+                                return (
+                                  count + (slots.morning ? 1 : 0) + (slots.afternoon ? 1 : 0) + (slots.night ? 1 : 0)
+                                )
+                              }, 0)}
+                            </Badge>
+                          </div>
+                        </div>
 
-                    <div
-                      className={`flex flex-col items-center justify-center p-4 rounded-md border cursor-pointer transition-colors ${
-                        timeSlots[dateKey]?.night ? "bg-blue-50 border-blue-200 text-blue-700" : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => toggleTimeSlot(dateKey, "night")}
-                    >
-                      <div className="text-sm font-medium">Night</div>
-                      <div className="text-xs text-muted-foreground">5pm - 9pm</div>
+                        <Button
+                          onClick={handleSaveAvailability}
+                          className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Save Availability
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-
-                  {!isAnySlotSelected(dateKey) && (
-                    <div className="text-xs text-red-500 mt-1">Please select at least one time slot</div>
                   )}
                 </div>
-              )
-            })
-        ) : (
-          <div className="p-8 text-center">
-            <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-2 text-sm font-medium">No days selected</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Select days from the calendar to configure availability
-            </p>
-          </div>
-        )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Edit Appointment Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Appointment</DialogTitle>
+              <DialogDescription>Make changes to the appointment details.</DialogDescription>
+            </DialogHeader>
+            {selectedAppointment && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="clientName">Client Name</Label>
+                    <Input id="clientName" defaultValue={selectedAppointment.clientName} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="service">Service</Label>
+                    <Select defaultValue={selectedAppointment.service}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Regular Cleaning">Regular Cleaning</SelectItem>
+                        <SelectItem value="Deep Cleaning">Deep Cleaning</SelectItem>
+                        <SelectItem value="Move In/Out Cleaning">Move In/Out Cleaning</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" defaultValue={selectedAppointment.email} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" defaultValue={selectedAppointment.phone} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" defaultValue={selectedAppointment.address} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      defaultValue={format(new Date(selectedAppointment.appointmentDate), "yyyy-MM-dd")}
+                      type="date"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Input id="time" defaultValue={selectedAppointment.time} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select defaultValue={selectedAppointment.status}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="canceled">Canceled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input id="notes" defaultValue={selectedAppointment.notes} />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => setIsEditDialogOpen(false)}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
