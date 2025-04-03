@@ -109,6 +109,8 @@ export default function BookingPage() {
   const [timeSlots, setTimeSlots] = useState<any>([]);
   const [availability, setAvailability] = useState<any>([]);
 
+  const [bookingId, setBookingId] = useState<string>("");
+
   const [userInfo, setUserInfo] = useState({
     firstName: "",
     lastName: "",
@@ -225,6 +227,9 @@ export default function BookingPage() {
       const options = { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) };
       const response: any = await fetch(url, options);
       if(response.ok) {
+        const data = response.json();
+        console.log(data);
+        setBookingId(data.bookingId);
         setIsSubmitting(false)
         setIsSubmitted(true)
         setRequestId(generateRequestId());
@@ -240,7 +245,6 @@ export default function BookingPage() {
       const response = await fetch(url)
         if (response.ok) {
           const json = await response.json();
-          console.log(json);
           setAvailability(json);
           let tmp = [];
           for(let i = 0; i < json.length; i++) {
@@ -828,7 +832,7 @@ export default function BookingPage() {
                       <h4 className="font-medium">Booking Reference</h4>
                       <p className="text-lg font-mono text-center mt-2 bg-white p-2 rounded border border-blue-200">
                         {/* Generate a random booking reference */}
-                        {`BK-${Math.floor(100000 + Math.random() * 900000)}`}
+                        {`BK-${bookingId}`}
                       </p>
                     </div>
                     <p className="text-center text-muted-foreground mt-4 max-w-md">

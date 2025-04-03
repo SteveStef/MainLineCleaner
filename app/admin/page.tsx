@@ -53,6 +53,7 @@ interface Appointment {
   notes: string
   appointmentDate: Date
   status: string
+  bookingId: string
 }
 
 export interface TimeSlot {
@@ -99,10 +100,12 @@ export default function AdminDashboard() {
     let count = 0
     for (let i = 0; i < allAppointments.length; i++) {
       const app: Appointment = allAppointments[i]
-      if (app.status === type) count++
+      if(app.status === type) count++;
     }
+
     return count
   }
+  console.log(allAppointments);
 
   useEffect(() => {
     async function getAppointments() {
@@ -171,7 +174,6 @@ export default function AdminDashboard() {
           setSaveSuccess(false)
         }, 3000)
       } else {
-        // Handle HTTP error responses
         const errorData = await response.json().catch(() => null)
         const errorMsg = errorData?.message || `Server error: ${response.status} ${response.statusText}`
         setErrorMessage(errorMsg)
@@ -261,8 +263,13 @@ export default function AdminDashboard() {
       appointment.status.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  // Get upcoming appointments
-  const upcomingAppointments = allAppointments.filter((appointment) => appointment.status.toLowerCase() === "upcoming")
+
+
+// Filter appointments where the appointmentDate is in the future compared to nowUTC
+  const upcomingAppointments = allAppointments.filter((appointment) => {
+    const nowUTC = new Date();
+    return new Date(appointment.appointmentDate) > nowUTC;
+  });
 
   // Handle time slot toggle
   const handleTimeSlotToggle = (dateKey: string, slot: keyof TimeSlot) => {
@@ -434,7 +441,7 @@ export default function AdminDashboard() {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">{searchForCount("upcoming")}</div>
+                  <div className="text-2xl font-bold text-blue-600">{searchForCount("Confirmed")}</div>
                 </CardContent>
               </Card>
 
@@ -503,6 +510,7 @@ export default function AdminDashboard() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead>Booking ID</TableHead>
                             <TableHead>Client</TableHead>
                             <TableHead>Time</TableHead>
                             <TableHead>Service</TableHead>
@@ -513,6 +521,7 @@ export default function AdminDashboard() {
                         <TableBody>
                           {todaysAppointments.map((appointment) => (
                             <TableRow key={appointment.id}>
+                              <TableCell className="font-medium">{appointment.bookingId}</TableCell>
                               <TableCell className="font-medium">{appointment.clientName}</TableCell>
                               <TableCell>{appointment.time}</TableCell>
                               <TableCell>{appointment.service}</TableCell>
@@ -571,6 +580,7 @@ export default function AdminDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>Booking ID</TableHead>
                           <TableHead>Client</TableHead>
                           <TableHead>Date & Time</TableHead>
                           <TableHead>Service</TableHead>
@@ -581,6 +591,7 @@ export default function AdminDashboard() {
                       <TableBody>
                         {upcomingAppointments.slice(0, 5).map((appointment) => (
                           <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">{appointment.bookingId}</TableCell>
                             <TableCell className="font-medium">{appointment.clientName}</TableCell>
                             <TableCell>
                               <div className="flex flex-col">
@@ -670,10 +681,6 @@ export default function AdminDashboard() {
                       <DropdownMenuItem onClick={() => setSearchQuery("")}>Clear Filters</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Button variant="outline" size="sm" className="border-blue-200 hover:bg-blue-50 hover:text-blue-600">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -681,6 +688,7 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Booking ID</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Service</TableHead>
@@ -695,6 +703,7 @@ export default function AdminDashboard() {
                       {filteredAppointments.length > 0 ? (
                         filteredAppointments.map((appointment) => (
                           <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">{appointment.bookingId}</TableCell>
                             <TableCell className="font-medium">{appointment.clientName}</TableCell>
                             <TableCell>
                               <div className="flex flex-col">
@@ -785,6 +794,7 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Booking ID</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Service</TableHead>
@@ -805,6 +815,7 @@ export default function AdminDashboard() {
                           )
                           .map((appointment) => (
                             <TableRow key={appointment.id}>
+                              <TableCell className="font-medium">{appointment.bookingId}</TableCell>
                               <TableCell className="font-medium">{appointment.clientName}</TableCell>
                               <TableCell>
                                 <div className="flex flex-col">
@@ -960,7 +971,7 @@ export default function AdminDashboard() {
                                 filteredDates.forEach((date) => {
                                   const dateKey = formatDateKey(date)
                                   if (!newTimeSlots[dateKey]) {
-                                    newTimeSlots[dateKey] = { morning: false, afternoon: false, night: false }
+                                    newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true}
                                   }
                                 })
 
