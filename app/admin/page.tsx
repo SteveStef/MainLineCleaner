@@ -1019,7 +1019,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {selectedDates.length > 0 ? (
-                              <ScrollArea className="h-[120px] pr-4 border rounded-lg p-2">
+                              <ScrollArea className="h-[140px] pr-4 border rounded-lg p-2">
                                 <div className="flex flex-wrap gap-2">
                                   {sortedSelectedDates.map((date) => {
                                     const dateKey = formatDateKey(date)

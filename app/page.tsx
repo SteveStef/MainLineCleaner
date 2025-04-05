@@ -643,7 +643,7 @@ export default function MainLineCleaners() {
             </div>
             <div className="relative mx-auto max-w-5xl py-12">
               <div className="grid gap-6 lg:grid-cols-3">
-{testimonialsTest
+{testimonials
   .slice(currentTestimonialPage * 3, currentTestimonialPage * 3 + 3)
   .map((testimonial, index) => (
     <div
