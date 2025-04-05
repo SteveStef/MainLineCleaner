@@ -229,34 +229,35 @@ export default function MainLineCleaners() {
     }
 
     if (!requestQuoteForm.phone.trim()) {
-      newErrors.phone = "Phone number is required"
-      hasErrors = true
+      newErrors.phone = "Phone number is required";
+      hasErrors = true;
     } else if (!validatePhone(requestQuoteForm.phone)) {
-      newErrors.phone = "Please enter a valid phone number"
-      hasErrors = true
+      newErrors.phone = "Please enter a valid phone number";
+      hasErrors = true;
     }
 
     if (!requestQuoteForm.service) {
-      newErrors.service = "Please select a service"
-      hasErrors = true
+      newErrors.service = "Please select a service";
+      hasErrors = true;
     }
 
-    setErrors(newErrors)
+    setErrors(newErrors);
     if (!hasErrors) {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
       try {
-        const url: string = `http://localhost:9080/requestQuote`
+        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`;
         const options = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestQuoteForm),
         }
-        const response: any = await fetch(url, options)
-        console.log(response)
+
+        const response: any = await fetch(url, options);
+        console.log(response);
 
         if (response.ok) {
-          setSubmitSuccess(true)
+          setSubmitSuccess(true);
           setRequestQuoteForm({
             firstName: "",
             lastName: "",
@@ -264,9 +265,9 @@ export default function MainLineCleaners() {
             phone: "",
             service: "",
             message: "",
-          })
+          });
         } else {
-          console.error("Form submission failed")
+          console.error("Form submission failed");
         }
       } catch (err) {
         console.error(err)

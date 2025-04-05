@@ -41,42 +41,6 @@ const timeSlotNames = {
 
 // Service types
 const serviceTypes = [
-  {
-    id: "regular",
-    name: "Regular Cleaning",
-    description: "Standard cleaning service for maintained homes",
-    price: "$120",
-    duration: "2-3 hours",
-    features: ["All rooms dusted and vacuumed", "Kitchen and bathroom sanitized", "Floors mopped", "Trash removed"],
-  },
-  {
-    id: "deep",
-    name: "Deep Cleaning",
-    description: "Thorough cleaning for homes needing extra attention",
-    price: "$220",
-    duration: "4-6 hours",
-    features: [
-      "All regular cleaning services",
-      "Inside cabinets and appliances",
-      "Window sills and baseboards",
-      "Detailed bathroom scrubbing",
-      "Wall spot cleaning",
-    ],
-  },
-  {
-    id: "move",
-    name: "Move In/Out Cleaning",
-    description: "Complete cleaning for moving situations",
-    price: "$280",
-    duration: "5-8 hours",
-    features: [
-      "All deep cleaning services",
-      "Inside all cabinets and drawers",
-      "Refrigerator and oven cleaning",
-      "Window cleaning",
-      "Garage sweeping",
-    ],
-  },
 ]
 
 // Form validation
@@ -108,6 +72,45 @@ export default function BookingPage() {
   const [availableDays, setAvailableDays] = useState<any>([]);
   const [timeSlots, setTimeSlots] = useState<any>([]);
   const [availability, setAvailability] = useState<any>([]);
+
+  const [serviceTypes, setServiceTypes] = useState<any>([
+  {
+    id: "regular",
+    name: "Regular Cleaning",
+    description: "Standard cleaning service for maintained homes",
+    price: "$",
+    duration: "2-3 hours",
+    features: ["All rooms dusted and vacuumed", "Kitchen and bathroom sanitized", "Floors mopped", "Trash removed"],
+  },
+  {
+    id: "deep",
+    name: "Deep Cleaning",
+    description: "Thorough cleaning for homes needing extra attention",
+    price: "$",
+    duration: "4-6 hours",
+    features: [
+      "All regular cleaning services",
+      "Inside cabinets and appliances",
+      "Window sills and baseboards",
+      "Detailed bathroom scrubbing",
+      "Wall spot cleaning",
+    ],
+  },
+  {
+    id: "move",
+    name: "Move In/Out Cleaning",
+    description: "Complete cleaning for moving situations",
+    price: "$",
+    duration: "5-8 hours",
+    features: [
+      "All deep cleaning services",
+      "Inside all cabinets and drawers",
+      "Refrigerator and oven cleaning",
+      "Window cleaning",
+      "Garage sweeping",
+    ],
+  },
+  ]);
 
   const [bookingId, setBookingId] = useState<string>("");
 
@@ -147,6 +150,27 @@ export default function BookingPage() {
       }
     }
   }
+
+  useEffect(() => {
+    async function getServicePrices() {
+      try {
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const details:any = await response.json();
+          console.log(details);
+          const tmp = [...serviceTypes];
+          tmp[0].price = "$" + details.regularPrice;
+          tmp[1].price = "$" + details.deepCleanPrice;
+          tmp[2].price = "$" + details.moveInOutPrice;
+          setServiceTypes(tmp);
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    getServicePrices();
+  },[]);
 
   // Check if a date is available
   const isDateAvailable = (date: Date) => {

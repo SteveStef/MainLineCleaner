@@ -27,7 +27,6 @@ import {
   CalendarIcon,
   CheckCircle,
   Clock,
-  Download,
   Filter,
   MoreHorizontal,
   Search,
@@ -40,6 +39,10 @@ import {
   ChevronRight,
   Info,
   ArrowLeft,
+  Settings,
+  Edit,
+  Mail,
+  User,
 } from "lucide-react"
 
 interface Appointment {
@@ -82,6 +85,25 @@ export default function AdminDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [calendarView, setCalendarView] = useState<boolean>(true)
 
+  // State for pricing management
+  const [pricing, setPricing] = useState({
+    regularClean: 150,
+    deepClean: 250,
+    moveInOut: 350,
+  })
+  const [isEditingPricing, setIsEditingPricing] = useState(false)
+  const [tempPricing, setTempPricing] = useState({
+    regularClean: 150,
+    deepClean: 250,
+    moveInOut: 350,
+  })
+
+  // State for admin email management
+  const [adminEmail, setAdminEmail] = useState("admin@cleaningservice.com")
+  const [tempAdminEmail, setTempAdminEmail] = useState("admin@cleaningservice.com")
+  const [isEditingAdminEmail, setIsEditingAdminEmail] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+
   function areDatesOnSameDay(date1: Date, date2: Date): boolean {
     return (
       date1.getFullYear() === date2.getFullYear() &&
@@ -100,20 +122,20 @@ export default function AdminDashboard() {
     let count = 0
     for (let i = 0; i < allAppointments.length; i++) {
       const app: Appointment = allAppointments[i]
-      if(app.status === type) count++;
+      if (app.status === type) count++
     }
 
     return count
   }
-  console.log(allAppointments);
+  console.log(allAppointments)
 
   useEffect(() => {
     async function getAppointments() {
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
         const response = await fetch(url)
         if (response.ok) {
-          const appointments = await response.json();
+          const appointments = await response.json()
           setAllAppointments(appointments)
         }
       } catch (err) {
@@ -121,6 +143,30 @@ export default function AdminDashboard() {
       }
     }
     getAppointments()
+  }, [])
+
+  useEffect(() => {
+    async function adminDetails() {
+      try {
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const details:any = await response.json();
+          console.log(details);
+
+          setPricing({
+            regularClean: parseFloat(details.regularPrice),
+            deepClean: parseFloat(details.deepCleanPrice),
+            moveInOut: parseFloat(details.moveInOutPrice),
+          });
+          setAdminEmail(details.email);
+          setTempAdminEmail(details.email);
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    adminDetails()
   }, [])
 
   const handleSaveAvailability = async () => {
@@ -198,6 +244,69 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleSavePricing = async () => {
+    setPricing(tempPricing);
+    setIsEditingPricing(false)
+    try {
+      const options = {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        body: JSON.stringify({
+          regularPrice: tempPricing.regularClean,
+          moveInOutPrice: tempPricing.moveInOut,
+          deepCleanPrice: tempPricing.deepClean
+        }),
+      }
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`;
+      const response = await fetch(url, options);
+      if(response.ok) {
+        setSaveSuccess(true)
+          setTimeout(() => {
+            setSaveSuccess(false)
+         }, 3000)
+      } else {
+        setErrorMessage("There was an problme saving");
+          setTimeout(() => {
+            setErrorMessage("")
+         }, 3000)
+      }
+    } catch(err) {
+      console.log(err);
+    }
+
+  }
+
+  const handleSaveAdminEmail = async () => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(tempAdminEmail)) {
+      setEmailError("Please enter a valid email address")
+      return
+    }
+    setAdminEmail(tempAdminEmail)
+
+    try {
+      const options = {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        body: tempAdminEmail,
+      }
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-email`;
+      const response = await fetch(url, options);
+      if(response.ok) {
+        setSaveSuccess(true)
+          setTimeout(() => {
+              setSaveSuccess(false)
+        }, 3000);
+        setEmailError(null);
+      }
+    } catch(err) {
+      console.log(err);
+      setEmailError("There was a problem saving this email");
+    }
+    setIsEditingAdminEmail(false)
+  }
+
   function cleanUpTimeSlots() {
     const tmp: any = {}
     for (let i = 0; i < selectedDates.length; i++) {
@@ -263,13 +372,11 @@ export default function AdminDashboard() {
       appointment.status.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-
-
-// Filter appointments where the appointmentDate is in the future compared to nowUTC
+  // Filter appointments where the appointmentDate is in the future compared to nowUTC
   const upcomingAppointments = allAppointments.filter((appointment) => {
-    const nowUTC = new Date();
-    return new Date(appointment.appointmentDate) > nowUTC;
-  });
+    const nowUTC = new Date()
+    return new Date(appointment.appointmentDate) > nowUTC
+  })
 
   // Handle time slot toggle
   const handleTimeSlotToggle = (dateKey: string, slot: keyof TimeSlot) => {
@@ -399,13 +506,13 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger
               value="appointments"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:text-white"
             >
               All Appointments
             </TabsTrigger>
             <TabsTrigger
               value="upcoming"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:text-white"
             >
               Upcoming
             </TabsTrigger>
@@ -414,6 +521,12 @@ export default function AdminDashboard() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
             >
               Manage Availability
+            </TabsTrigger>
+            <TabsTrigger
+              value="settings"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -758,7 +871,7 @@ export default function AdminDashboard() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={8} className="h-24 text-center">
+                          <TableCell colSpan={9} className="h-24 text-center">
                             No appointments found.
                           </TableCell>
                         </TableRow>
@@ -865,7 +978,7 @@ export default function AdminDashboard() {
                           ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="h-24 text-center">
+                          <TableCell colSpan={8} className="h-24 text-center">
                             No upcoming appointments found.
                           </TableCell>
                         </TableRow>
@@ -971,7 +1084,7 @@ export default function AdminDashboard() {
                                 filteredDates.forEach((date) => {
                                   const dateKey = formatDateKey(date)
                                   if (!newTimeSlots[dateKey]) {
-                                    newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true}
+                                    newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true }
                                   }
                                 })
 
@@ -1317,6 +1430,266 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card className="border-blue-100 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                  <Settings className="h-5 w-5 text-blue-600" />
+                </div>
+                <CardTitle>Service Pricing</CardTitle>
+                <CardDescription>Manage the pricing for your cleaning services</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Success Message */}
+                {saveSuccess && (
+                  <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-5 duration-300">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    <div className="text-green-700 font-medium">Settings updated successfully!</div>
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-medium">Service Pricing Configuration</h3>
+                      {!isEditingPricing ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditingPricing(true)}
+                          className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Pricing
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsEditingPricing(false)
+                              setTempPricing(pricing)
+                            }}
+                            className="border-red-200 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleSavePricing}
+                            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Save Changes
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid gap-6">
+                      {/* Regular Clean Pricing */}
+                      <div className="p-4 rounded-lg border border-blue-100 bg-blue-50">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <h4 className="text-lg font-medium text-blue-700">Regular Clean</h4>
+                            <p className="text-sm text-blue-600 mt-1">Standard cleaning service for maintained homes</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl font-bold text-blue-700">
+                              $
+                              {isEditingPricing ? (
+                                <Input
+                                  type="number"
+                                  value={tempPricing.regularClean}
+                                  onChange={(e) =>
+                                    setTempPricing({
+                                      ...tempPricing,
+                                      regularClean: Number.parseInt(e.target.value) || 0,
+                                    })
+                                  }
+                                  className="w-24 h-8 inline-block text-center"
+                                />
+                              ) : (
+                                pricing.regularClean
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deep Clean Pricing */}
+                      <div className="p-4 rounded-lg border border-green-100 bg-green-50">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <h4 className="text-lg font-medium text-green-700">Deep Clean</h4>
+                            <p className="text-sm text-green-600 mt-1">
+                              Thorough cleaning for homes needing extra attention
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl font-bold text-green-700">
+                              $
+                              {isEditingPricing ? (
+                                <Input
+                                  type="number"
+                                  value={tempPricing.deepClean}
+                                  onChange={(e) =>
+                                    setTempPricing({ ...tempPricing, deepClean: Number.parseInt(e.target.value) || 0 })
+                                  }
+                                  className="w-24 h-8 inline-block text-center"
+                                />
+                              ) : (
+                                pricing.deepClean
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Move In/Out Pricing */}
+                      <div className="p-4 rounded-lg border border-purple-100 bg-purple-50">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <h4 className="text-lg font-medium text-purple-700">Move In/Out Clean</h4>
+                            <p className="text-sm text-purple-600 mt-1">
+                              Comprehensive cleaning for property transitions
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl font-bold text-purple-700">
+                              $
+                              {isEditingPricing ? (
+                                <Input
+                                  type="number"
+                                  value={tempPricing.moveInOut}
+                                  onChange={(e) =>
+                                    setTempPricing({ ...tempPricing, moveInOut: Number.parseInt(e.target.value) || 0 })
+                                  }
+                                  className="w-24 h-8 inline-block text-center"
+                                />
+                              ) : (
+                                pricing.moveInOut
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {!isEditingPricing && (
+                      <div className="mt-6 p-4 rounded-lg border border-blue-100 bg-blue-50">
+                        <div className="flex items-center">
+                          <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                          <p className="text-sm text-blue-700">
+                            Click the "Edit Pricing" button above to modify the service prices. Changes will be saved
+                            and visible to customers on the booking page.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Admin Settings Section */}
+                <div className="mt-8 space-y-6">
+                  <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
+                        <User className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <CardTitle>Admin Settings</CardTitle>
+                      <CardDescription>Manage administrator account settings</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
+                        <div className="flex justify-between items-center mb-6">
+                          <h3 className="text-lg font-medium">Admin Email Configuration</h3>
+                          {!isEditingAdminEmail ? (
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsEditingAdminEmail(true)}
+                              className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Email
+                            </Button>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setIsEditingAdminEmail(false)
+                                  setTempAdminEmail(adminEmail)
+                                  setEmailError(null)
+                                }}
+                                className="border-red-200 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <X className="mr-2 h-4 w-4" />
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleSaveAdminEmail}
+                                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                              >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Save Email
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-purple-100 bg-purple-50">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                              <h4 className="text-lg font-medium text-purple-700">Admin Email Address</h4>
+                              <p className="text-sm text-purple-600 mt-1">
+                                Email address used for admin notifications and account recovery
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isEditingAdminEmail ? (
+                                <div className="flex flex-col">
+                                  <div className="flex items-center">
+                                    <Mail className="h-4 w-4 text-purple-600 mr-2" />
+                                    <Input
+                                      type="email"
+                                      value={tempAdminEmail}
+                                      onChange={(e) => setTempAdminEmail(e.target.value)}
+                                      className="w-64"
+                                      placeholder="admin@example.com"
+                                    />
+                                  </div>
+                                  {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
+                                </div>
+                              ) : (
+                                <div className="flex items-center">
+                                  <Mail className="h-4 w-4 text-purple-600 mr-2" />
+                                  <span className="text-lg font-medium text-purple-700">{adminEmail}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {!isEditingAdminEmail && (
+                          <div className="mt-6 p-4 rounded-lg border border-purple-100 bg-purple-50">
+                            <div className="flex items-center">
+                              <Info className="h-5 w-5 text-purple-600 mr-3 flex-shrink-0" />
+                              <p className="text-sm text-purple-700">
+                                This email address will receive all admin notifications, including new bookings,
+                                cancellations, and system alerts. Make sure to use an email address you check regularly.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
