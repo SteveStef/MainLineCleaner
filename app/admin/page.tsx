@@ -44,6 +44,7 @@ import {
   Mail,
   User,
 } from "lucide-react"
+import Login from "./login";
 
 interface Appointment {
   id: number
@@ -75,7 +76,11 @@ export default function AdminDashboard() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [auth, setAuth] = useState(false);
 
   // State for availability management
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
@@ -127,7 +132,6 @@ export default function AdminDashboard() {
 
     return count
   }
-  console.log(allAppointments)
 
   useEffect(() => {
     async function getAppointments() {
@@ -152,7 +156,6 @@ export default function AdminDashboard() {
         const response = await fetch(url);
         if (response.ok) {
           const details:any = await response.json();
-          console.log(details);
 
           setPricing({
             regularClean: parseFloat(details.regularPrice),
@@ -200,7 +203,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`;
       const cleanedTimeSlots = cleanUpTimeSlots()
       const availabilityObj = []
       for (const key in cleanedTimeSlots) {
@@ -208,7 +211,7 @@ export default function AdminDashboard() {
       }
       const options = {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
         body: JSON.stringify(availabilityObj),
       }
       const response = await fetch(url, options)
@@ -250,7 +253,7 @@ export default function AdminDashboard() {
     try {
       const options = {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
         body: JSON.stringify({
           regularPrice: tempPricing.regularClean,
           moveInOutPrice: tempPricing.moveInOut,
@@ -288,7 +291,7 @@ export default function AdminDashboard() {
     try {
       const options = {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "bearer " },
+        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
         body: tempAdminEmail,
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-email`;
@@ -482,6 +485,9 @@ export default function AdminDashboard() {
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime())
 
   return (
+  <>
+    {
+    !auth ? <Login setAuth={setAuth} setUsername={setUsername} setPassword={setPassword} /> : 
     <div className="flex min-h-screen flex-col">
       <div className="container mx-auto py-6 px-4">
         <div className="flex items-center justify-between mb-6">
@@ -1790,6 +1796,9 @@ export default function AdminDashboard() {
         </Dialog>
       </div>
     </div>
+
+    }
+    </>
   )
 }
 
