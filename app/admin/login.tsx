@@ -229,9 +229,6 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
                   <Lock className="h-4 w-4 text-blue-500" />
                   Password
                 </Label>
-                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-                  Forgot password?
-                </Link>
               </div>
               <Input
                 id="password"
@@ -286,12 +283,6 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
               )}
             </Button>
 
-            <div className="mt-6 text-center text-sm">
-              Need help?{" "}
-              <Link href="/contact" className="text-blue-600 hover:text-blue-800 hover:underline">
-                Contact support
-              </Link>
-            </div>
           </form>
         )
 
@@ -477,24 +468,6 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
           </div>
         </section>
       </main>
-
-      <footer className="w-full border-t bg-background">
-        <div className="container flex flex-col gap-2 py-4 md:py-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <p className="text-center text-sm text-muted-foreground md:text-left">
-              &copy; {new Date().getFullYear()} MainLine Cleaners. All rights reserved.
-            </p>
-            <div className="flex justify-center gap-4 md:justify-end">
-              <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-                Terms
-              </Link>
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-                Privacy
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

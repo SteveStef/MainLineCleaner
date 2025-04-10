@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -519,7 +520,38 @@ export default function AdminDashboard() {
   }
 
   // Sort dates chronologically
-  const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime())
+  const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+
+  function matchService(service: string): string {
+    console.log(service);
+    if(service === "deep") return "Deep Cleaning";
+    if(service === "regular") return "Regular Cleaning";
+    return "Move In/Out Cleaning"
+  }
+
+  async function cancelAppointment(appointment: Appointment) {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`;
+      const token = Cookies.get("token");
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Autherization: "Bearer " + token
+        },
+        body: appointment.bookingId
+      };
+      const response = await fetch(url, options);
+      console.log(response);
+      if(response.ok) {
+
+      } else {
+
+      }
+    } catch(err) {
+      console.log(err);
+    }
+  }
 
   return (
   <>
@@ -1743,19 +1775,19 @@ export default function AdminDashboard() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Edit Appointment</DialogTitle>
-              <DialogDescription>Make changes to the appointment details.</DialogDescription>
+              <DialogTitle>Appointment Details</DialogTitle>
+              <DialogDescription>Viewing Appointment details.</DialogDescription>
             </DialogHeader>
             {selectedAppointment && (
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="clientName">Client Name</Label>
-                    <Input id="clientName" defaultValue={selectedAppointment.clientName} />
+                    <Input disabled id="clientName" defaultValue={selectedAppointment.clientName} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="service">Service</Label>
-                    <Select defaultValue={selectedAppointment.service}>
+                    <Select disabled defaultValue={matchService(selectedAppointment.service)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select service" />
                       </SelectTrigger>
@@ -1770,21 +1802,22 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" defaultValue={selectedAppointment.email} />
+                    <Input disabled id="email" defaultValue={selectedAppointment.email} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" defaultValue={selectedAppointment.phone} />
+                    <Input disabled id="phone" defaultValue={selectedAppointment.phone} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input id="address" defaultValue={selectedAppointment.address} />
+                  <Input disabled id="address" defaultValue={selectedAppointment.address} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
                     <Input
+                    disabled 
                       id="date"
                       defaultValue={format(new Date(selectedAppointment.appointmentDate), "yyyy-MM-dd")}
                       type="date"
@@ -1792,44 +1825,33 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="time">Time</Label>
-                    <Input id="time" defaultValue={selectedAppointment.time} />
+                    <Input disabled id="time" defaultValue={selectedAppointment.time} />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select defaultValue={selectedAppointment.status}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Status</Label>
+                    <Input disabled id="time" defaultValue={selectedAppointment.status} />
+                  </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Input id="notes" defaultValue={selectedAppointment.notes} />
+                  <Textarea disabled id="notes" defaultValue={selectedAppointment.notes} />
                 </div>
               </div>
             )}
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-                className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => setIsEditDialogOpen(false)}
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-              >
-                Save Changes
-              </Button>
-            </DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:gap-0">
+            <Button variant="destructive" onClick={() => cancelAppointment(selectedAppointment)} className="w-full sm:w-auto">
+              Cancel Appointment
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto"
+            >
+              Close
+            </Button>
+          </DialogFooter>
           </DialogContent>
+
         </Dialog>
       </div>
     </div>

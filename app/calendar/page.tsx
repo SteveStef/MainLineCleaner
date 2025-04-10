@@ -39,9 +39,6 @@ const timeSlotNames = {
   "Night, 6:00PM - 9:00PM": "night",
 };
 
-// Service types
-const serviceTypes = [
-]
 
 // Form validation
 interface FormErrors {
@@ -251,8 +248,7 @@ export default function BookingPage() {
       const options = { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) };
       const response: any = await fetch(url, options);
       if(response.ok) {
-        const data = response.json();
-        console.log(data);
+        const data = await response.json();
         setBookingId(data.bookingId);
         setIsSubmitting(false)
         setIsSubmitted(true)
@@ -856,7 +852,7 @@ export default function BookingPage() {
                       <h4 className="font-medium">Booking Reference</h4>
                       <p className="text-lg font-mono text-center mt-2 bg-white p-2 rounded border border-blue-200">
                         {/* Generate a random booking reference */}
-                        {`BK-${bookingId}`}
+                        {`${bookingId}`}
                       </p>
                     </div>
                     <p className="text-center text-muted-foreground mt-4 max-w-md">
