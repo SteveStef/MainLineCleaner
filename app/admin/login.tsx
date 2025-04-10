@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import type React from "react"
+import Cookies from 'js-cookie';
 
 import Link from "next/link"
 
@@ -12,7 +13,7 @@ import { Lock, AlertCircle, LogIn, User, KeyRound, ShieldCheck, WifiOff } from "
 
 type Step = "credentials" | "verification"
 
-export default function AuthFlow({ setAuth, setUsername, setPassword }: any) {
+export default function AuthFlow({ username, password, setAuth, setUsername, setPassword }: any) {
   const [currentStep, setCurrentStep] = useState<Step>("credentials")
   const [formData, setFormData] = useState({
     username: "",
@@ -86,7 +87,7 @@ export default function AuthFlow({ setAuth, setUsername, setPassword }: any) {
 
     try {
       // Send credentials to the verification endpoint
-      const response = await fetch("http://localhost:9080/verify-credentials", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verify-credentials`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,25 +139,29 @@ export default function AuthFlow({ setAuth, setUsername, setPassword }: any) {
 
     try {
       // Send verification code to the verification endpoint
-      const response = await fetch("http://localhost:9080/verify-code", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verify-code`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Basic " + btoa(`${username}:${password}`)
         },
         body: formData.verificationCode,
       })
 
       if (response.ok) {
-        // If verification is successful, redirect to the restricted content
+        const token = await response.text();
+        Cookies.set('token', token, {
+            expires: 7,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        });
         setAuth(true);
       } else if (response.status === 401) {
-        // Handle unauthorized (invalid code)
         setGeneralError("Invalid verification code. Please try again.")
       } else if (response.status === 410) {
-        // Handle expired code
         setGeneralError("Verification code has expired. Please request a new code.")
       } else {
-        // Handle other errors
         setGeneralError("An error occurred while verifying the code. Please try again.")
       }
     } catch (err) {

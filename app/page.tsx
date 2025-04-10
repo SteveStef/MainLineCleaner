@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
 import type React from "react"
 
 import { Label } from "@/components/ui/label"
@@ -7,75 +7,94 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
-import { CheckCircle, MapPin, Phone, Mail, Clock, Star, ArrowRight, Award, Sparkles, Home, MessageSquare, User, ClipboardCheck, AlertCircle } from 'lucide-react'
+import {
+  CheckCircle,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Star,
+  ArrowRight,
+  Award,
+  Sparkles,
+  Home,
+  MessageSquare,
+  User,
+  ClipboardCheck,
+  AlertCircle,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import Header from "./Header"
-
 
 import Clean from "../images/cleanHouse.jpg"
 import Clean2 from "../images/clean.jpg"
 import Clean3 from "../images/spotless.jpeg"
 import Clean4 from "../images/livingroom.jpg"
 
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
+
 const testimonialsTest = [
   {
     stars: 5,
     content: "This product is absolutely amazing! I've never been so impressed.",
     clientName: "Alice Johnson",
-    location: "San Francisco, USA"
+    location: "San Francisco, USA",
   },
   {
     stars: 4,
     content: "Great service and friendly staff. Would definitely recommend!",
     clientName: "Bob Smith",
-    location: "London, UK"
+    location: "London, UK",
   },
   {
     stars: 3,
     content: "Good experience overall, but there is room for improvement.",
     clientName: "Charlie Brown",
-    location: "Sydney, Australia"
+    location: "Sydney, Australia",
   },
   {
     stars: 5,
     content: "Exceptional quality and attention to detail. Exceeded my expectations!",
     clientName: "Diana Prince",
-    location: "Paris, France"
+    location: "Paris, France",
   },
   {
     stars: 4,
     content: "Very satisfied with my purchase. Great value for money.",
     clientName: "Ethan Hunt",
-    location: "Berlin, Germany"
+    location: "Berlin, Germany",
   },
   {
     stars: 2,
     content: "Not what I expected. Could be better.",
     clientName: "Fiona Apple",
-    location: "Toronto, Canada"
+    location: "Toronto, Canada",
   },
   {
     stars: 5,
     content: "Outstanding experience from start to finish!",
     clientName: "George Michael",
-    location: "Los Angeles, USA"
+    location: "Los Angeles, USA",
   },
   {
     stars: 3,
     content: "Decent, but there are better options available in the market.",
     clientName: "Hannah Montana",
-    location: "Nashville, USA"
+    location: "Nashville, USA",
   },
   {
     stars: 4,
     content: "Pretty good overall, though I encountered minor issues.",
     clientName: "Ian Fleming",
-    location: "Edinburgh, Scotland"
-  }
-];
+    location: "Edinburgh, Scotland",
+  },
+]
 
-export default function MainLineCleaners() {
+function MainLineCleanersContent() {
+  const { language } = useContext(LanguageContext)
   const [requestQuoteForm, setRequestQuoteForm] = useState({
     firstName: "",
     lastName: "",
@@ -94,7 +113,7 @@ export default function MainLineCleaners() {
     message: "",
   })
 
-  const [testimonials, setTestimonials] = useState([]);
+  const [testimonials, setTestimonials] = useState([])
 
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -102,21 +121,24 @@ export default function MainLineCleaners() {
 
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
-  const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
+  const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0)
+
+  // Get translations based on current language
+  const t = translations[language as Language]
 
   // Images for the slideshow
   const slideshowImages = [Clean, Clean3, Clean4]
 
   // Functions to navigate testimonials
   const nextTestimonialPage = () => {
-    const maxPages = Math.ceil(testimonials.length / 3) - 1;
-    setCurrentTestimonialPage(prev => prev >= maxPages ? 0 : prev + 1);
-  };
+    const maxPages = Math.ceil(testimonials.length / 3) - 1
+    setCurrentTestimonialPage((prev) => (prev >= maxPages ? 0 : prev + 1))
+  }
 
   const prevTestimonialPage = () => {
-    const maxPages = Math.ceil(testimonials.length / 3) - 1;
-    setCurrentTestimonialPage(prev => prev <= 0 ? maxPages : prev - 1);
-  };
+    const maxPages = Math.ceil(testimonials.length / 3) - 1
+    setCurrentTestimonialPage((prev) => (prev <= 0 ? maxPages : prev - 1))
+  }
 
   // Autoplay functionality
   useEffect(() => {
@@ -137,18 +159,21 @@ export default function MainLineCleaners() {
     async function getReviews() {
       try {
         const url: string = `${process.env.NEXT_PUBLIC_API_URL}/reviews`
-        const options = { method: "GET" };
-        const response: any = await fetch(url, options);
-        if(response.ok) {
-          const data = await response.json();
-          setTestimonials(data);
+        const options = { method: "GET" }
+        const response: any = await fetch(url, options)
+        if (response.ok) {
+          const data = await response.json()
+          for (let i = 0; i < testimonialsTest.length; i++) {
+            data.push(testimonialsTest[i])
+          }
+          setTestimonials(data)
         }
-      } catch(err) {
-        console.log(err);
+      } catch (err) {
+        console.log(err)
       }
     }
-    getReviews();
-  },[])
+    getReviews()
+  }, [])
 
   // Functions to control the slideshow
   const nextSlide = () => {
@@ -211,53 +236,53 @@ export default function MainLineCleaners() {
     let hasErrors = false
 
     if (!requestQuoteForm.firstName.trim()) {
-      newErrors.firstName = "First name is required"
+      newErrors.firstName = t.firstNameRequired
       hasErrors = true
     }
 
     if (!requestQuoteForm.lastName.trim()) {
-      newErrors.lastName = "Last name is required"
+      newErrors.lastName = t.lastNameRequired
       hasErrors = true
     }
 
     if (!requestQuoteForm.email.trim()) {
-      newErrors.email = "Email is required"
+      newErrors.email = t.emailRequired
       hasErrors = true
     } else if (!validateEmail(requestQuoteForm.email)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = t.invalidEmail
       hasErrors = true
     }
 
     if (!requestQuoteForm.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-      hasErrors = true;
+      newErrors.phone = t.phoneRequired
+      hasErrors = true
     } else if (!validatePhone(requestQuoteForm.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
-      hasErrors = true;
+      newErrors.phone = t.invalidPhone
+      hasErrors = true
     }
 
     if (!requestQuoteForm.service) {
-      newErrors.service = "Please select a service";
-      hasErrors = true;
+      newErrors.service = t.serviceRequired
+      hasErrors = true
     }
 
-    setErrors(newErrors);
+    setErrors(newErrors)
     if (!hasErrors) {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
 
       try {
-        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`;
+        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`
         const options = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestQuoteForm),
         }
 
-        const response: any = await fetch(url, options);
-        console.log(response);
+        const response: any = await fetch(url, options)
+        console.log(response)
 
         if (response.ok) {
-          setSubmitSuccess(true);
+          setSubmitSuccess(true)
           setRequestQuoteForm({
             firstName: "",
             lastName: "",
@@ -265,9 +290,9 @@ export default function MainLineCleaners() {
             phone: "",
             service: "",
             message: "",
-          });
+          })
         } else {
-          console.error("Form submission failed");
+          console.error("Form submission failed")
         }
       } catch (err) {
         console.error(err)
@@ -279,7 +304,7 @@ export default function MainLineCleaners() {
 
   return (
     <div className="flex min-h-screen flex-col">
-    <Header />
+      <Header />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white">
           <div className="container px-4 md:px-6">
@@ -289,20 +314,19 @@ export default function MainLineCleaners() {
                   <Sparkles className="h-6 w-6 text-blue-600" />
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Professional Cleaning Services for the Main Line
+                  {t.heroTitle}
                 </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  We provide top-quality residential and commercial cleaning services throughout the Main Line area. Our
-                  professional team ensures your space is spotless and sanitized.
+                  {t.heroDescription}
                 </p>
                 <div className="flex flex-wrap gap-3 mt-2">
                   <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full">
                     <CheckCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Eco-Friendly</span>
+                    <span className="text-sm font-medium">{t.ecoFriendly}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
                     <Award className="h-4 w-4" />
-                    <span className="text-sm font-medium">Top-Rated</span>
+                    <span className="text-sm font-medium">{t.topRated}</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row mt-4">
@@ -311,10 +335,10 @@ export default function MainLineCleaners() {
                     asChild
                     className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                   >
-                    <Link href="/calendar">Book Now</Link>
+                    <Link href="/calendar">{t.bookNow}</Link>
                   </Button>
                   <Button size="lg" variant="outline" className="border-blue-200 hover:bg-blue-50">
-                    Learn More
+                    {t.learnMore}
                   </Button>
                 </div>
               </div>
@@ -327,22 +351,22 @@ export default function MainLineCleaners() {
                     onMouseLeave={() => setAutoplay(true)}
                   >
                     {/* Main slideshow image */}
-                          <div className="relative w-full h-[300px] md:h-[400px]">
+                    <div className="relative w-full h-[300px] md:h-[400px]">
                       {slideshowImages.map((image, index) => (
                         <div
                           key={index}
                           className={`absolute inset-0 transition-opacity duration-1000 flex items-center justify-center ${
                             currentSlide === index ? "opacity-100" : "opacity-0 pointer-events-none"
                           }`}
-                          >
+                        >
                           <div className="relative w-full h-[300px] md:h-[400px]">
-                          <Image
-                          src={image || "/placeholder.svg"}
-                          fill
-                          alt={`Professional cleaning services ${index + 1}`}
-                          className="object-cover object-center"
-                          priority={index === 0}
-                          />
+                            <Image
+                              src={image || "/placeholder.svg"}
+                              fill
+                              alt={`Professional cleaning services ${index + 1}`}
+                              className="object-cover object-center"
+                              priority={index === 0}
+                            />
                           </div>
                         </div>
                       ))}
@@ -465,13 +489,13 @@ export default function MainLineCleaners() {
               </div>
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-3 py-1 text-sm text-white font-medium">
-                  Our Services
+                  {t.ourServices}
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Comprehensive Cleaning Solutions
+                  {t.comprehensiveSolutions}
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  We offer a variety of cleaning services tailored to your specific needs.
+                  {t.servicesDescription}
                 </p>
               </div>
             </div>
@@ -485,23 +509,21 @@ export default function MainLineCleaners() {
                     </div>
                   </div>
                   <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-blue-600">Regular Cleaning</h3>
+                  <h3 className="text-xl font-bold text-blue-600">{t.regularCleaning}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
-                  <p className="text-center text-muted-foreground">
-                    Our standard cleaning service includes dusting, vacuuming, mopping, and sanitizing all surfaces.
-                  </p>
+                  <p className="text-center text-muted-foreground">{t.regularCleaningDesc}</p>
                   <ul className="mt-2 space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span>Weekly or bi-weekly service</span>
+                      <span>{t.weeklyService}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span>All rooms thoroughly cleaned</span>
+                      <span>{t.allRoomsCleaned}</span>
                     </li>
                   </ul>
                   <Button variant="outline" className="mt-2 border-blue-200 hover:bg-blue-50 hover:text-blue-600">
-                    Learn More
+                    {t.learnMore}
                   </Button>
                 </div>
 
@@ -513,23 +535,21 @@ export default function MainLineCleaners() {
                     </div>
                   </div>
                   <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-cyan-600">Deep Cleaning</h3>
+                  <h3 className="text-xl font-bold text-cyan-600">{t.deepCleaning}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-cyan-600 to-blue-500"></div>
-                  <p className="text-center text-muted-foreground">
-                    A thorough cleaning that reaches every corner, including behind appliances and inside cabinets.
-                  </p>
+                  <p className="text-center text-muted-foreground">{t.deepCleaningDesc}</p>
                   <ul className="mt-2 space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-cyan-600" />
-                      <span>Recommended quarterly</span>
+                      <span>{t.recommendedQuarterly}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-cyan-600" />
-                      <span>Includes hard-to-reach areas</span>
+                      <span>{t.hardToReachAreas}</span>
                     </li>
                   </ul>
                   <Button className="mt-2 bg-gradient-to-r from-cyan-600 to-blue-500 hover:from-cyan-700 hover:to-blue-600 text-white">
-                    Learn More
+                    {t.learnMore}
                   </Button>
                 </div>
 
@@ -541,33 +561,31 @@ export default function MainLineCleaners() {
                     </div>
                   </div>
                   <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-emerald-600">Move In/Out Cleaning</h3>
+                  <h3 className="text-xl font-bold text-emerald-600">{t.moveInOut}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"></div>
-                  <p className="text-center text-muted-foreground">
-                    Prepare your new home or leave your old one spotless with our specialized move-in/out cleaning.
-                  </p>
+                  <p className="text-center text-muted-foreground">{t.moveInOutDesc}</p>
                   <ul className="mt-2 space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      <span>One-time deep cleaning</span>
+                      <span>{t.oneTimeDeep}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      <span>Includes appliance cleaning</span>
+                      <span>{t.applianceCleaning}</span>
                     </li>
                   </ul>
                   <Button
                     variant="outline"
                     className="mt-2 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
                   >
-                    Learn More
+                    {t.learnMore}
                   </Button>
                 </div>
               </div>
             </div>
             <div className="flex justify-center">
               <Button variant="outline" className="gap-1 border-blue-200 hover:bg-blue-50 hover:text-blue-600">
-                View All Services <ArrowRight className="h-4 w-4" />
+                {t.viewAllServices} <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -579,7 +597,7 @@ export default function MainLineCleaners() {
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl blur opacity-25"></div>
                 <Image
-                  src={Clean2}
+                  src={Clean2 || "/placeholder.svg"}
                   width={550}
                   height={550}
                   alt="Our cleaning team"
@@ -591,32 +609,30 @@ export default function MainLineCleaners() {
                   <User className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="inline-block rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-3 py-1 text-sm text-white font-medium">
-                  About Us
+                  {t.aboutUs}
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Trusted Cleaning Professionals
+                  {t.trustedProfessionals}
                 </h2>
                 <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  With over 10 years of experience serving the Main Line area, our team of professional cleaners is
-                  dedicated to providing exceptional service. We use eco-friendly products and proven techniques to
-                  ensure your space is not only clean but healthy.
+                  {t.aboutDescription}
                 </p>
                 <ul className="grid gap-2">
                   <li className="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span>Fully insured and bonded professionals</span>
+                    <span>{t.insuredProfessionals}</span>
                   </li>
                   <li className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-blue-600" />
-                    <span>Eco-friendly cleaning products</span>
+                    <span>{t.ecoProducts}</span>
                   </li>
                   <li className="flex items-center gap-2 bg-cyan-50 p-2 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-cyan-600" />
-                    <span>Satisfaction guaranteed</span>
+                    <span>{t.satisfactionGuaranteed}</span>
                   </li>
                   <li className="flex items-center gap-2 bg-emerald-50 p-2 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    <span>Flexible scheduling options</span>
+                    <span>{t.flexibleScheduling}</span>
                   </li>
                 </ul>
               </div>
@@ -632,54 +648,54 @@ export default function MainLineCleaners() {
               </div>
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-3 py-1 text-sm text-white font-medium">
-                  Testimonials
+                  {t.testimonials}
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  What Our Clients Say
+                  {t.clientsSay}
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Don't just take our word for it. Here's what our satisfied customers have to say.
+                  {t.testimonialsDescription}
                 </p>
               </div>
             </div>
             <div className="relative mx-auto max-w-5xl py-12">
               <div className="grid gap-6 lg:grid-cols-3">
-{testimonials
-  .slice(currentTestimonialPage * 3, currentTestimonialPage * 3 + 3)
-  .map((testimonial, index) => (
-    <div
-      key={index}
-      className="flex flex-col justify-between space-y-4 rounded-lg border p-6 shadow-md hover:shadow-lg transition-shadow bg-white h-64"
-    >
-      <div className="space-y-2">
-        <div className="flex text-yellow-500">
-          {Array.from({ length: testimonial.stars }, (_, idx) => (
-            <Star key={idx} className="fill-yellow-500 h-5 w-5" />
-          ))}
-          {Array.from({ length: 5 - testimonial.stars }, (_, idx) => (
-            <Star key={idx} className="h-5 w-5" />
-          ))}
-        </div>
-        <p className="text-muted-foreground overflow-hidden text-ellipsis line-clamp-3">
-          {testimonial.content}
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="rounded-full bg-blue-100 p-2">
-          <User className="h-4 w-4 text-blue-600" />
-        </div>
-        <div>
-          <p className="font-medium">{testimonial.clientName}</p>
-          <p className="text-sm text-muted-foreground">{testimonial.location}</p>
-        </div>
-      </div>
-    </div>
-  ))}
+                {testimonials
+                  .slice(currentTestimonialPage * 3, currentTestimonialPage * 3 + 3)
+                  .map((testimonial, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col justify-between space-y-4 rounded-lg border p-6 shadow-md hover:shadow-lg transition-shadow bg-white h-64"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex text-yellow-500">
+                          {Array.from({ length: testimonial.stars }, (_, idx) => (
+                            <Star key={idx} className="fill-yellow-500 h-5 w-5" />
+                          ))}
+                          {Array.from({ length: 5 - testimonial.stars }, (_, idx) => (
+                            <Star key={idx} className="h-5 w-5" />
+                          ))}
+                        </div>
+                        <p className="text-muted-foreground overflow-hidden text-ellipsis line-clamp-3">
+                          {testimonial.content}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-blue-100 p-2">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{testimonial.clientName}</p>
+                          <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-              
+
               {/* Testimonial navigation arrows */}
               <div className="flex justify-between items-center mt-8">
-                <button 
+                <button
                   onClick={prevTestimonialPage}
                   className="rounded-full bg-white p-3 text-blue-600 shadow-md transition-all hover:bg-blue-50 hover:text-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="Previous testimonials"
@@ -699,7 +715,7 @@ export default function MainLineCleaners() {
                     <path d="m15 18-6-6 6-6" />
                   </svg>
                 </button>
-                
+
                 {/* Pagination indicators */}
                 <div className="flex gap-2">
                   {Array.from({ length: Math.ceil(testimonials.length / 3) }).map((_, index) => (
@@ -713,8 +729,8 @@ export default function MainLineCleaners() {
                     />
                   ))}
                 </div>
-                
-                <button 
+
+                <button
                   onClick={nextTestimonialPage}
                   className="rounded-full bg-white p-3 text-blue-600 shadow-md transition-all hover:bg-blue-50 hover:text-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="Next testimonials"
@@ -735,13 +751,13 @@ export default function MainLineCleaners() {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="flex justify-center mt-8">
                 <Button
                   asChild
                   className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                 >
-                  <Link href="/reviews">Share Your Experience</Link>
+                  <Link href="/reviews">{t.shareExperience}</Link>
                 </Button>
               </div>
             </div>
@@ -756,43 +772,43 @@ export default function MainLineCleaners() {
                   <Mail className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="inline-block rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-3 py-1 text-sm text-white font-medium">
-                  Contact Us
+                  {t.contactUs}
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Get in Touch
+                  {t.getInTouch}
                 </h2>
                 <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Have questions or ready to schedule a cleaning? Contact us today for a free quote.
+                  {t.contactDescription}
                 </p>
                 <div className="grid gap-4">
                   <div className="flex items-start gap-4 bg-white p-4 rounded-lg shadow-sm">
                     <MapPin className="h-6 w-6 text-blue-600 mt-0.5" />
                     <div>
-                      <h3 className="font-medium">Address</h3>
-                      <p className="text-sm text-muted-foreground">123 Main Line Avenue, Bryn Mawr, PA 19010</p>
+                      <h3 className="font-medium">{t.address}</h3>
+                      <p className="text-sm text-muted-foreground">{t.addressValue}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 bg-white p-4 rounded-lg shadow-sm">
                     <Phone className="h-6 w-6 text-blue-600 mt-0.5" />
                     <div>
-                      <h3 className="font-medium">Phone</h3>
-                      <p className="text-sm text-muted-foreground">(610) 555-1234</p>
+                      <h3 className="font-medium">{t.phone}</h3>
+                      <p className="text-sm text-muted-foreground">{t.phoneValue}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 bg-white p-4 rounded-lg shadow-sm">
                     <Mail className="h-6 w-6 text-blue-600 mt-0.5" />
                     <div>
-                      <h3 className="font-medium">Email</h3>
-                      <p className="text-sm text-muted-foreground">info@mainlinecleaners.com</p>
+                      <h3 className="font-medium">{t.email}</h3>
+                      <p className="text-sm text-muted-foreground">{t.emailValue}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 bg-white p-4 rounded-lg shadow-sm">
                     <Clock className="h-6 w-6 text-blue-600 mt-0.5" />
                     <div>
-                      <h3 className="font-medium">Hours</h3>
-                      <p className="text-sm text-muted-foreground">Monday - Friday: 8am - 6pm</p>
-                      <p className="text-sm text-muted-foreground">Saturday: 9am - 4pm</p>
-                      <p className="text-sm text-muted-foreground">Sunday: Closed</p>
+                      <h3 className="font-medium">{t.hours}</h3>
+                      <p className="text-sm text-muted-foreground">{t.mondayFriday}</p>
+                      <p className="text-sm text-muted-foreground">{t.saturday}</p>
+                      <p className="text-sm text-muted-foreground">{t.sunday}</p>
                     </div>
                   </div>
                 </div>
@@ -804,24 +820,21 @@ export default function MainLineCleaners() {
                       <CheckCircle className="h-10 w-10 text-green-600" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-bold text-green-600">Quote Request Sent!</h3>
-                      <p className="text-muted-foreground">
-                        Thank you for your interest in MainLine Cleaners. We've received your request and will get back
-                        to you within 24 hours.
-                      </p>
+                      <h3 className="text-2xl font-bold text-green-600">{t.quoteSuccess}</h3>
+                      <p className="text-muted-foreground">{t.quoteSuccessMessage}</p>
                     </div>
                     <Button
                       onClick={() => setSubmitSuccess(false)}
                       className="mt-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     >
-                      Submit Another Request
+                      {t.submitAnother}
                     </Button>
                   </div>
                 ) : (
                   <>
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <MessageSquare className="h-5 w-5 text-blue-600" />
-                      Request a Quote
+                      {t.requestQuote}
                     </h3>
                     <form className="space-y-4" onSubmit={handleSubmitRequest}>
                       <div className="grid grid-cols-2 gap-4">
@@ -831,12 +844,12 @@ export default function MainLineCleaners() {
                             className="text-sm font-medium leading-none flex items-center gap-1"
                           >
                             <User className="h-4 w-4 text-blue-500" />
-                            First name
+                            {t.firstName}
                           </Label>
                           <Input
                             id="firstName"
                             name="firstName"
-                            placeholder="Enter your first name"
+                            placeholder={t.firstName}
                             className={errors.firstName ? "border-red-500" : ""}
                             value={requestQuoteForm.firstName}
                             onChange={handleInputChange}
@@ -854,12 +867,12 @@ export default function MainLineCleaners() {
                             className="text-sm font-medium leading-none flex items-center gap-1"
                           >
                             <User className="h-4 w-4 text-blue-500" />
-                            Last name
+                            {t.lastName}
                           </Label>
                           <Input
                             id="lastName"
                             name="lastName"
-                            placeholder="Enter your last name"
+                            placeholder={t.lastName}
                             className={errors.lastName ? "border-red-500" : ""}
                             value={requestQuoteForm.lastName}
                             onChange={handleInputChange}
@@ -875,13 +888,13 @@ export default function MainLineCleaners() {
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-sm font-medium leading-none flex items-center gap-1">
                           <Mail className="h-4 w-4 text-blue-500" />
-                          Email
+                          {t.email}
                         </Label>
                         <Input
                           id="email"
                           name="email"
                           type="email"
-                          placeholder="Enter your email"
+                          placeholder={t.email}
                           className={errors.email ? "border-red-500" : ""}
                           value={requestQuoteForm.email}
                           onChange={handleInputChange}
@@ -896,13 +909,13 @@ export default function MainLineCleaners() {
                       <div className="space-y-2">
                         <Label htmlFor="phone" className="text-sm font-medium leading-none flex items-center gap-1">
                           <Phone className="h-4 w-4 text-blue-500" />
-                          Phone
+                          {t.phone}
                         </Label>
                         <Input
                           id="phone"
                           name="phone"
                           type="tel"
-                          placeholder="Enter your phone number"
+                          placeholder={t.phone}
                           className={errors.phone ? "border-red-500" : ""}
                           value={requestQuoteForm.phone}
                           onChange={handleInputChange}
@@ -917,7 +930,7 @@ export default function MainLineCleaners() {
                       <div className="space-y-2">
                         <Label htmlFor="service" className="text-sm font-medium leading-none flex items-center gap-1">
                           <ClipboardCheck className="h-4 w-4 text-blue-500" />
-                          Service Needed
+                          {t.service}
                         </Label>
                         <select
                           id="service"
@@ -928,11 +941,11 @@ export default function MainLineCleaners() {
                           value={requestQuoteForm.service}
                           onChange={handleInputChange}
                         >
-                          <option value="">Select a service</option>
-                          <option value="regular">Regular Cleaning</option>
-                          <option value="deep">Deep Cleaning</option>
-                          <option value="move">Move In/Out Cleaning</option>
-                          <option value="other">Other</option>
+                          <option value="">{t.selectService}</option>
+                          <option value="regular">{t.regularService}</option>
+                          <option value="deep">{t.deepService}</option>
+                          <option value="move">{t.moveService}</option>
+                          <option value="other">{t.otherService}</option>
                         </select>
                         {errors.service && (
                           <p className="text-red-500 text-xs flex items-center mt-1">
@@ -944,12 +957,12 @@ export default function MainLineCleaners() {
                       <div className="space-y-2">
                         <Label htmlFor="message" className="text-sm font-medium leading-none flex items-center gap-1">
                           <MessageSquare className="h-4 w-4 text-blue-500" />
-                          Message
+                          {t.message}
                         </Label>
                         <Textarea
                           id="message"
                           name="message"
-                          placeholder="Tell us about your cleaning needs"
+                          placeholder={t.messagePlaceholder}
                           className="min-h-[100px]"
                           value={requestQuoteForm.message}
                           onChange={handleInputChange}
@@ -979,10 +992,10 @@ export default function MainLineCleaners() {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                               ></path>
                             </svg>
-                            Submitting...
+                            {t.submitting}
                           </>
                         ) : (
-                          "Submit Request"
+                          t.submitRequest
                         )}
                       </Button>
                     </form>
@@ -1000,132 +1013,76 @@ export default function MainLineCleaners() {
               <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 MainLine Cleaners
               </div>
-              <p className="max-w-[350px] text-sm text-muted-foreground">
-                Professional cleaning services for homes and businesses throughout the Main Line area.
-              </p>
+              <p className="max-w-[350px] text-sm text-muted-foreground">{t.footerDescription}</p>
             </div>
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">Company</h3>
+                <h3 className="text-sm font-medium">{t.company}</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="#about" className="text-muted-foreground hover:text-foreground">
-                      About
+                      {t.aboutUs}
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      Careers
+                      {t.careers}
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      Blog
+                      {t.blog}
                     </Link>
                   </li>
                 </ul>
               </div>
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">Services</h3>
+                <h3 className="text-sm font-medium">{t.services}</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      Residential
+                      {t.residential}
                     </Link>
                   </li>
                   <li>
                     <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      Commercial
+                      {t.commercial}
                     </Link>
                   </li>
                   <li>
                     <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      Special Cleaning
+                      {t.specialCleaning}
                     </Link>
                   </li>
                 </ul>
               </div>
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">Legal</h3>
+                <h3 className="text-sm font-medium">{t.contact}</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      Terms
+                      {t.helpCenter}
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      Privacy
+                      {t.contactUs}
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      Cookies
+                      {t.faq}
                     </Link>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-4">
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-                <span className="sr-only">Facebook</span>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                </svg>
-                <span className="sr-only">Instagram</span>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-                </svg>
-                <span className="sr-only">Twitter</span>
-              </Link>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">© 2024 MainLine Cleaners. {t.allRightsReserved}.</p>
         </div>
       </footer>
     </div>
   )
 }
+
+export default MainLineCleanersContent

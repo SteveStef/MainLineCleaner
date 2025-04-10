@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Cookies from 'js-cookie';
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -134,10 +135,42 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    async function authenticate() {
+      try {
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/authenticate`
+        const token = Cookies.get("token");
+        if(!token) {
+           setAuth(false);
+        }
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        })
+        if (response.ok) {
+          setAuth(true);
+        } else {
+            setAuth(false);
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    authenticate();
+  }, []);
+
+  useEffect(() => {
     async function getAppointments() {
       try {
         const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
-        const response = await fetch(url)
+        const token = Cookies.get("token");
+        const options = {
+            method: "GET",
+            headers: {"Content-Type":"application/json", Authorization: `Bearer ${token}`}
+        };
+        const response = await fetch(url, options);
         if (response.ok) {
           const appointments = await response.json()
           setAllAppointments(appointments)
@@ -146,8 +179,8 @@ export default function AdminDashboard() {
         console.log(err)
       }
     }
-    getAppointments()
-  }, [])
+    if(auth) getAppointments();
+  }, [auth])
 
   useEffect(() => {
     async function adminDetails() {
@@ -169,8 +202,8 @@ export default function AdminDashboard() {
         console.log(err)
       }
     }
-    adminDetails()
-  }, [])
+    if(auth) adminDetails()
+  }, [auth])
 
   const handleSaveAvailability = async () => {
     // Clear any existing messages
@@ -209,9 +242,11 @@ export default function AdminDashboard() {
       for (const key in cleanedTimeSlots) {
         availabilityObj.push({ ...cleanedTimeSlots[key], date: key, available: true })
       }
+      const token = Cookies.get("token");
       const options = {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
+
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token},
         body: JSON.stringify(availabilityObj),
       }
       const response = await fetch(url, options)
@@ -251,9 +286,10 @@ export default function AdminDashboard() {
     setPricing(tempPricing);
     setIsEditingPricing(false)
     try {
+        const token = Cookies.get("token");
       const options = {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token},
         body: JSON.stringify({
           regularPrice: tempPricing.regularClean,
           moveInOutPrice: tempPricing.moveInOut,
@@ -268,7 +304,7 @@ export default function AdminDashboard() {
             setSaveSuccess(false)
          }, 3000)
       } else {
-        setErrorMessage("There was an problme saving");
+        setErrorMessage("There was an problem saving the new price");
           setTimeout(() => {
             setErrorMessage("")
          }, 3000)
@@ -289,9 +325,10 @@ export default function AdminDashboard() {
     setAdminEmail(tempAdminEmail)
 
     try {
+      const token = Cookies.get("token");
       const options = {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Basic " + btoa(`${username}:${password}`)},
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token},
         body: tempAdminEmail,
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-email`;
@@ -487,7 +524,7 @@ export default function AdminDashboard() {
   return (
   <>
     {
-    !auth ? <Login setAuth={setAuth} setUsername={setUsername} setPassword={setPassword} /> : 
+    !auth ? <Login username={username} password={password} setAuth={setAuth} setUsername={setUsername} setPassword={setPassword} /> :
     <div className="flex min-h-screen flex-col">
       <div className="container mx-auto py-6 px-4">
         <div className="flex items-center justify-between mb-6">

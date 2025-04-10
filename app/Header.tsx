@@ -1,16 +1,24 @@
-
-
 "use client"
 
-import { useState } from "react"
+import { useState, useContext } from "react"
 import Link from "next/link"
-import { CheckCircle, Menu, Phone, Mail, Clock, User, MessageSquare, X, Sparkles } from "lucide-react"
+import { CheckCircle, Menu, Phone, Clock, User, MessageSquare, X, Sparkles, Globe } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet"
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
 
-export default function ResponsiveHeader() {
+export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const { language, setLanguage } = useContext(LanguageContext)
+
+  const t = translations[language as Language]
+
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "es" : "en")
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -19,7 +27,7 @@ export default function ResponsiveHeader() {
           <div className="flex items-center">
             <Sparkles className="h-6 w-6 text-gradient-to-r from-blue-600 to-cyan-500 mr-2" />
             <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Main Line Cleaners
+              {t.companyName}
             </div>
           </div>
         </Link>
@@ -31,36 +39,47 @@ export default function ResponsiveHeader() {
             className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-primary"
           >
             <CheckCircle className="h-4 w-4" />
-            <span>Services</span>
+            <span>{t.services}</span>
           </Link>
           <Link
             href="../#about"
             className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-primary"
           >
             <User className="h-4 w-4" />
-            <span>About</span>
+            <span>{t.about}</span>
           </Link>
           <Link
             href="../#testimonials"
             className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-primary"
           >
             <MessageSquare className="h-4 w-4" />
-            <span>Testimonials</span>
+            <span>{t.testimonials}</span>
           </Link>
           <Link
             href="/calendar"
             className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-primary"
           >
             <Clock className="h-4 w-4" />
-            <span>Book Now</span>
+            <span>{t.bookNow}</span>
           </Link>
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="../#contact">
-          <Button className="hidden md:flex bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
-            <Phone className="mr-2 h-4 w-4" /> Get a Quote
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleLanguage}
+            className="hidden md:flex"
+            aria-label="Toggle language"
+          >
+            <Globe className="h-5 w-5" />
+            <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
           </Button>
+
+          <Link href="../#contact">
+            <Button className="hidden md:flex bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
+              <Phone className="mr-2 h-4 w-4" /> {t.getQuote}
+            </Button>
           </Link>
 
           {/* Mobile Menu Button */}
@@ -81,7 +100,7 @@ export default function ResponsiveHeader() {
                 <SheetTitle className="flex items-center">
                   <Sparkles className="h-6 w-6 text-blue-600 mr-2" />
                   <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    MainLine Cleaners
+                    {t.companyName}
                   </span>
                 </SheetTitle>
                 <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
@@ -97,7 +116,7 @@ export default function ResponsiveHeader() {
                   onClick={() => setIsOpen(false)}
                 >
                   <CheckCircle className="h-5 w-5" />
-                  <span>Services</span>
+                  <span>{t.services}</span>
                 </Link>
                 <Link
                   href="../#about"
@@ -105,7 +124,7 @@ export default function ResponsiveHeader() {
                   onClick={() => setIsOpen(false)}
                 >
                   <User className="h-5 w-5" />
-                  <span>About</span>
+                  <span>{t.about}</span>
                 </Link>
                 <Link
                   href="../#testimonials"
@@ -113,7 +132,7 @@ export default function ResponsiveHeader() {
                   onClick={() => setIsOpen(false)}
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Testimonials</span>
+                  <span>{t.testimonials}</span>
                 </Link>
                 <Link
                   href="/calendar"
@@ -121,15 +140,24 @@ export default function ResponsiveHeader() {
                   onClick={() => setIsOpen(false)}
                 >
                   <Clock className="h-5 w-5" />
-                  <span>Book Now</span>
+                  <span>{t.bookNow}</span>
                 </Link>
+
+                <Button
+                  variant="outline"
+                  onClick={toggleLanguage}
+                  className="flex items-center justify-center gap-2 mt-4"
+                >
+                  <Globe className="h-5 w-5" />
+                  <span>{language === "en" ? "Español" : "English"}</span>
+                </Button>
 
                 <Link href="../#contact" className="mt-4 pt-4 border-t">
                   <Button
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Phone className="mr-2 h-4 w-4" /> Get a Quote
+                    <Phone className="mr-2 h-4 w-4" /> {t.getQuote}
                   </Button>
                 </Link>
               </div>
@@ -141,4 +169,3 @@ export default function ResponsiveHeader() {
     </header>
   )
 }
-
