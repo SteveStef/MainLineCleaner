@@ -523,13 +523,13 @@ export default function AdminDashboard() {
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
 
   function matchService(service: string): string {
-    console.log(service);
     if(service === "deep") return "Deep Cleaning";
     if(service === "regular") return "Regular Cleaning";
     return "Move In/Out Cleaning"
   }
 
   async function cancelAppointment(appointment: Appointment) {
+    //console.log(appointment);
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`;
       const token = Cookies.get("token");
@@ -537,19 +537,29 @@ export default function AdminDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Autherization: "Bearer " + token
+          Authorization: "Bearer " + token
         },
-        body: appointment.bookingId
+        body: JSON.stringify(appointment)
       };
       const response = await fetch(url, options);
-      console.log(response);
+      setIsEditDialogOpen(false);
       if(response.ok) {
-
+        setSaveSuccess(true)
+        setTimeout(() => {
+          setSaveSuccess(false)
+        }, 3000)
       } else {
-
+        setErrorMessage("Canceling appointment failed, are you sure this appointment was not already canceled?");
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 10000)
       }
     } catch(err) {
       console.log(err);
+      setErrorMessage("Canceling appointment failed, are you sure this appointment was not already canceled?");
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
     }
   }
 
@@ -658,6 +668,21 @@ export default function AdminDashboard() {
               </Card>
             </div>
 
+                  {/* Success Message */}
+                  {saveSuccess && (
+                    <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-5 duration-300">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                      <div className="text-green-700 font-medium">Availability settings saved successfully!</div>
+                    </div>
+                  )}
+
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-5 duration-300">
+                      <X className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
+                      <div className="text-red-700 font-medium">{errorMessage}</div>
+                    </div>
+                  )}
             {/* Calendar and Today's Appointments */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-1 border-blue-100 hover:shadow-md transition-shadow">
@@ -772,6 +797,7 @@ export default function AdminDashboard() {
                           <TableHead>Client</TableHead>
                           <TableHead>Date & Time</TableHead>
                           <TableHead>Service</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Contact</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -788,12 +814,19 @@ export default function AdminDashboard() {
                               </div>
                             </TableCell>
                             <TableCell>{appointment.service}</TableCell>
+
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-sm">{appointment.status}</span>
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <div className="flex flex-col">
                                 <span className="text-sm">{appointment.email}</span>
                                 <span className="text-sm text-muted-foreground">{appointment.phone}</span>
                               </div>
                             </TableCell>
+
                             <TableCell className="text-right">
                               <Button
                                 variant="outline"

@@ -69,6 +69,7 @@ export default function BookingPage() {
   const [availableDays, setAvailableDays] = useState<any>([]);
   const [timeSlots, setTimeSlots] = useState<any>([]);
   const [availability, setAvailability] = useState<any>([]);
+  const [paymentError, setPaymentError] = useState<string>("");
 
   const [serviceTypes, setServiceTypes] = useState<any>([
   {
@@ -256,6 +257,7 @@ export default function BookingPage() {
       }
     } catch(err) {
       console.log(err);
+      setPaymentError("There was an error when processing your payment");
     }
   }
 
@@ -577,6 +579,7 @@ export default function BookingPage() {
                       value={userInfo.firstName}
                       onChange={handleInputChange}
                       className={errors.firstName ? "border-red-500" : ""}
+                      maxLength={20}
                     />
                     {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
                   </div>
@@ -592,6 +595,7 @@ export default function BookingPage() {
                       value={userInfo.lastName}
                       onChange={handleInputChange}
                       className={errors.lastName ? "border-red-500" : ""}
+                      maxLength={20}
                     />
                     {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
                   </div>
@@ -608,6 +612,7 @@ export default function BookingPage() {
                       value={userInfo.email}
                       onChange={handleInputChange}
                       className={errors.email ? "border-red-500" : ""}
+                      maxLength={40}
                     />
                     {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
                   </div>
@@ -624,6 +629,7 @@ export default function BookingPage() {
                       value={userInfo.phone}
                       onChange={handleInputChange}
                       className={errors.phone ? "border-red-500" : ""}
+                      maxLength={10}
                     />
                     {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
                   </div>
@@ -639,6 +645,7 @@ export default function BookingPage() {
                       value={userInfo.address}
                       onChange={handleInputChange}
                       className={errors.address ? "border-red-500" : ""}
+                      maxLength={75}
                     />
                     {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
                   </div>
@@ -655,6 +662,7 @@ export default function BookingPage() {
                       value={userInfo.notes}
                       onChange={handleInputChange}
                       className="min-h-[100px]"
+                      maxLength={600}
                     />
                   </div>
                 </div>
@@ -792,6 +800,12 @@ export default function BookingPage() {
                         </div>
                       </div>
                     </div>
+
+
+                    {
+                      paymentError && <div className="color-red-500">{paymentError}</div>
+                    }
+
 
 
                     <div className="p-4 rounded-lg border max-w-2xl mx-auto">
@@ -1027,47 +1041,3 @@ export default function BookingPage() {
     </div>
   )
 }
-
-
-
-
-
-
-
-/*
-            <div className="mt-16 max-w-4xl mx-auto bg-white rounded-lg border shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Award className="h-6 w-6 text-blue-600" />
-                Why Choose MainLine Cleaners
-              </h2>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="flex flex-col items-center text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="rounded-full bg-blue-100 p-3 mb-3">
-                    <CheckCircle className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="font-medium mb-2">Professional Service</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Our team of experienced cleaners delivers exceptional quality every time.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 bg-cyan-50 rounded-lg">
-                  <div className="rounded-full bg-cyan-100 p-3 mb-3">
-                    <Clock className="h-6 w-6 text-cyan-600" />
-                  </div>
-                  <h3 className="font-medium mb-2">Flexible Scheduling</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Book appointments that fit your schedule with our convenient online system.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 bg-emerald-50 rounded-lg">
-                  <div className="rounded-full bg-emerald-100 p-3 mb-3">
-                    <Award className="h-6 w-6 text-emerald-600" />
-                  </div>
-                  <h3 className="font-medium mb-2">Satisfaction Guaranteed</h3>
-                  <p className="text-sm text-muted-foreground">
-                    We're not happy until you're happy with the results of our cleaning service.
-                  </p>
-                </div>
-              </div>
-            </div>
- * */
