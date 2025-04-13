@@ -65,22 +65,22 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleLanguage}
-            className="hidden md:flex"
-            aria-label="Toggle language"
-          >
-            <Globe className="h-5 w-5" />
-            <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
-          </Button>
 
           <Link href="../#contact">
             <Button className="hidden md:flex bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
               <Phone className="mr-2 h-4 w-4" /> {t.getQuote}
             </Button>
           </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleLanguage}
+            className="hidden md:flex w-10"
+            aria-label="Toggle language"
+          >
+            <Globe className="h-5 w-5" />
+            <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
+          </Button>
 
           {/* Mobile Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

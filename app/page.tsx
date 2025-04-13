@@ -279,7 +279,6 @@ function MainLineCleanersContent() {
         }
 
         const response: any = await fetch(url, options)
-        console.log(response)
 
         if (response.ok) {
           setSubmitSuccess(true)
