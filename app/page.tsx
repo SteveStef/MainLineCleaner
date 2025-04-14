@@ -14,7 +14,6 @@ import {
   Mail,
   Clock,
   Star,
-  ArrowRight,
   Award,
   Sparkles,
   Home,
@@ -26,6 +25,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import Header from "./Header"
+import Footer from "./Footer"
 
 import Clean from "../images/cleanHouse.jpg"
 import Clean2 from "../images/clean.jpg"
@@ -337,7 +337,7 @@ function MainLineCleanersContent() {
                     <Link href="/calendar">{t.bookNow}</Link>
                   </Button>
                   <Button size="lg" variant="outline" className="border-blue-200 hover:bg-blue-50">
-                    {t.learnMore}
+                    <Link href="#about"> {t.learnMore}</Link>
                   </Button>
                 </div>
               </div>
@@ -511,7 +511,7 @@ function MainLineCleanersContent() {
                   <h3 className="text-xl font-bold text-blue-600">{t.regularCleaning}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
                   <p className="text-center text-muted-foreground">{t.regularCleaningDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm">
+                  <ul className="mt-2 space-y-2 text-sm pb-5">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-blue-600" />
                       <span>{t.weeklyService}</span>
@@ -521,9 +521,6 @@ function MainLineCleanersContent() {
                       <span>{t.allRoomsCleaned}</span>
                     </li>
                   </ul>
-                  <Button variant="outline" className="mt-2 border-blue-200 hover:bg-blue-50 hover:text-blue-600">
-                    {t.learnMore}
-                  </Button>
                 </div>
 
                 {/* Second Card - Center (positioned lower) */}
@@ -537,7 +534,7 @@ function MainLineCleanersContent() {
                   <h3 className="text-xl font-bold text-cyan-600">{t.deepCleaning}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-cyan-600 to-blue-500"></div>
                   <p className="text-center text-muted-foreground">{t.deepCleaningDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm">
+                  <ul className="mt-2 space-y-2 text-sm pb-5">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-cyan-600" />
                       <span>{t.recommendedQuarterly}</span>
@@ -547,9 +544,6 @@ function MainLineCleanersContent() {
                       <span>{t.hardToReachAreas}</span>
                     </li>
                   </ul>
-                  <Button className="mt-2 bg-gradient-to-r from-cyan-600 to-blue-500 hover:from-cyan-700 hover:to-blue-600 text-white">
-                    {t.learnMore}
-                  </Button>
                 </div>
 
                 {/* Third Card - Right */}
@@ -563,7 +557,7 @@ function MainLineCleanersContent() {
                   <h3 className="text-xl font-bold text-emerald-600">{t.moveInOut}</h3>
                   <div className="h-1 w-12 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"></div>
                   <p className="text-center text-muted-foreground">{t.moveInOutDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm">
+                  <ul className="mt-2 space-y-2 text-sm pb-5">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600" />
                       <span>{t.oneTimeDeep}</span>
@@ -573,19 +567,8 @@ function MainLineCleanersContent() {
                       <span>{t.applianceCleaning}</span>
                     </li>
                   </ul>
-                  <Button
-                    variant="outline"
-                    className="mt-2 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
-                  >
-                    {t.learnMore}
-                  </Button>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-center">
-              <Button variant="outline" className="gap-1 border-blue-200 hover:bg-blue-50 hover:text-blue-600">
-                {t.viewAllServices} <ArrowRight className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </section>
@@ -1005,81 +988,7 @@ function MainLineCleanersContent() {
           </div>
         </section>
       </main>
-      <footer className="w-full border-t bg-background">
-        <div className="container flex flex-col gap-6 py-8 md:py-12">
-          <div className="flex flex-col gap-6 md:flex-row md:justify-between">
-            <div className="space-y-4">
-              <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                MainLine Cleaners
-              </div>
-              <p className="max-w-[350px] text-sm text-muted-foreground">{t.footerDescription}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t.company}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="#about" className="text-muted-foreground hover:text-foreground">
-                      {t.aboutUs}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      {t.careers}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      {t.blog}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t.services}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      {t.residential}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      {t.commercial}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#services" className="text-muted-foreground hover:text-foreground">
-                      {t.specialCleaning}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t.contact}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      {t.helpCenter}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      {t.contactUs}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
-                      {t.faq}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">© 2024 MainLine Cleaners. {t.allRightsReserved}.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

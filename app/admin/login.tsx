@@ -1,13 +1,18 @@
 "use client"
-import { useState } from "react"
+import { useState, useContext } from "react"
 import type React from "react"
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie"
 
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { Lock, AlertCircle, LogIn, User, KeyRound, ShieldCheck, WifiOff } from "lucide-react"
+
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
+import Header from "../Header";
 
 type Step = "credentials" | "verification"
 
@@ -18,6 +23,9 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
     password: "",
     verificationCode: "",
   })
+
+  const { language } = useContext(LanguageContext)
+  const t = translations[language as Language]
 
   const [errors, setErrors] = useState({
     username: "",
@@ -65,12 +73,12 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
     let hasErrors = false
 
     if (!formData.username.trim()) {
-      newErrors.username = "Username is required"
+      newErrors.username = t["usernameRequired"]
       hasErrors = true
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = "Password is required"
+      newErrors.password = t["passwordRequired"]
       hasErrors = true
     }
 
@@ -98,23 +106,23 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
 
       if (response.ok) {
         // If credentials are valid, move to verification step
-        setCurrentStep("verification");
-        setUsername(formData.username);
-        setPassword(formData.password);
+        setCurrentStep("verification")
+        setUsername(formData.username)
+        setPassword(formData.password)
       } else if (response.status === 401) {
         // Handle unauthorized (invalid credentials)
-        setGeneralError("Invalid username or password. Please try again.")
+        setGeneralError(t["invalidCredentials"])
       } else if (response.status === 429) {
         // Handle rate limiting
-        setGeneralError("Too many login attempts. Please try again later.")
+        setGeneralError(t["tooManyAttempts"])
       } else {
         // Handle other errors
-        setGeneralError("An error occurred while verifying credentials. Please try again.")
+        setGeneralError(t["credentialsVerificationError"])
       }
     } catch (err) {
       console.error(err)
       // Handle network errors
-      setGeneralError("Unable to connect to authentication server. Please check your connection and try again.")
+      setGeneralError(t["connectionError"])
     } finally {
       setIsSubmitting(false)
     }
@@ -125,10 +133,10 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
 
     // Validate verification code
     if (!formData.verificationCode.trim()) {
-      setErrors((prev) => ({ ...prev, verificationCode: "Verification code is required" }))
+      setErrors((prev) => ({ ...prev, verificationCode: t["verificationCodeRequired"] }))
       return
     } else if (formData.verificationCode.length !== 6) {
-      setErrors((prev) => ({ ...prev, verificationCode: "Verification code must be 6 digits" }))
+      setErrors((prev) => ({ ...prev, verificationCode: t["verificationCodeLengthError"] }))
       return
     }
 
@@ -141,31 +149,31 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa(`${username}:${password}`)
+          Authorization: "Basic " + btoa(`${username}:${password}`),
         },
         body: formData.verificationCode,
       })
 
       if (response.ok) {
-        const token = await response.text();
-        Cookies.set('token', token, {
-            expires: 7,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            path: '/',
-        });
-        setAuth(true);
+        const token = await response.text()
+        Cookies.set("token", token, {
+          expires: 7,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+        })
+        setAuth(true)
       } else if (response.status === 401) {
-        setGeneralError("Invalid verification code. Please try again.")
+        setGeneralError(t["invalidVerificationCode"])
       } else if (response.status === 410) {
-        setGeneralError("Verification code has expired. Please request a new code.")
+        setGeneralError(t["expiredVerificationCode"])
       } else {
-        setGeneralError("An error occurred while verifying the code. Please try again.")
+        setGeneralError(t["verificationError"])
       }
     } catch (err) {
       console.error(err)
       // Handle network errors
-      setGeneralError("Unable to connect to authentication server. Please check your connection and try again.")
+      setGeneralError(t["connectionError"])
     } finally {
       setIsSubmitting(false)
     }
@@ -174,20 +182,20 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
   const renderStepTitle = () => {
     switch (currentStep) {
       case "credentials":
-        return "Secure Access"
+        return t["secureAccessTitle"]
       case "verification":
-        return "Two-Factor Authentication"
+        return t["twoFactorAuthenticationTitle"]
       default:
-        return "Authentication"
+        return t["authenticationTitle"]
     }
   }
 
   const renderStepDescription = () => {
     switch (currentStep) {
       case "credentials":
-        return "Enter your credentials to access the restricted content."
+        return t["credentialsDescription"]
       case "verification":
-        return `We've sent a verification code to the email associated with username ${formData.username}. Please enter it below to complete authentication.`
+        return t["verificationDescription"].replace("{username}", formData.username)
       default:
         return ""
     }
@@ -201,13 +209,13 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium leading-none flex items-center gap-1">
                 <User className="h-4 w-4 text-blue-500" />
-                Username
+                {t["usernameLabel"]}
               </Label>
               <Input
                 id="username"
                 name="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder={t["usernamePlaceholder"]}
                 className={errors.username ? "border-red-500" : ""}
                 value={formData.username}
                 onChange={handleInputChange}
@@ -225,14 +233,14 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-medium leading-none flex items-center gap-1">
                   <Lock className="h-4 w-4 text-blue-500" />
-                  Password
+                  {t["passwordLabel"]}
                 </Label>
               </div>
               <Input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t["passwordPlaceholder"]}
                 className={errors.password ? "border-red-500" : ""}
                 value={formData.password}
                 onChange={handleInputChange}
@@ -274,13 +282,12 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Verifying...
+                  {t["verifyingButton"]}
                 </>
               ) : (
-                "Continue"
+                t["continueButton"]
               )}
             </Button>
-
           </form>
         )
 
@@ -290,14 +297,14 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
             <div className="space-y-2">
               <Label htmlFor="verificationCode" className="text-sm font-medium leading-none flex items-center gap-1">
                 <KeyRound className="h-4 w-4 text-blue-500" />
-                Verification Code
+                {t["verificationCodeLabel"]}
               </Label>
               <Input
                 id="verificationCode"
                 name="verificationCode"
                 type="text"
                 inputMode="numeric"
-                placeholder="Enter 6-digit code"
+                placeholder={t["verificationCodePlaceholder"]}
                 className={errors.verificationCode ? "border-red-500" : ""}
                 value={formData.verificationCode}
                 onChange={handleInputChange}
@@ -340,10 +347,10 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Verifying...
+                  {t["verifyingButton"]}
                 </>
               ) : (
-                "Access Content"
+                t["accessContentButton"]
               )}
             </Button>
 
@@ -353,21 +360,21 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
                 onClick={() => setCurrentStep("credentials")}
                 className="text-blue-600 hover:text-blue-800 hover:underline"
               >
-                Back to login
+                {t["backToLogin"]}
               </button>
             </div>
 
             <div className="text-center text-sm">
-              Didn't receive a code?{" "}
+              {t["didNotReceiveCode"]}{" "}
               <button
                 type="button"
                 onClick={() => {
                   // Resend code logic would go here
-                  alert("Code resent to your email")
+                  alert(t["codeResentAlert"])
                 }}
                 className="text-blue-600 hover:text-blue-800 hover:underline"
               >
-                Resend code
+                {t["resendCode"]}
               </button>
             </div>
           </form>
@@ -425,6 +432,7 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
 
   return (
     <div className="flex min-h-screen flex-col">
+      <Header />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white">
           <div className="container px-4 md:px-6">
@@ -469,4 +477,3 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
     </div>
   )
 }
-

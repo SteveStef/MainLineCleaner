@@ -39,6 +39,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import Header from "../Header";
+import Footer from "../Footer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1189,81 +1190,7 @@ export default function BookingPage() {
         </div>
       </main>
 
-      <footer className="w-full border-t bg-white mt-12">
-        <div className="container flex flex-col gap-6 py-8 md:py-12">
-          <div className="flex flex-col gap-6 md:flex-row md:justify-between">
-            <div className="space-y-4">
-              <div className="text-xl font-bold">{t["footer.company_name"]}</div>
-              <p className="max-w-[350px] text-sm text-muted-foreground">
-                {t["footer.company_description"]}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t["footer.company"]}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.company_about"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.company_careers"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.company_blog"]}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t["footer.services"]}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.services_residential"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.services_commercial"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.services_special_cleaning"]}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t["footer.legal"]}</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.legal_terms"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.legal_privacy"]}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-muted-foreground hover:text-foreground">
-                      {t["footer.legal_cookies"]}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"></div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
