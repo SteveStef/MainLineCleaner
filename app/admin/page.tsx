@@ -521,7 +521,7 @@ export default function AdminDashboard() {
             <Clock className="mr-1 h-3 w-3" /> Confirmed
           </Badge>
         )
-      case "confirmed":
+      case "completed":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             <CheckCircle className="mr-1 h-3 w-3" /> Completed
