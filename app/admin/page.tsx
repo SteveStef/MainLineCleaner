@@ -49,6 +49,8 @@ import { LanguageContext } from "@/contexts/language-context";
 import { translations } from "@/translations";
 import type { Language } from "@/translations";
 
+import { translateDateToSpanish } from "@/lib/utils";
+
 interface Appointment {
   id: number
   clientName: string
@@ -100,6 +102,8 @@ export default function AdminDashboard() {
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "es" : "en")
   }
+
+  //console.log(translateDateToSpanish("Monday, April 5 2025"));
 
   // State for pricing management
   const [pricing, setPricing] = useState({
@@ -182,6 +186,12 @@ export default function AdminDashboard() {
         const response = await fetch(url, options)
         if (response.ok) {
           const appointments = await response.json();
+          for(let i = 0; i < appointments.length; i++) {
+            const appointmentDate = new Date(appointments[i].appointmentDate);
+            if (appointmentDate < new Date()) {
+              appointments[i].status = "completed";
+            }
+          }
           setAllAppointments(appointments);
         }
       } catch (err) {
