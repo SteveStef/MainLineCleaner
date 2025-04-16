@@ -8,7 +8,7 @@ import type { Language } from "@/translations"
 
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useState, useEffect, useContext } from "react";
-import { format, addDays, isSameDay, isToday } from "date-fns";
+import { format, addDays, isSameDay, isToday, isDate } from "date-fns";
 import {
   Calendar,
   Clock,
@@ -315,6 +315,12 @@ export default function BookingPage() {
     }
   };
 
+  const isDateInPast = (date: Date): boolean => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date <= today
+  }
+
   async function getAvailability() {
     setIsLoadingAvailability(true);
     setApiErrors((prev) => ({ ...prev, availability: undefined }));
@@ -327,7 +333,8 @@ export default function BookingPage() {
         const tmp = [];
         for (let i = 0; i < json.length; i++) {
           const [year, month, day] = json[i].date.split("-").map(Number);
-          tmp.push(new Date(year, month - 1, day));
+          const currDate = new Date(year, month - 1, day);
+          if(!isDateInPast(currDate)) tmp.push(currDate);
         }
         setAvailableDays(tmp);
       } else {

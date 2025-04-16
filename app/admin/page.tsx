@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useContext } from "react";
-import Cookies from "js-cookie";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState, useEffect, useContext } from "react"
+import Cookies from "js-cookie"
+import { format } from "date-fns"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Calendar } from "@/components/ui/calendar"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Link from "next/link"
 import {
   CalendarIcon,
   Globe,
@@ -43,13 +43,11 @@ import {
   Edit,
   Mail,
   User,
-} from "lucide-react";
-import Login from "./login";
-import { LanguageContext } from "@/contexts/language-context";
-import { translations } from "@/translations";
-import type { Language } from "@/translations";
-
-import { translateDateToSpanish } from "@/lib/utils";
+} from "lucide-react"
+import Login from "./login"
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
 
 interface Appointment {
   id: number
@@ -86,7 +84,7 @@ export default function AdminDashboard() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [auth, setAuth] = useState(false)
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   // State for availability management
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
@@ -123,6 +121,9 @@ export default function AdminDashboard() {
   const [tempAdminEmail, setTempAdminEmail] = useState("admin@cleaningservice.com")
   const [isEditingAdminEmail, setIsEditingAdminEmail] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  // Add a new state to track the current month displayed in the calendar
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(new Date())
 
   function areDatesOnSameDay(date1: Date, date2: Date): boolean {
     return (
@@ -175,33 +176,33 @@ export default function AdminDashboard() {
     authenticate()
   }, [])
 
-    async function getAppointments() {
-      try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
-        const token = Cookies.get("token")
-        const options = {
-          method: "GET",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        }
-        const response = await fetch(url, options)
-        if (response.ok) {
-          const appointments = await response.json();
-          for(let i = 0; i < appointments.length; i++) {
-            const appointmentDate = new Date(appointments[i].appointmentDate);
-            if (appointmentDate < new Date()) {
-              appointments[i].status = "completed";
-            }
-          }
-          setAllAppointments(appointments);
-        }
-      } catch (err) {
-        console.log(err)
+  async function getAppointments() {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
+      const token = Cookies.get("token")
+      const options = {
+        method: "GET",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       }
+      const response = await fetch(url, options)
+      if (response.ok) {
+        const appointments = await response.json()
+        for (let i = 0; i < appointments.length; i++) {
+          const appointmentDate = new Date(appointments[i].appointmentDate)
+          if (appointmentDate < new Date()) {
+            appointments[i].status = "completed"
+          }
+        }
+        setAllAppointments(appointments)
+      }
+    } catch (err) {
+      console.log(err)
     }
+  }
 
   useEffect(() => {
     if (auth) getAppointments()
-  }, [auth, getAppointments])
+  }, [auth])
 
   useEffect(() => {
     async function adminDetails() {
@@ -387,7 +388,8 @@ export default function AdminDashboard() {
       const curr: any = response[i]
       first[curr.date] = { morning: curr.morning, afternoon: curr.afternoon, night: curr.night }
       const [year, month, day] = curr.date.split("-").map(Number)
-      second.push(new Date(year, month - 1, day))
+      const currDate = new Date(year, month - 1, day)
+      if (!isDateInPast(currDate)) second.push(currDate)
     }
     setTimeSlots(first)
     setSelectedDates(second)
@@ -456,11 +458,63 @@ export default function AdminDashboard() {
     return format(date, "yyyy-MM-dd")
   }
 
-  // Add this function after the formatDateKey function to check if a date is in the past
   const isDateInPast = (date: Date): boolean => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return date < today
+    return date <= today
+  }
+
+  // Update the selectCurrentMonth function to use the tracked month instead of the current system month
+  const selectCurrentMonth = () => {
+    // Use the tracked calendar month instead of the current system month
+    const year = currentCalendarMonth.getFullYear()
+    const month = currentCalendarMonth.getMonth()
+
+    // Get the first and last day of the displayed month
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+
+    // Create array of all dates in the month
+    const datesInMonth = []
+    const currentDate = new Date(firstDay)
+
+    while (currentDate <= lastDay) {
+      // Only add dates that aren't in the past
+      if (!isDateInPast(currentDate)) {
+        datesInMonth.push(new Date(currentDate))
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    // Create a map of existing dates for quick lookup
+    const existingDatesMap = {}
+    selectedDates.forEach((date) => {
+      existingDatesMap[formatDateKey(date)] = true
+    })
+
+    // Filter out dates that are already selected
+    const newDatesToAdd = datesInMonth.filter((date) => {
+      const dateKey = formatDateKey(date)
+      return !existingDatesMap[dateKey]
+    })
+
+    // Merge existing dates with new dates
+    const updatedDates = [...selectedDates, ...newDatesToAdd]
+
+    // Update selected dates
+    setSelectedDates(updatedDates)
+
+    // Create time slots for newly added dates
+    const newTimeSlots = { ...timeSlots }
+    newDatesToAdd.forEach((date) => {
+      const dateKey = formatDateKey(date)
+      if (!newTimeSlots[dateKey]) {
+        newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true }
+      }
+    })
+
+    setTimeSlots(newTimeSlots)
+
   }
 
   // Update the handleDateSelect function to prevent selecting past dates
@@ -548,9 +602,9 @@ export default function AdminDashboard() {
   }
 
   async function cancelAppointment(appointment: Appointment) {
-    setLoading(true);
+    setLoading(true)
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`
       const token = Cookies.get("token")
       const options = {
         method: "POST",
@@ -563,7 +617,7 @@ export default function AdminDashboard() {
       const response = await fetch(url, options)
       setIsEditDialogOpen(false)
       if (response.ok) {
-        await getAppointments();
+        await getAppointments()
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
@@ -581,7 +635,7 @@ export default function AdminDashboard() {
         setErrorMessage(null)
       }, 5000)
     }
-    setLoading(false);
+    setLoading(false)
   }
 
   return (
@@ -832,45 +886,48 @@ export default function AdminDashboard() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {upcomingAppointments.slice(0, 5).filter((appointment) => appointment.status !== "canceled").map((appointment) => (
-                              <TableRow key={appointment.id}>
-                                <TableCell className="font-medium">{appointment.bookingId}</TableCell>
-                                <TableCell className="font-medium">{appointment.clientName}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
-                                    <span className="text-sm text-muted-foreground">{appointment.time}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{matchService(appointment.service)}</TableCell>
+                            {upcomingAppointments
+                              .slice(0, 5)
+                              .filter((appointment) => appointment.status !== "canceled")
+                              .map((appointment) => (
+                                <TableRow key={appointment.id}>
+                                  <TableCell className="font-medium">{appointment.bookingId}</TableCell>
+                                  <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-col">
+                                      <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
+                                      <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{matchService(appointment.service)}</TableCell>
 
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm">{getStatusBadge(appointment.status)}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm">{appointment.email}</span>
-                                    <span className="text-sm text-muted-foreground">{appointment.phone}</span>
-                                  </div>
-                                </TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm">{getStatusBadge(appointment.status)}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm">{appointment.email}</span>
+                                      <span className="text-sm text-muted-foreground">{appointment.phone}</span>
+                                    </div>
+                                  </TableCell>
 
-                                <TableCell className="text-right">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedAppointment(appointment)
-                                      setIsEditDialogOpen(true)
-                                    }}
-                                    className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                                  >
-                                    {t["button.view_details"]}
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedAppointment(appointment)
+                                        setIsEditDialogOpen(true)
+                                      }}
+                                      className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                    >
+                                      {t["button.view_details"]}
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
                           </TableBody>
                         </Table>
                       </div>
@@ -1006,7 +1063,6 @@ export default function AdminDashboard() {
                 </Card>
               </TabsContent>
 
-
               {/* Availability Management Tab - Consolidated Version */}
               <TabsContent value="availability">
                 <Card className="border-blue-100 hover:shadow-md transition-shadow">
@@ -1046,24 +1102,17 @@ export default function AdminDashboard() {
                                 <CalendarIcon className="h-5 w-5 text-blue-600" />
                                 <span>{t["availability.select_dates"]}</span>
                               </h3>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                                onClick={() => setCalendarView(!calendarView)}
-                              >
-                                {calendarView ? (
-                                  <>
-                                    <ChevronLeft className="h-4 w-4 mr-1" />
-                                    <span>Hide</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CalendarIcon className="h-4 w-4 mr-1" />
-                                    <span>Show</span>
-                                  </>
-                                )}
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-green-200 hover:bg-green-50 hover:text-green-600"
+                                  onClick={selectCurrentMonth}
+                                >
+                                  <CalendarIcon className="h-4 w-4 mr-1" />
+                                  <span>Select Current Month</span>
+                                </Button>
+                              </div>
                             </div>
 
                             {calendarView && (
@@ -1110,6 +1159,8 @@ export default function AdminDashboard() {
                                     handleDateSelect(value)
                                   }
                                 }}
+                                onMonthChange={setCurrentCalendarMonth}
+                                defaultMonth={currentCalendarMonth}
                                 disabled={isDateInPast}
                                 className="rounded-md"
                                 modifiersClassNames={{
@@ -1748,11 +1799,21 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="clientName">{t["dialog.appointment.label.client_name"]}</Label>
-                        <Input disabled className="font-bold"id="clientName" defaultValue={selectedAppointment.clientName} />
+                        <Input
+                          disabled
+                          className="font-bold"
+                          id="clientName"
+                          defaultValue={selectedAppointment.clientName}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="service">{t["dialog.appointment.label.service"]}</Label>
-                        <Input disabled className="font-bold" id="service" defaultValue={matchService(selectedAppointment.service)} />
+                        <Input
+                          disabled
+                          className="font-bold"
+                          id="service"
+                          defaultValue={matchService(selectedAppointment.service)}
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -1762,7 +1823,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">{t["dialog.appointment.label.phone"]}</Label>
-                        <Input disabled className="font-bold"id="phone" defaultValue={selectedAppointment.phone} />
+                        <Input disabled className="font-bold" id="phone" defaultValue={selectedAppointment.phone} />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -1787,11 +1848,11 @@ export default function AdminDashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="time">{t["dialog.appointment.label.status"]}</Label>
-                      <Input disabled className="font-bold"id="time" defaultValue={selectedAppointment.status} />
+                      <Input disabled className="font-bold" id="time" defaultValue={selectedAppointment.status} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="notes">{t["dialog.appointment.label.notes"]}</Label>
-                      <Textarea disabled className="font-bold"id="notes" defaultValue={selectedAppointment.notes} />
+                      <Textarea disabled className="font-bold" id="notes" defaultValue={selectedAppointment.notes} />
                     </div>
                   </div>
                 )}
