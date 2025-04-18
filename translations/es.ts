@@ -196,6 +196,10 @@ export const es = {
   "label.service": "Servicio",
   "label.customer": "Cliente",
   "label.total_price": "Precio Total:",
+  "label.sales_tax": "Impuesto sobre las ventas:",
+  "label.base_price": "Precio base:",
+  "label.price_breakdown": "Desglose de precios",
+  "label.includes_tax": "Impuesto incluido",
   "loading.service_options": "Cargando opciones de servicio...",
   "label.processing_payment": "Procesando pago...",
   "payment.note_heading": "Nota",
@@ -249,6 +253,12 @@ export const es = {
 
 
   "admin.dashboard.title": "Panel de Administración",
+
+  "admin.dashboard.gross":        "Ingresos Brutos",
+  "admin.dashboard.profit":       "Beneficio",
+  "admin.dashboard.sales_tax":    "Impuesto sobre Ventas",
+  "admin.dashboard.paypal_fees":  "Tarifa de PayPal",
+
   "admin.dashboard.back_to_home": "Volver a la Página Principal",
   "tabs.overview": "Resumen",
   "tabs.all_appointments": "Todas las Citas",

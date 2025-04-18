@@ -43,6 +43,7 @@ import {
   Edit,
   Mail,
   User,
+  Landmark,
 } from "lucide-react"
 import Login from "./login"
 import { LanguageContext } from "@/contexts/language-context"
@@ -92,7 +93,15 @@ export default function AdminDashboard() {
   const [selectedDateForTimeSlot, setSelectedDateForTimeSlot] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [calendarView, setCalendarView] = useState<boolean>(true)
+  //const [calendarView, setCalendarView] = useState<boolean>(true)
+
+  // State for financial metrics
+  const [financialMetrics, setFinancialMetrics] = useState({
+    profit: 0,
+    grossRevenue: 0,
+    salesTax: 0,
+    paypalFees: 0,
+  })
 
   const { language, setLanguage } = useContext(LanguageContext)
   const t = translations[language as Language]
@@ -201,8 +210,34 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (auth) getAppointments()
+    if (auth) {
+      getAppointments()
+      getRevenueDetails()
+    }
   }, [auth])
+
+  async function getRevenueDetails() {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/paypal-info`
+      const token = Cookies.get("token")
+      const options = {
+        method: "GET",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      }
+      const response = await fetch(url, options)
+      if (response.ok) {
+        const details = await response.json()
+        setFinancialMetrics({
+          profit: details.profit || 0,
+          grossRevenue: details.gross || 0,
+          salesTax: details.salesTax || 0,
+          paypalFees: details.paypalFee || 0,
+        })
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   useEffect(() => {
     async function adminDetails() {
@@ -514,7 +549,6 @@ export default function AdminDashboard() {
     })
 
     setTimeSlots(newTimeSlots)
-
   }
 
   // Update the handleDateSelect function to prevent selecting past dates
@@ -617,7 +651,8 @@ export default function AdminDashboard() {
       const response = await fetch(url, options)
       setIsEditDialogOpen(false)
       if (response.ok) {
-        await getAppointments()
+        await getAppointments();
+        await getRevenueDetails();
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
@@ -759,6 +794,61 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-red-600">{searchForCount("canceled")}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Financial Metrics Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-6">
+                  <Card className="border-green-100 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <div className="inline-flex items-center justify-center p-2 bg-green-100 rounded-full mb-2">
+                        <Landmark className="h-5 w-5 text-green-600" />
+                      </div>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.gross"]}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                        ${financialMetrics.grossRevenue.toFixed(2)}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-emerald-100 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <div className="inline-flex items-center justify-center p-2 bg-emerald-100 rounded-full mb-2">
+                        <Sparkles className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.profit"]}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-emerald-600">${financialMetrics.profit.toFixed(2)}</div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-amber-100 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <div className="inline-flex items-center justify-center p-2 bg-amber-100 rounded-full mb-2">
+                        <Landmark className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.sales_tax"]}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-amber-600">${financialMetrics.salesTax.toFixed(2)}</div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-purple-100 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
+                        <Landmark className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.paypal_fees"]}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                        ${financialMetrics.paypalFees.toFixed(2)}
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1115,59 +1205,57 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            {calendarView && (
-                              <Calendar
-                                mode="multiple"
-                                selected={selectedDates}
-                                onSelect={(value) => {
-                                  if (Array.isArray(value)) {
-                                    // Filter out past dates from the selection
-                                    const filteredDates = value.filter((date) => !isDateInPast(date))
+                            <Calendar
+                              mode="multiple"
+                              selected={selectedDates}
+                              onSelect={(value) => {
+                                if (Array.isArray(value)) {
+                                  // Filter out past dates from the selection
+                                  const filteredDates = value.filter((date) => !isDateInPast(date))
 
-                                    // Show error if user tried to select past dates
-                                    if (filteredDates.length < value.length) {
-                                      setErrorMessage(
-                                        "Cannot select dates in the past. Only current and future dates are allowed.",
-                                      )
-                                      setTimeout(() => {
-                                        setErrorMessage(null)
-                                      }, 5000)
-                                    }
-
-                                    setSelectedDates(filteredDates)
-
-                                    // Update time slots
-                                    const newTimeSlots = { ...timeSlots }
-
-                                    // Remove time slots for dates that are no longer selected
-                                    Object.keys(newTimeSlots).forEach((dateKey) => {
-                                      if (!filteredDates.some((date) => formatDateKey(date) === dateKey)) {
-                                        delete newTimeSlots[dateKey]
-                                      }
-                                    })
-
-                                    // Add default time slots for newly selected dates
-                                    filteredDates.forEach((date) => {
-                                      const dateKey = formatDateKey(date)
-                                      if (!newTimeSlots[dateKey]) {
-                                        newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true }
-                                      }
-                                    })
-
-                                    setTimeSlots(newTimeSlots)
-                                  } else {
-                                    handleDateSelect(value)
+                                  // Show error if user tried to select past dates
+                                  if (filteredDates.length < value.length) {
+                                    setErrorMessage(
+                                      "Cannot select dates in the past. Only current and future dates are allowed.",
+                                    )
+                                    setTimeout(() => {
+                                      setErrorMessage(null)
+                                    }, 5000)
                                   }
-                                }}
-                                onMonthChange={setCurrentCalendarMonth}
-                                defaultMonth={currentCalendarMonth}
-                                disabled={isDateInPast}
-                                className="rounded-md"
-                                modifiersClassNames={{
-                                  selected: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white",
-                                }}
-                              />
-                            )}
+
+                                  setSelectedDates(filteredDates)
+
+                                  // Update time slots
+                                  const newTimeSlots = { ...timeSlots }
+
+                                  // Remove time slots for dates that are no longer selected
+                                  Object.keys(newTimeSlots).forEach((dateKey) => {
+                                    if (!filteredDates.some((date) => formatDateKey(date) === dateKey)) {
+                                      delete newTimeSlots[dateKey]
+                                    }
+                                  })
+
+                                  // Add default time slots for newly selected dates
+                                  filteredDates.forEach((date) => {
+                                    const dateKey = formatDateKey(date)
+                                    if (!newTimeSlots[dateKey]) {
+                                      newTimeSlots[dateKey] = { morning: true, afternoon: true, night: true }
+                                    }
+                                  })
+
+                                  setTimeSlots(newTimeSlots)
+                                } else {
+                                  handleDateSelect(value)
+                                }
+                              }}
+                              onMonthChange={setCurrentCalendarMonth}
+                              defaultMonth={currentCalendarMonth}
+                              disabled={isDateInPast}
+                              className="rounded-md"
+                              modifiersClassNames={{
+                                selected: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white",
+                              }}
+                            />
                           </div>
                         </div>
 

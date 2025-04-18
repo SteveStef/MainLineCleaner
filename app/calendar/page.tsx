@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
 
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { useState, useEffect, useContext } from "react";
-import { format, addDays, isSameDay, isToday, isDate } from "date-fns";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
+import { useState, useEffect, useContext } from "react"
+import { format, addDays, isSameDay, isToday } from "date-fns"
 import {
   Calendar,
   Clock,
@@ -29,59 +29,58 @@ import {
   CreditCard,
   Info,
   Loader2,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import Header from "../Header";
-import Footer from "../Footer";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
+import Header from "../Header"
+import Footer from "../Footer"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useToast } from "@/hooks/use-toast"
 
 // Note: The original timeSlotNames mapping has been moved
 // so that it can use the translation hook inside the component.
 
 interface FormErrors {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  address?: string
 }
 
 function generateRequestId() {
-  let result = "";
+  let result = ""
   for (let i = 0; i < 12; i++) {
-    const randomByte = Math.floor(Math.random() * 256);
-    result += ("0" + randomByte.toString(16)).slice(-2);
+    const randomByte = Math.floor(Math.random() * 256)
+    result += ("0" + randomByte.toString(16)).slice(-2)
   }
-  return result;
+  return result
 }
 
 export default function BookingPage() {
-
   const { language } = useContext(LanguageContext)
   const t = translations[language as Language]
-  const { toast } = useToast();
+  const { toast } = useToast()
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 5
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | undefined>(undefined);
-  const [selectedService, setSelectedService] = useState<string | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | undefined>(undefined)
+  const [selectedService, setSelectedService] = useState<string | undefined>(undefined)
 
-  const [availableDays, setAvailableDays] = useState<any>([]);
-  const [timeSlots, setTimeSlots] = useState<any>([]);
-  const [availability, setAvailability] = useState<any>([]);
-  const [paymentError, setPaymentError] = useState<string>("");
+  const [availableDays, setAvailableDays] = useState<any>([])
+  const [timeSlots, setTimeSlots] = useState<any>([])
+  const [availability, setAvailability] = useState<any>([])
+  const [paymentError, setPaymentError] = useState<string>("")
 
- // Service types using translation keys in their values.
+  // Service types using translation keys in their values.
   const [serviceTypes, setServiceTypes] = useState<any>([
     {
       id: "regular",
@@ -124,9 +123,9 @@ export default function BookingPage() {
         "feature.move.feature5",
       ],
     },
-  ]);
+  ])
 
-  const [bookingId, setBookingId] = useState<string>("");
+  const [bookingId, setBookingId] = useState<string>("")
   const [userInfo, setUserInfo] = useState({
     firstName: "",
     lastName: "",
@@ -134,135 +133,135 @@ export default function BookingPage() {
     phone: "",
     address: "",
     notes: "",
-  });
+  })
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [requestId, setRequestId] = useState(generateRequestId());
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [requestId, setRequestId] = useState(generateRequestId())
 
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
-  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [isLoadingPrices, setIsLoadingPrices] = useState(false)
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [apiErrors, setApiErrors] = useState<{
-    prices?: string;
-    availability?: string;
-    payment?: string;
-    general?: string;
-  }>({});
+    prices?: string
+    availability?: string
+    payment?: string
+    general?: string
+  }>({})
 
   // Create localized time slot names using bracket-notation.
   const localizedTimeSlotNames: { [key: string]: string } = {
     morning: t["timeslot.morning"],
     afternoon: t["timeslot.afternoon"],
     night: t["timeslot.night"],
-  };
+  }
 
   const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    const year = date.getFullYear().toString();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    const key = `${year}-${month}-${day}`;
+    setSelectedDate(date)
+    const year = date.getFullYear().toString()
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const day = date.getDate().toString().padStart(2, "0")
+    const key = `${year}-${month}-${day}`
     for (let i = 0; i < availability.length; i++) {
       if (availability[i].date === key) {
-        const tmp: any = [];
-        if (availability[i].morning) tmp.push(localizedTimeSlotNames.morning);
-        if (availability[i].afternoon) tmp.push(localizedTimeSlotNames.afternoon);
-        if (availability[i].night) tmp.push(localizedTimeSlotNames.night);
-        setTimeSlots(tmp);
-        break;
+        const tmp: any = []
+        if (availability[i].morning) tmp.push(localizedTimeSlotNames.morning)
+        if (availability[i].afternoon) tmp.push(localizedTimeSlotNames.afternoon)
+        if (availability[i].night) tmp.push(localizedTimeSlotNames.night)
+        setTimeSlots(tmp)
+        break
       }
     }
-  };
+  }
 
   async function getServicePrices() {
-    setIsLoadingPrices(true);
-    setApiErrors((prev) => ({ ...prev, prices: undefined }));
+    setIsLoadingPrices(true)
+    setApiErrors((prev) => ({ ...prev, prices: undefined }))
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`;
-      const response = await fetch(url);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
+      const response = await fetch(url)
       if (response.ok) {
-        const details: any = await response.json();
-        const tmp = [...serviceTypes];
-        tmp[0].price = "$" + details.regularPrice;
-        tmp[1].price = "$" + details.deepCleanPrice;
-        tmp[2].price = "$" + details.moveInOutPrice;
-        setServiceTypes(tmp);
+        const details: any = await response.json()
+        const tmp = [...serviceTypes]
+        tmp[0].price = details.regularPrice
+        tmp[1].price = details.deepCleanPrice
+        tmp[2].price = details.moveInOutPrice
+        setServiceTypes(tmp)
       } else {
-        setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }));
+        setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }))
         toast({
           title: t["toast.error_loading_prices_title"],
           description: t["toast.error_loading_prices_description"],
           variant: "destructive",
-        });
+        })
       }
     } catch (err) {
-      console.error(err);
-      setApiErrors((prev) => ({ ...prev, prices: t["toast.connection_error_description"] }));
+      console.error(err)
+      setApiErrors((prev) => ({ ...prev, prices: t["toast.connection_error_description"] }))
       toast({
         title: t["toast.connection_error_title"],
         description: t["toast.connection_error_description"],
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsLoadingPrices(false);
+      setIsLoadingPrices(false)
     }
   }
 
   const isDateAvailable = (date: Date) => {
-    return availableDays.some((availableDate) => isSameDay(date, availableDate));
-  };
+    return availableDays.some((availableDate) => isSameDay(date, availableDate))
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setUserInfo((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setUserInfo((prev) => ({ ...prev, [name]: value }))
+  }
 
   // Validate user info using t for error messages.
   const validateUserInfo = () => {
-    const newErrors: FormErrors = {};
-    if (!userInfo.firstName.trim()) newErrors.firstName = t["error.first_name_required"];
-    if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"];
+    const newErrors: FormErrors = {}
+    if (!userInfo.firstName.trim()) newErrors.firstName = t["error.first_name_required"]
+    if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"]
     if (!userInfo.email.trim()) {
-      newErrors.email = t["error.email_required"];
+      newErrors.email = t["error.email_required"]
     } else if (!/\S+@\S+\.\S+/.test(userInfo.email)) {
-      newErrors.email = t["error.email_invalid"];
+      newErrors.email = t["error.email_invalid"]
     }
     if (!userInfo.phone.trim()) {
-      newErrors.phone = t["error.phone_required"];
+      newErrors.phone = t["error.phone_required"]
     } else if (!/^\d{10,}$/.test(userInfo.phone.replace(/\D/g, ""))) {
-      newErrors.phone = t["error.phone_invalid"];
+      newErrors.phone = t["error.phone_invalid"]
     }
-    if (!userInfo.address.trim()) newErrors.address = t["error.address_required"];
-    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors };
-  };
+    if (!userInfo.address.trim()) newErrors.address = t["error.address_required"]
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors }
+  }
 
   const handleNextStep = () => {
     if (currentStep === 3) {
-      const { isValid, errors: newErrors } = validateUserInfo();
-      setErrors(newErrors);
-      if (!isValid) return;
+      const { isValid, errors: newErrors } = validateUserInfo()
+      setErrors(newErrors)
+      if (!isValid) return
     }
     if (currentStep < totalSteps) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep((prev) => prev + 1)
     }
-  };
+  }
 
   const handlePreviousStep = () => {
     if (currentStep === 2) {
-      setSelectedTimeSlot(undefined);
+      setSelectedTimeSlot(undefined)
     }
     if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep((prev) => prev - 1)
     }
-  };
+  }
 
   const handleSubmit = async (orderId: string) => {
-    setIsSubmitting(true);
-    setPaymentError("");
-    setApiErrors((prev) => ({ ...prev, payment: undefined }));
+    setIsSubmitting(true)
+    setPaymentError("")
+    setApiErrors((prev) => ({ ...prev, payment: undefined }))
 
     try {
       const body = {
@@ -275,45 +274,45 @@ export default function BookingPage() {
         service: selectedService,
         notes: userInfo.notes,
         appointmentDate: selectedDate,
-      };
-      const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`;
-      const options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+      }
+      const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
+      const options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
 
-      const response: any = await fetch(url, options);
+      const response: any = await fetch(url, options)
       if (response.ok) {
-        const data = await response.json();
-        setBookingId(data.bookingId);
-        setIsSubmitted(true);
-        setRequestId(generateRequestId());
+        const data = await response.json()
+        setBookingId(data.bookingId)
+        setIsSubmitted(true)
+        setRequestId(generateRequestId())
         toast({
           title: t["booking.confirmed"],
           // Manually interpolate email in the confirmation string.
           description: t["booking.confirmation_email"].replace("{email}", userInfo.email),
-        });
+        })
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || t["toast.payment_failed_description"];
-        setPaymentError(errorMessage);
-        setApiErrors((prev) => ({ ...prev, payment: errorMessage }));
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.message || t["toast.payment_failed_description"]
+        setPaymentError(errorMessage)
+        setApiErrors((prev) => ({ ...prev, payment: errorMessage }))
         toast({
           title: t["toast.payment_failed_title"],
           description: errorMessage,
           variant: "destructive",
-        });
+        })
       }
     } catch (err) {
-      console.error(err);
-      setPaymentError(t["toast.connection_error_description"]);
-      setApiErrors((prev) => ({ ...prev, payment: t["toast.connection_error_description"] }));
+      console.error(err)
+      setPaymentError(t["toast.connection_error_description"])
+      setApiErrors((prev) => ({ ...prev, payment: t["toast.connection_error_description"] }))
       toast({
         title: t["toast.connection_error_title"],
         description: t["toast.connection_error_description"],
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const isDateInPast = (date: Date): boolean => {
     const today = new Date()
@@ -322,62 +321,62 @@ export default function BookingPage() {
   }
 
   async function getAvailability() {
-    setIsLoadingAvailability(true);
-    setApiErrors((prev) => ({ ...prev, availability: undefined }));
+    setIsLoadingAvailability(true)
+    setApiErrors((prev) => ({ ...prev, availability: undefined }))
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`;
-      const response = await fetch(url);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
+      const response = await fetch(url)
       if (response.ok) {
-        const json = await response.json();
-        setAvailability(json);
-        const tmp = [];
+        const json = await response.json()
+        setAvailability(json)
+        const tmp = []
         for (let i = 0; i < json.length; i++) {
-          const [year, month, day] = json[i].date.split("-").map(Number);
-          const currDate = new Date(year, month - 1, day);
-          if(!isDateInPast(currDate)) tmp.push(currDate);
+          const [year, month, day] = json[i].date.split("-").map(Number)
+          const currDate = new Date(year, month - 1, day)
+          if (!isDateInPast(currDate)) tmp.push(currDate)
         }
-        setAvailableDays(tmp);
+        setAvailableDays(tmp)
       } else {
         setApiErrors((prev) => ({
           ...prev,
           availability: t["toast.error_loading_prices_description"],
-        }));
+        }))
         toast({
           title: t["toast.error_loading_prices_title"],
           description: t["toast.error_loading_prices_description"],
           variant: "destructive",
-        });
+        })
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
       setApiErrors((prev) => ({
         ...prev,
         availability: t["toast.connection_error_description"],
-      }));
+      }))
       toast({
         title: t["toast.connection_error_title"],
         description: t["toast.connection_error_description"],
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsLoadingAvailability(false);
+      setIsLoadingAvailability(false)
     }
   }
 
   useEffect(() => {
-    getAvailability();
-  }, []);
+    getAvailability()
+  }, [])
 
   useEffect(() => {
-    getServicePrices();
-  }, []);
+    getServicePrices()
+  }, [])
 
   const isStepComplete = () => {
     switch (currentStep) {
       case 1:
-        return !!selectedDate;
+        return !!selectedDate
       case 2:
-        return !!selectedTimeSlot;
+        return !!selectedTimeSlot
       case 3:
         return (
           !!userInfo.firstName.trim() &&
@@ -385,17 +384,17 @@ export default function BookingPage() {
           !!userInfo.email.trim() &&
           !!userInfo.phone.trim() &&
           !!userInfo.address.trim()
-        );
+        )
       case 4:
-        return !!selectedService;
+        return !!selectedService
       default:
-        return true;
+        return true
     }
-  };
+  }
 
   const getServiceById = (id: string) => {
-    return serviceTypes.find((service) => service.id === id);
-  };
+    return serviceTypes.find((service) => service.id === id)
+  }
 
   const getStepTitle = () => {
     switch (currentStep) {
@@ -405,107 +404,124 @@ export default function BookingPage() {
             <Calendar className="h-5 w-5 text-blue-600" />
             {t["step_title.date"]}
           </>
-        );
+        )
       case 2:
         return (
           <>
             <Clock className="h-5 w-5 text-blue-600" />
             {t["step_title.time_slot"]}
           </>
-        );
+        )
       case 3:
         return (
           <>
             <User className="h-5 w-5 text-blue-600" />
             {t["step_title.user_information"]}
           </>
-        );
+        )
       case 4:
         return (
           <>
             <Sparkles className="h-5 w-5 text-blue-600" />
             {t["step_title.service_type"]}
           </>
-        );
+        )
       case 5:
         return (
           <>
             <CreditCard className="h-5 w-5 text-blue-600" />
             {t["step_title.payment"]}
           </>
-        );
+        )
       default:
-        return t["booking.confirmed"];
+        return t["booking.confirmed"]
     }
-  };
+  }
 
   const createPayPalOrder = async () => {
-    setIsProcessingPayment(true);
-    setApiErrors((prev) => ({ ...prev, payment: undefined }));
+    setIsProcessingPayment(true)
+    setApiErrors((prev) => ({ ...prev, payment: undefined }))
     try {
       const options = {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({}),
-      };
+      }
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/paypal/createOrder?serviceType=${selectedService}`,
-        options
-      );
+        options,
+      )
       if (response.ok) {
-        const orderId = await response.text();
-        return orderId;
+        const orderId = await response.text()
+        return orderId
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || t["toast.payment_initialization_failed_description"];
-        setApiErrors((prev) => ({ ...prev, payment: errorMessage }));
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.message || t["toast.payment_initialization_failed_description"]
+        setApiErrors((prev) => ({ ...prev, payment: errorMessage }))
         toast({
           title: t["toast.payment_initialization_failed_title"],
           description: errorMessage,
           variant: "destructive",
-        });
-        return "";
+        })
+        return ""
       }
     } catch (err) {
-      console.error(err);
-      setApiErrors((prev) => ({ ...prev, payment: t["toast.connection_error_description"] }));
+      console.error(err)
+      setApiErrors((prev) => ({ ...prev, payment: t["toast.connection_error_description"] }))
       toast({
         title: t["toast.connection_error_title"],
         description: t["toast.connection_error_description"],
         variant: "destructive",
-      });
-      return "";
+      })
+      return ""
     } finally {
-      setIsProcessingPayment(false);
+      setIsProcessingPayment(false)
     }
-  };
+  }
 
   const handlePayPalApproval = async (data: any) => {
-    setIsProcessingPayment(true);
+    setIsProcessingPayment(true)
     try {
-      await handleSubmit(data.orderID);
+      await handleSubmit(data.orderID)
     } catch (err) {
-      console.error(err);
-      setApiErrors((prev) => ({ ...prev, payment: t["toast.payment_processing_error_description"] }));
+      console.error(err)
+      setApiErrors((prev) => ({ ...prev, payment: t["toast.payment_processing_error_description"] }))
       toast({
         title: t["toast.payment_processing_error_title"],
         description: t["toast.payment_processing_error_description"],
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsProcessingPayment(false);
+      setIsProcessingPayment(false)
     }
-  };
+  }
 
   const renderErrorAlert = (error: string | undefined, title: string) => {
-    if (!error) return null;
+    if (!error) return null
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertTitle>{title}</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
-    );
-  };
+    )
+  }
+
+  function getSalesTax(service: any) {
+    const serv = getServiceById(service)
+    return 0.06 * Number.parseFloat(serv.price)
+  }
+
+  function getTotalAmount(service: string) {
+    const serv = getServiceById(service)
+    return (Number.parseFloat(serv.price) + getSalesTax(service)).toFixed(2)
+  }
+
+  function calculateSavings(service: string) {
+    // This is a placeholder - you would replace with actual logic based on your pricing model
+    const basePrice = Number.parseFloat(getServiceById(service)?.price || "0")
+    // For example, if regular price is 10% higher
+    return (basePrice * 0.1).toFixed(2)
+  }
 
   const renderBookingSummary = () => {
     return (
@@ -550,13 +566,18 @@ export default function BookingPage() {
                   <div className="bg-blue-100 p-2 rounded-full">
                     <Sparkles className="h-5 w-5 text-blue-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-muted-foreground">{t["label.service"]}</p>
-                    <p className="font-medium">{t[getServiceById(selectedService)?.name]}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium">{t[getServiceById(selectedService)?.name]}</p>
+                      <span className="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                        ${getServiceById(selectedService)?.price}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm text-muted-foreground">{getServiceById(selectedService)?.duration}</span>
-                      <span className="text-sm font-medium text-blue-700">
-                        {getServiceById(selectedService)?.price}
+                      <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded-full flex items-center">
+                        <Clock className="h-3 w-3 mr-1 text-gray-500" />
+                        {getServiceById(selectedService)?.duration}
                       </span>
                     </div>
                   </div>
@@ -574,9 +595,7 @@ export default function BookingPage() {
                       {userInfo.firstName} {userInfo.lastName}
                     </p>
                     {userInfo.address && (
-                      <p className="text-sm text-muted-foreground mt-1 truncate max-w-[200px]">
-                        {userInfo.address}
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1 truncate max-w-[200px]">{userInfo.address}</p>
                     )}
                   </div>
                 </div>
@@ -591,9 +610,42 @@ export default function BookingPage() {
 
           {selectedService && selectedDate && selectedTimeSlot && (
             <div className="mt-6 pt-4 border-t border-blue-200">
-              <div className="flex justify-between items-center font-medium">
-                <span>{t["label.total_price"]}</span>
-                <span className="text-lg text-blue-700">{getServiceById(selectedService)?.price}</span>
+              <h4 className="font-medium text-blue-800 mb-3 flex items-center">
+                <CreditCard className="h-4 w-4 mr-2" />
+                {t["label.price_breakdown"]}
+              </h4>
+
+              <div className="space-y-3 bg-white rounded-lg p-3 border border-blue-100 shadow-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
+                    {t["label.base_price"]}
+                  </span>
+                  <span className="font-medium">${getServiceById(selectedService)?.price}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
+                    {t["label.sales_tax"]} (6%)
+                  </span>
+                  <span className="font-medium">${getSalesTax(selectedService).toFixed(2)}</span>
+                </div>
+
+                <div className="h-px bg-blue-100 my-2"></div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-blue-900">{t["label.total_price"]}</span>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xl font-bold text-blue-700">${getTotalAmount(selectedService)}</span>
+                    <span className="text-xs text-green-600">{t["label.includes_tax"]}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-center gap-2 bg-blue-50 p-2 rounded-md">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                <span className="text-xs text-blue-700 font-medium">{t["label.best_value"]}</span>
               </div>
             </div>
           )}
@@ -635,8 +687,8 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -651,9 +703,7 @@ export default function BookingPage() {
                 <Sparkles className="h-6 w-6 text-blue-600" />
               </div>
             </h1>
-            <p className="max-w-[800px] text-muted-foreground md:text-xl">
-              {t["header.subtitle"]}
-            </p>
+            <p className="max-w-[800px] text-muted-foreground md:text-xl">{t["header.subtitle"]}</p>
           </div>
         </div>
 
@@ -668,8 +718,8 @@ export default function BookingPage() {
                     currentStep === step
                       ? "border-blue-600 bg-blue-100 text-blue-600"
                       : currentStep > step
-                      ? "border-green-600 bg-green-100 text-green-600"
-                      : "border-gray-300 bg-gray-100 text-gray-500"
+                        ? "border-green-600 bg-green-100 text-green-600"
+                        : "border-gray-300 bg-gray-100 text-gray-500",
                   )}
                 >
                   {currentStep > step ? <Check className="h-5 w-5" /> : step}
@@ -680,19 +730,19 @@ export default function BookingPage() {
                     currentStep === step
                       ? "text-blue-600 font-medium"
                       : currentStep > step
-                      ? "text-green-600"
-                      : "text-gray-500"
+                        ? "text-green-600"
+                        : "text-gray-500",
                   )}
                 >
                   {step === 1
                     ? t["step.date"]
                     : step === 2
-                    ? t["step.time"]
-                    : step === 3
-                    ? t["step.details"]
-                    : step === 4
-                    ? t["step.service"]
-                    : t["step.payment"]}
+                      ? t["step.time"]
+                      : step === 3
+                        ? t["step.details"]
+                        : step === 4
+                          ? t["step.service"]
+                          : t["step.payment"]}
                 </span>
               </div>
             ))}
@@ -783,7 +833,15 @@ export default function BookingPage() {
                           </div>
 
                           <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-3">
-                            {[t["weekday.sun"], t["weekday.mon"], t["weekday.tue"], t["weekday.wed"], t["weekday.thu"], t["weekday.fri"], t["weekday.sat"]].map((day, idx) => (
+                            {[
+                              t["weekday.sun"],
+                              t["weekday.mon"],
+                              t["weekday.tue"],
+                              t["weekday.wed"],
+                              t["weekday.thu"],
+                              t["weekday.fri"],
+                              t["weekday.sat"],
+                            ].map((day, idx) => (
                               <div key={idx} className="text-blue-700 py-2 text-base">
                                 {day}
                               </div>
@@ -792,22 +850,22 @@ export default function BookingPage() {
 
                           <div className="grid grid-cols-7 gap-2">
                             {Array.from({ length: 42 }).map((_, index) => {
-                              const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-                              const offset = firstDayOfMonth.getDay();
+                              const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+                              const offset = firstDayOfMonth.getDay()
                               const date = new Date(
                                 currentMonth.getFullYear(),
                                 currentMonth.getMonth(),
-                                index - offset + 1
-                              );
-                              const dayNumber = date.getDate();
-                              const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+                                index - offset + 1,
+                              )
+                              const dayNumber = date.getDate()
+                              const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
 
                               if (!isCurrentMonth) {
-                                return <div key={`empty-${index}`} className="h-12 w-full"></div>;
+                                return <div key={`empty-${index}`} className="h-12 w-full"></div>
                               }
 
-                              const isAvailable = isDateAvailable(date);
-                              const isSelected = selectedDate && isSameDay(date, selectedDate);
+                              const isAvailable = isDateAvailable(date)
+                              const isSelected = selectedDate && isSameDay(date, selectedDate)
 
                               return (
                                 <button
@@ -820,13 +878,13 @@ export default function BookingPage() {
                                     isAvailable
                                       ? "bg-green-100 hover:bg-green-200 text-green-800 hover:scale-105 shadow-sm"
                                       : "bg-gray-100 text-gray-400 cursor-not-allowed",
-                                    isSelected && "ring-2 ring-blue-500 bg-blue-100 text-blue-800"
+                                    isSelected && "ring-2 ring-blue-500 bg-blue-100 text-blue-800",
                                   )}
                                   disabled={!isAvailable}
                                 >
                                   {dayNumber}
                                 </button>
-                              );
+                              )
                             })}
                           </div>
 
@@ -850,7 +908,7 @@ export default function BookingPage() {
                       <p className="text-muted-foreground">
                         {t["step2.instructions"].replace(
                           "{date}",
-                          selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : ""
+                          selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
                         )}
                       </p>
 
@@ -866,7 +924,7 @@ export default function BookingPage() {
                               "flex items-center space-x-2 p-4 rounded-md border transition-all",
                               selectedTimeSlot === slot
                                 ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:border-blue-300"
+                                : "border-gray-200 hover:border-blue-300",
                             )}
                           >
                             <RadioGroupItem value={slot} id={slot} className="text-blue-600" />
@@ -1009,29 +1067,36 @@ export default function BookingPage() {
                               className={cn(
                                 "flex flex-col p-4 rounded-md border transition-all",
                                 selectedService === service.id
-                                  ? "border-blue-500 bg-blue-50"
-                                  : "border-gray-200 hover:border-blue-300"
+                                  ? "border-blue-500 bg-blue-50 shadow-md"
+                                  : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
                               )}
                             >
                               <div className="flex items-start">
                                 <RadioGroupItem value={service.id} id={service.id} className="text-blue-600 mt-1" />
                                 <div className="ml-2 flex-1">
-                                  <Label htmlFor={service.id} className="text-lg font-medium cursor-pointer">
-                                    {t[service.name]}
-                                  </Label>
+                                  <div className="flex justify-between items-start">
+                                    <Label htmlFor={service.id} className="text-lg font-medium cursor-pointer">
+                                      {t[service.name]}
+                                    </Label>
+                                    <div className="font-bold text-lg text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                      ${service.price}
+                                    </div>
+                                  </div>
                                   <p className="text-muted-foreground">{t[service.description]}</p>
 
                                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
                                       <Clock className="h-4 w-4 text-blue-500" />
                                       <span>{service.duration}</span>
                                     </div>
-                                    <div className="font-medium text-blue-700">{service.price}</div>
                                   </div>
 
-                                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {service.features.map((feature: string, index: number) => (
-                                      <div key={index} className="flex items-center gap-1 text-sm">
+                                      <div
+                                        key={index}
+                                        className="flex items-center gap-1.5 text-sm bg-gray-50 p-1.5 rounded-md"
+                                      >
                                         <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                                         <span>{t[feature]}</span>
                                       </div>
@@ -1073,19 +1138,19 @@ export default function BookingPage() {
                             <PayPalButtons
                               createOrder={createPayPalOrder}
                               onApprove={async (data, actions) => {
-                                await handlePayPalApproval(data);
+                                await handlePayPalApproval(data)
                               }}
                               onError={(err) => {
-                                console.error(err);
+                                console.error(err)
                                 setApiErrors((prev) => ({
                                   ...prev,
                                   payment: t["toast.payment_error_description"],
-                                }));
+                                }))
                                 toast({
                                   title: t["toast.payment_error_title"],
                                   description: t["toast.payment_error_description"],
                                   variant: "destructive",
-                                });
+                                })
                               }}
                               style={{ layout: "vertical" }}
                               disabled={isProcessingPayment || isSubmitting}
@@ -1151,7 +1216,9 @@ export default function BookingPage() {
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg border-b">
                   <CardTitle className="text-xl flex items-center gap-2">
                     <ClipboardList className="h-5 w-5 text-blue-600" />
-                    {t["booking_summary.heading"]}
+                    <span className="bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent">
+                      {t["booking_summary.heading"]}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">{renderBookingSummary()}</CardContent>
@@ -1171,27 +1238,21 @@ export default function BookingPage() {
                 <CheckCircle className="h-6 w-6 text-blue-600" />
               </div>
               <h3 className="font-medium mb-2">{t["why_choose.professional_service.heading"]}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t["why_choose.professional_service.description"]}
-              </p>
+              <p className="text-sm text-muted-foreground">{t["why_choose.professional_service.description"]}</p>
             </div>
             <div className="flex flex-col items-center text-center p-4 bg-cyan-50 rounded-lg">
               <div className="rounded-full bg-cyan-100 p-3 mb-3">
                 <Clock className="h-6 w-6 text-cyan-600" />
               </div>
               <h3 className="font-medium mb-2">{t["why_choose.flexible_scheduling.heading"]}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t["why_choose.flexible_scheduling.description"]}
-              </p>
+              <p className="text-sm text-muted-foreground">{t["why_choose.flexible_scheduling.description"]}</p>
             </div>
             <div className="flex flex-col items-center text-center p-4 bg-emerald-50 rounded-lg">
               <div className="rounded-full bg-emerald-100 p-3 mb-3">
                 <Award className="h-6 w-6 text-emerald-600" />
               </div>
               <h3 className="font-medium mb-2">{t["why_choose.satisfaction_guaranteed.heading"]}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t["why_choose.satisfaction_guaranteed.description"]}
-              </p>
+              <p className="text-sm text-muted-foreground">{t["why_choose.satisfaction_guaranteed.description"]}</p>
             </div>
           </div>
         </div>
@@ -1199,5 +1260,5 @@ export default function BookingPage() {
 
       <Footer />
     </div>
-  );
+  )
 }

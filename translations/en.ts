@@ -192,6 +192,10 @@ export const en = {
   "label.service": "Service",
   "label.customer": "Customer",
   "label.total_price": "Total Price:",
+  "label.sales_tax": "Sales Tax:",
+  "label.base_price": "Base Price:",
+  "label.price_breakdown": "Price Breakdown",
+  "label.includes_tax": "Tax Included",
   "loading.service_options": "Loading service options...",
   "label.processing_payment": "Processing payment...",
   "payment.note_heading": "Please Note",
@@ -244,6 +248,11 @@ export const en = {
 
 
   "admin.dashboard.title": "Admin Dashboard",
+  "admin.dashboard.gross": "Gross Revenue",
+  "admin.dashboard.profit": "Profit",
+  "admin.dashboard.sales_tax": "Sales Tax",
+  "admin.dashboard.paypal_fees": "PayPal Fees",
+
   "admin.dashboard.back_to_home": "Back to Homepage",
   "tabs.overview": "Overview",
   "tabs.all_appointments": "All Appointments",
