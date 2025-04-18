@@ -152,7 +152,7 @@ export default function AdminDashboard() {
     let count = 0
     for (let i = 0; i < allAppointments.length; i++) {
       const app: Appointment = allAppointments[i]
-      if (app.status === type) count++
+      if (app.status.toLowerCase() === type.toLowerCase()) count++
     }
 
     return count
@@ -765,7 +765,7 @@ export default function AdminDashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-blue-600">{searchForCount("Confirmed")}</div>
+                      <div className="text-2xl font-bold text-blue-600">{searchForCount("confirmed")}</div>
                     </CardContent>
                   </Card>
 
