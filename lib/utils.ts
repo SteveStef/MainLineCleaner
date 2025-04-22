@@ -5,59 +5,95 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-//Monday, April 5 2025
-export function translateDateToSpanish(dateString: string) {
-
-  const daysOfWeek = {
-    "Monday": "Lunes",
-    "Tuesday": "Martes",
-    "Wednesday": "Miércoles",
-    "Thursday": "Jueves",
-    "Friday": "Viernes",
-    "Saturday": "Sábado",
-    "Sunday": "Domingo"
-  };
-
-  const months = {
-    "January": "Enero",
-    "February": "Febrero",
-    "March": "Marzo",
-    "April": "Abril",
-    "May": "Mayo",
-    "June": "Junio",
-    "July": "Julio",
-    "August": "Agosto",
-    "September": "Septiembre",
-    "October": "Octubre",
-    "November": "Noviembre",
-    "December": "Diciembre"
-  };
-
-  // Split the input string by comma to separate day of week from the rest
-  const parts = dateString.split(", ");
-  if (parts.length < 2) {
-    throw new Error("Invalid date format");
+export function formatDateToSpanish(
+  dateString: string,
+  short: boolean = false
+): string {
+  // Parse the input into a Date object
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid date string: ${dateString}`);
   }
 
-  // Get the day-of-week and remaining part ("April 5 2025")
-  const dayOfWeekEng = parts[0];
-  const restParts = parts[1].split(" ");
-  if (restParts.length < 3) {
-    throw new Error("Invalid date format");
+  // Spanish day and month names
+  const days = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ];
+  const months = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+  ];
+  const monthsShort = [
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic",
+  ];
+
+  const dayName = days[date.getDay()];
+  const dayNum = date.getDate();
+  const monthIndex = date.getMonth();
+  const monthName = months[monthIndex];
+  const monthAbbrev = monthsShort[monthIndex];
+  const year = date.getFullYear();
+
+  if (short) {
+    // e.g. "abr 25, 2025"
+    return `${monthAbbrev} ${dayNum}, ${year}`;
   }
-  
-  // Extract the month, day, and year
-  const monthEng = restParts[0];
-  const day = restParts[1];
-  const year = restParts[2];
 
-  // Lookup the Spanish translations
-  const dayOfWeekEsp = daysOfWeek[dayOfWeekEng];
-  const monthEsp = months[monthEng];
-
-  if (!dayOfWeekEsp || !monthEsp) {
-    throw new Error("Invalid day or month");
-  }
-
-  return `${dayOfWeekEsp}, ${day} de ${monthEsp} de ${year}`;
+  // Full format: "Viernes, 25 de abril de 2025"
+  return `${dayName}, ${dayNum} de ${monthName} de ${year}`;
 }
+
+export async function tes(text: string) {
+  try {
+    const url = "https://translation.googleapis.com/language/translate/v2?key=" + process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        q: text,
+        target: "es",
+      })
+    });
+
+    const data = await response.json();
+
+    if(!response.ok) {
+      return text;
+    }
+    return data.data.translations[0].translatedText;
+  } catch(err) {
+    console.log(err);
+    return text;
+  }
+}
+
+

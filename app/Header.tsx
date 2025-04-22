@@ -2,7 +2,7 @@
 
 import { useState, useContext } from "react"
 import Link from "next/link"
-import { CheckCircle, Menu, Phone, Clock, User, MessageSquare, X, Sparkles, Globe } from 'lucide-react'
+import { CheckCircle, Menu, Phone, Star, Clock, User, MessageSquare, X, Sparkles, Globe } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet"
@@ -54,6 +54,13 @@ export default function Header() {
           >
             <MessageSquare className="h-4 w-4" />
             <span>{t.testimonials}</span>
+          </Link>
+          <Link
+            href="/reviews"
+            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-primary"
+          >
+            <Star className="h-4 w-4" />
+            <span>{t.reviews}</span>
           </Link>
           <Link
             href="/calendar"

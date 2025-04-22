@@ -35,66 +35,145 @@ import Clean4 from "../images/livingroom.jpg"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
+import { tes } from "@/lib/utils"
 
-const testimonialsTest = [
+interface Service {
+  id: string;                          // the value= you’ll use on the <SelectItem>
+  translationKey: string;              // e.g. "regularService"
+  descKey: string;                     // e.g. "regularServiceDesc"
+  features: string[];                  // e.g. ["weeklyService","allRoomsCleaned"]
+  Icon: React.ComponentType<any>;      // the icon component
+  gradientFrom: string;                // tailwind color (no #) e.g. "blue-600"
+  gradientTo: string;                  // e.g. "blue-400"
+  route: string;                       // link href
+}
+
+const services: Service[] = [
   {
-    stars: 5,
-    content: "This product is absolutely amazing! I've never been so impressed.",
-    clientName: "Alice Johnson",
-    location: "San Francisco, USA",
+    id: "REGULAR",
+    translationKey: "regularService",
+    descKey: "regularServiceDesc",
+    features: ["weeklyService", "allRoomsCleaned"],
+    Icon: Home,
+    gradientFrom: "blue-600",
+    gradientTo: "blue-400",
+    route: "/services/regular",
   },
   {
-    stars: 4,
-    content: "Great service and friendly staff. Would definitely recommend!",
-    clientName: "Bob Smith",
-    location: "London, UK",
+    id: "ENVIRONMENT",
+    translationKey: "environmentService",
+    descKey: "environmentServiceDesc",
+    features: ["ecoFriendlyProducts", "sustainableMethods"],
+    Icon: Sparkles,
+    gradientFrom: "green-600",
+    gradientTo: "green-400",
+    route: "/services/environment",
   },
   {
-    stars: 3,
-    content: "Good experience overall, but there is room for improvement.",
-    clientName: "Charlie Brown",
-    location: "Sydney, Australia",
+    id: "DEEP",
+    translationKey: "deepService",
+    descKey: "deepServiceDesc",
+    features: ["recommendedQuarterly", "hardToReachAreas"],
+    Icon: Sparkles,
+    gradientFrom: "cyan-600",
+    gradientTo: "blue-500",
+    route: "/services/deep",
   },
   {
-    stars: 5,
-    content: "Exceptional quality and attention to detail. Exceeded my expectations!",
-    clientName: "Diana Prince",
-    location: "Paris, France",
+    id: "HAZMAT",
+    translationKey: "hazmatService",
+    descKey: "hazmatServiceDesc",
+    features: ["certifiedTechnicians", "safetyProtocols"],
+    Icon: AlertCircle,
+    gradientFrom: "yellow-600",
+    gradientTo: "yellow-400",
+    route: "/services/hazmat",
   },
   {
-    stars: 4,
-    content: "Very satisfied with my purchase. Great value for money.",
-    clientName: "Ethan Hunt",
-    location: "Berlin, Germany",
+    id: "FIRE",
+    translationKey: "fireService",
+    descKey: "fireServiceDesc",
+    features: ["smokeRemoval", "odorElimination"],
+    Icon: AlertCircle,
+    gradientFrom: "red-600",
+    gradientTo: "red-400",
+    route: "/services/fire",
   },
   {
-    stars: 2,
-    content: "Not what I expected. Could be better.",
-    clientName: "Fiona Apple",
-    location: "Toronto, Canada",
+    id: "WATER",
+    translationKey: "waterService",
+    descKey: "waterServiceDesc",
+    features: ["waterExtraction", "moldPrevention"],
+    Icon: AlertCircle,
+    gradientFrom: "blue-600",
+    gradientTo: "blue-400",
+    route: "/services/water",
   },
   {
-    stars: 5,
-    content: "Outstanding experience from start to finish!",
-    clientName: "George Michael",
-    location: "Los Angeles, USA",
+    id: "MOVE_IN_OUT",
+    translationKey: "moveService",
+    descKey: "moveServiceDesc",
+    features: ["oneTimeDeep", "applianceCleaning"],
+    Icon: CheckCircle,
+    gradientFrom: "emerald-600",
+    gradientTo: "emerald-400",
+    route: "/services/move",
   },
   {
-    stars: 3,
-    content: "Decent, but there are better options available in the market.",
-    clientName: "Hannah Montana",
-    location: "Nashville, USA",
+    id: "DECEASED",
+    translationKey: "deceasedService",
+    descKey: "deceasedServiceDesc",
+    features: ["discreetService", "thoroughSanitization"],
+    Icon: AlertCircle,
+    gradientFrom: "purple-600",
+    gradientTo: "purple-400",
+    route: "/services/deceased",
   },
   {
-    stars: 4,
-    content: "Pretty good overall, though I encountered minor issues.",
-    clientName: "Ian Fleming",
-    location: "Edinburgh, Scotland",
+    id: "EXPLOSIVE_RESIDUE",
+    translationKey: "explosiveResidueService",
+    descKey: "explosiveResidueServiceDesc",
+    features: ["expertTechnicians", "completeDecontamination"],
+    Icon: AlertCircle,
+    gradientFrom: "orange-600",
+    gradientTo: "orange-400",
+    route: "/services/explosive",
   },
-]
+  {
+    id: "MOLD",
+    translationKey: "moldService",
+    descKey: "moldServiceDesc",
+    features: ["moldTesting", "completeRemoval"],
+    Icon: AlertCircle,
+    gradientFrom: "teal-600",
+    gradientTo: "teal-400",
+    route: "/services/mold",
+  },
+  {
+    id: "CONSTRUCTION",
+    translationKey: "constructionService",
+    descKey: "constructionServiceDesc",
+    features: ["debrisRemoval", "dustElimination"],
+    Icon: Home,
+    gradientFrom: "amber-600",
+    gradientTo: "amber-400",
+    route: "/services/construction",
+  },
+  {
+    id: "COMMERCIAL",
+    translationKey: "commercialService",
+    descKey: "commercialServiceDesc",
+    features: ["afterHoursService", "customizedPlans"],
+    Icon: Home,
+    gradientFrom: "indigo-600",
+    gradientTo: "indigo-400",
+    route: "/services/commercial",
+  },
+];
 
 function MainLineCleanersContent() {
   const { language } = useContext(LanguageContext)
+
   const [requestQuoteForm, setRequestQuoteForm] = useState({
     firstName: "",
     lastName: "",
@@ -122,6 +201,7 @@ function MainLineCleanersContent() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0)
+  const [currentServicesPage, setCurrentServicesPage] = useState(0)
 
   // Get translations based on current language
   const t = translations[language as Language]
@@ -139,6 +219,19 @@ function MainLineCleanersContent() {
     const maxPages = Math.ceil(testimonials.length / 3) - 1
     setCurrentTestimonialPage((prev) => (prev <= 0 ? maxPages : prev - 1))
   }
+
+  // Functions to navigate services
+  const nextServicesPage = () => {
+    const maxPages = Math.ceil(12 / 4) - 1 // 12 is the total number of services
+    setCurrentServicesPage((prev) => (prev >= maxPages ? 0 : prev + 1))
+  }
+
+  const prevServicesPage = () => {
+    const maxPages = Math.ceil(12 / 4) - 1
+    setCurrentServicesPage((prev) => (prev <= 0 ? maxPages : prev - 1))
+  }
+
+  useEffect(() => {}, [testimonials])
 
   // Autoplay functionality
   useEffect(() => {
@@ -163,8 +256,8 @@ function MainLineCleanersContent() {
         const response: any = await fetch(url, options)
         if (response.ok) {
           const data = await response.json()
-          for (let i = 0; i < testimonialsTest.length; i++) {
-            data.push(testimonialsTest[i])
+          for (let i = 0; i < data.length; i++) {
+            data[i]["content.es"] = await tes(data[i].content)
           }
           setTestimonials(data)
         }
@@ -498,75 +591,132 @@ function MainLineCleanersContent() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto max-w-5xl py-12 px-4">
-              <div className="relative grid gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
-                {/* First Card - Left */}
-                <div className="group relative z-10 flex flex-col items-center space-y-4 rounded-xl border bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl md:mt-8 md:self-start hover:border-blue-200">
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 transform rounded-full bg-gradient-to-r from-blue-600 to-blue-400 p-1">
-                    <div className="rounded-full bg-white p-3">
-                      <Home className="h-7 w-7 text-blue-600" />
-                    </div>
+            <div className="mx-auto max-w-7xl py-12 px-4">
+              {/* Services carousel */}
+              <div className="relative">
+<div className="grid grid-cols-4 gap-6">
+        {services
+          .slice(currentServicesPage * 4, currentServicesPage * 4 + 4)
+          .map((svc, idx) => {
+            const {
+              id,
+              translationKey,
+              descKey,
+              features,
+              Icon,
+              gradientFrom,
+              gradientTo,
+              route,
+            } = svc;
+            // lower inner two cards by adding top margin
+            const staggerClass = idx === 1 || idx === 2 ? "mt-6" : "";
+
+            return (
+              <div
+                key={id}
+                className={
+                  `group relative flex flex-col items-center space-y-4 rounded-xl border bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-${gradientTo} h-[400px] ${staggerClass}`
+                }
+              >
+                <div
+                  className={`absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-${gradientFrom} to-${gradientTo} p-1`}
+                >
+                  <div className="rounded-full bg-white p-3">
+                    <Icon className={`h-7 w-7 text-${gradientFrom}`} />
                   </div>
-                  <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-blue-600">{t.regularCleaning}</h3>
-                  <div className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
-                  <p className="text-center text-muted-foreground">{t.regularCleaningDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm pb-5">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span>{t.weeklyService}</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span>{t.allRoomsCleaned}</span>
-                    </li>
-                  </ul>
                 </div>
 
-                {/* Second Card - Center (positioned lower) */}
-                <div className="group relative z-20 flex flex-col items-center space-y-4 rounded-xl border bg-white p-6 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl md:mt-16 md:self-center hover:border-cyan-200">
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 transform rounded-full bg-gradient-to-r from-cyan-600 to-blue-500 p-1">
-                    <div className="rounded-full bg-white p-3">
-                      <Sparkles className="h-7 w-7 text-cyan-600" />
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-cyan-600">{t.deepCleaning}</h3>
-                  <div className="h-1 w-12 rounded-full bg-gradient-to-r from-cyan-600 to-blue-500"></div>
-                  <p className="text-center text-muted-foreground">{t.deepCleaningDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm pb-5">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-cyan-600" />
-                      <span>{t.recommendedQuarterly}</span>
+                <h3 className={`mt-8 text-xl font-bold text-${gradientFrom}`}>
+                  {t[translationKey]}
+                </h3>
+                <div
+                  className={`h-1 w-12 rounded-full bg-gradient-to-r from-${gradientFrom} to-${gradientTo}`}
+                />
+                <p className="text-center text-muted-foreground h-[80px]">
+                  {t[descKey]}
+                </p>
+                <br></br>
+                <br></br>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {features.map((feat) => (
+                    <li key={feat} className="flex items-center gap-2">
+                      <CheckCircle className={`h-4 w-4 text-${gradientFrom}`} />
+                      <span>{t[feat]}</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-cyan-600" />
-                      <span>{t.hardToReachAreas}</span>
-                    </li>
-                  </ul>
-                </div>
+                  ))}
+                </ul>
 
-                {/* Third Card - Right */}
-                <div className="group relative z-10 flex flex-col items-center space-y-4 rounded-xl border bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl md:mt-8 md:self-start hover:border-emerald-200">
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 transform rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 p-1">
-                    <div className="rounded-full bg-white p-3">
-                      <CheckCircle className="h-7 w-7 text-emerald-600" />
-                    </div>
+                <div className="mt-auto pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`border-${gradientTo} hover:bg-${gradientTo.replace(/-\d+$/, "-50")} text-${gradientFrom}`}
+                  >
+                    <Link href={route}>{t.learnMore}</Link>
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+</div>
+
+                {/* Services navigation arrows */}
+                <div className="flex justify-between items-center mt-8">
+                  <button
+                    onClick={prevServicesPage}
+                    className="rounded-full bg-white p-3 text-blue-600 shadow-md transition-all hover:bg-blue-50 hover:text-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Previous services"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-5 w-5"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
+
+                  {/* Pagination indicators */}
+                  <div className="flex gap-2">
+                    {Array.from({ length: Math.ceil(12 / 4) }).map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentServicesPage(index)}
+                        className={`h-2.5 w-2.5 rounded-full transition-all ${
+                          currentServicesPage === index ? "bg-blue-600 w-8" : "bg-blue-200 hover:bg-blue-400"
+                        }`}
+                        aria-label={`Go to services page ${index + 1}`}
+                      />
+                    ))}
                   </div>
-                  <div className="mt-4 pt-4"></div>
-                  <h3 className="text-xl font-bold text-emerald-600">{t.moveInOut}</h3>
-                  <div className="h-1 w-12 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"></div>
-                  <p className="text-center text-muted-foreground">{t.moveInOutDesc}</p>
-                  <ul className="mt-2 space-y-2 text-sm pb-5">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      <span>{t.oneTimeDeep}</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      <span>{t.applianceCleaning}</span>
-                    </li>
-                  </ul>
+
+                  <button
+                    onClick={nextServicesPage}
+                    className="rounded-full bg-white p-3 text-blue-600 shadow-md transition-all hover:bg-blue-50 hover:text-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Next services"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-5 w-5"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -659,7 +809,7 @@ function MainLineCleanersContent() {
                           ))}
                         </div>
                         <p className="text-muted-foreground overflow-hidden text-ellipsis line-clamp-3">
-                          {testimonial.content}
+                          {language === "en" ? testimonial.content : testimonial["content.es"] || ""}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

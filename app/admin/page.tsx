@@ -49,6 +49,77 @@ import Login from "./login"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
+import { tes, formatDateToSpanish } from "@/lib/utils";
+
+const colorSchemes = {
+regularClean: {
+bg: "bg-blue-50",
+    border: "border-blue-100",
+    text: "text-blue-700",
+    textLight: "text-blue-600",
+              },
+deepClean: {
+bg: "bg-green-50",
+    border: "border-green-100",
+    text: "text-green-700",
+    textLight: "text-green-600",
+           },
+moveInOut: {
+bg: "bg-purple-50",
+    border: "border-purple-100",
+    text: "text-purple-700",
+    textLight: "text-purple-600",
+           },
+environmentPrice: {
+bg: "bg-teal-50",
+    border: "border-teal-100",
+    text: "text-teal-700",
+    textLight: "text-teal-600",
+                  },
+firePrice: { bg: "bg-red-50", border: "border-red-100", text: "text-red-700", textLight: "text-red-600" },
+           waterPrice: {
+bg: "bg-cyan-50",
+    border: "border-cyan-100",
+    text: "text-cyan-700",
+    textLight: "text-cyan-600",
+           },
+deceasedPrice: {
+bg: "bg-gray-50",
+    border: "border-gray-100",
+    text: "text-gray-700",
+    textLight: "text-gray-600",
+               },
+hazmat: {
+bg: "bg-yellow-50",
+    border: "border-yellow-100",
+    text: "text-yellow-700",
+    textLight: "text-yellow-600",
+        },
+explosiveResidue: {
+bg: "bg-orange-50",
+    border: "border-orange-100",
+    text: "text-orange-700",
+    textLight: "text-orange-600",
+                  },
+moldPrice: {
+bg: "bg-emerald-50",
+    border: "border-emerald-100",
+    text: "text-emerald-700",
+    textLight: "text-emerald-600",
+           },
+constructionPrice: {
+bg: "bg-amber-50",
+    border: "border-amber-100",
+    text: "text-amber-700",
+    textLight: "text-amber-600",
+                   },
+commercialPrice: {
+bg: "bg-indigo-50",
+    border: "border-indigo-100",
+    text: "text-indigo-700",
+    textLight: "text-indigo-600",
+                 },
+}
 
 interface Appointment {
   id: number
@@ -62,6 +133,21 @@ interface Appointment {
   appointmentDate: Date
   status: string
   bookingId: string
+}
+
+const defaultPricing = {
+    regularClean: 0,
+    deepClean: 0,
+    moveInOut: 0,
+    environmentPrice: 0,
+    firePrice:        0,
+    waterPrice:        0,
+    deceasedPrice:     0,
+    hazmat:            0,
+    explosiveResidue:  0,
+    moldPrice:         0,
+    constructionPrice: 0,
+    commercialPrice:   0,
 }
 
 export interface TimeSlot {
@@ -113,17 +199,10 @@ export default function AdminDashboard() {
   //console.log(translateDateToSpanish("Monday, April 5 2025"));
 
   // State for pricing management
-  const [pricing, setPricing] = useState({
-    regularClean: 150,
-    deepClean: 250,
-    moveInOut: 350,
-  })
+  const [pricing, setPricing] = useState(defaultPricing);
+  const [tempPricing, setTempPricing] = useState(defaultPricing);
+
   const [isEditingPricing, setIsEditingPricing] = useState(false)
-  const [tempPricing, setTempPricing] = useState({
-    regularClean: 150,
-    deepClean: 250,
-    moveInOut: 350,
-  })
 
   // State for admin email management
   const [adminEmail, setAdminEmail] = useState("admin@cleaningservice.com")
@@ -246,12 +325,23 @@ export default function AdminDashboard() {
         const response = await fetch(url)
         if (response.ok) {
           const details: any = await response.json()
+          const vals = {
+regularClean:   Number.parseFloat(details.regularPrice),
+deepClean:      Number.parseFloat(details.deepCleanPrice),
+moveInOut:      Number.parseFloat(details.moveInOutPrice),
+environmentPrice: Number.parseFloat(details.environmentPrice),
+hazmat:             Number.parseFloat(details.hazmat),
+firePrice:          Number.parseFloat(details.firePrice),
+waterPrice:         Number.parseFloat(details.waterPrice),
+deceasedPrice:      Number.parseFloat(details.deceasedPrice),
+explosiveResidue:   Number.parseFloat(details.explosiveResidue),
+moldPrice:          Number.parseFloat(details.moldPrice),
+constructionPrice:  Number.parseFloat(details.constructionPrice),
+commercialPrice:    Number.parseFloat(details.commercialPrice),
+          };
 
-          setPricing({
-            regularClean: Number.parseFloat(details.regularPrice),
-            deepClean: Number.parseFloat(details.deepCleanPrice),
-            moveInOut: Number.parseFloat(details.moveInOutPrice),
-          })
+          setPricing(vals);
+          setTempPricing(vals);
           setAdminEmail(details.email)
           setTempAdminEmail(details.email)
         }
@@ -351,6 +441,15 @@ export default function AdminDashboard() {
           regularPrice: tempPricing.regularClean,
           moveInOutPrice: tempPricing.moveInOut,
           deepCleanPrice: tempPricing.deepClean,
+          environmentPrice: tempPricing.environmentPrice,
+          firePrice:         tempPricing.firePrice,
+          waterPrice:        tempPricing.waterPrice,
+          deceasedPrice:     tempPricing.deceasedPrice,
+          hazmat:            tempPricing.hazmat,
+          explosiveResidue:  tempPricing.explosiveResidue,
+          moldPrice:         tempPricing.moldPrice,
+          constructionPrice: tempPricing.constructionPrice,
+          commercialPrice:   tempPricing.commercialPrice,
         }),
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`
@@ -606,19 +705,19 @@ export default function AdminDashboard() {
       case "confirmed":
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <Clock className="mr-1 h-3 w-3" /> Confirmed
+            <Clock className="mr-1 h-3 w-3" /> {t["confirmed"]}
           </Badge>
         )
       case "completed":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <CheckCircle className="mr-1 h-3 w-3" /> Completed
+            <CheckCircle className="mr-1 h-3 w-3" /> {t["completed"]}
           </Badge>
         )
       case "canceled":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            <X className="mr-1 h-3 w-3" /> Canceled
+            <X className="mr-1 h-3 w-3" /> {t["canceled"]}
           </Badge>
         )
       default:
@@ -628,12 +727,6 @@ export default function AdminDashboard() {
 
   // Sort dates chronologically
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime())
-
-  function matchService(service: string): string {
-    if (service === "deep") return "Deep Cleaning"
-    if (service === "regular") return "Regular Cleaning"
-    return "Move In/Out Cleaning"
-  }
 
   async function cancelAppointment(appointment: Appointment) {
     setLoading(true)
@@ -900,7 +993,7 @@ export default function AdminDashboard() {
                         <Clock className="h-5 w-5 text-blue-600" />
                       </div>
                       <CardTitle>{t["today.title"]}</CardTitle>
-                      <CardDescription>{date ? format(date, "EEEE, MMMM d, yyyy") : "Select a date"}</CardDescription>
+                      <CardDescription>{date && language === "es" ? formatDateToSpanish(format(date, "EEEE, MMMM d, yyyy")) : date && language === "en" ? format(date, "EEE, MMM d, yyyy"): t["select.a.date"]}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {todaysAppointments.length > 0 ? (
@@ -921,14 +1014,15 @@ export default function AdminDashboard() {
                                 <TableRow key={appointment.id}>
                                   <TableCell className="font-medium">{appointment.bookingId}</TableCell>
                                   <TableCell className="font-medium">{appointment.clientName}</TableCell>
-                                  <TableCell>{appointment.time}</TableCell>
-                                  <TableCell>{matchService(appointment.service)}</TableCell>
+                                  <TableCell>{t[appointment.time]}</TableCell>
+                                  <TableCell>{t[appointment.service]}</TableCell>
                                   <TableCell>{getStatusBadge(appointment.status)}</TableCell>
                                   <TableCell className="text-right">
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => {
+                                      onClick={async () => {
+                                        if(language === "es") appointment.notes = await tes(appointment.notes);
                                         setSelectedAppointment(appointment)
                                         setIsEditDialogOpen(true)
                                       }}
@@ -985,11 +1079,12 @@ export default function AdminDashboard() {
                                   <TableCell className="font-medium">{appointment.clientName}</TableCell>
                                   <TableCell>
                                     <div className="flex flex-col">
-                                      <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
-                                      <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                                      <span>{language === "en" ? format(new Date(appointment.appointmentDate), "MMM d, yyyy") 
+                                      : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), false) }</span>
+                                      <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
                                     </div>
                                   </TableCell>
-                                  <TableCell>{matchService(appointment.service)}</TableCell>
+                                  <TableCell>{t[appointment.service]}</TableCell>
 
                                   <TableCell>
                                     <div className="flex flex-col">
@@ -1068,7 +1163,7 @@ export default function AdminDashboard() {
                             className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                           >
                             <Filter className="mr-2 h-4 w-4" />
-                            Filter
+                            {t["filter"]}
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -1109,11 +1204,12 @@ export default function AdminDashboard() {
                                 <TableCell className="font-medium">{appointment.clientName}</TableCell>
                                 <TableCell>
                                   <div className="flex flex-col">
-                                    <span>{format(new Date(appointment.appointmentDate), "MMM d, yyyy")}</span>
-                                    <span className="text-sm text-muted-foreground">{appointment.time}</span>
+                                      <span>{language === "en" ? format(new Date(appointment.appointmentDate), "MMM d, yyyy") 
+                                      : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), false) }</span>
+                                      <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
                                   </div>
                                 </TableCell>
-                                <TableCell>{matchService(appointment.service)}</TableCell>
+                                <TableCell>{t[appointment.service]}</TableCell>
                                 <TableCell>
                                   <div className="flex flex-col">
                                     <span className="text-sm">{appointment.email}</span>
@@ -1200,7 +1296,7 @@ export default function AdminDashboard() {
                                   onClick={selectCurrentMonth}
                                 >
                                   <CalendarIcon className="h-4 w-4 mr-1" />
-                                  <span>Select Current Month</span>
+                                  <span>{t["select.current.month"]}</span>
                                 </Button>
                               </div>
                             </div>
@@ -1313,7 +1409,11 @@ export default function AdminDashboard() {
                                           >
                                             <div className="flex items-center gap-2">
                                               <div>
-                                                <div className="font-medium text-sm">{format(date, "MMM d, yyyy")}</div>
+                                                <div className="font-medium text-sm">{
+                                                  language === "en" ? 
+                                                  format(date, "MMM d, yyyy"):
+                                                  formatDateToSpanish(format(date, "MMM d, yyyy"),true)
+                                                  }</div>
                                                 {hasSlots && (
                                                   <div className="flex gap-1 mt-1">
                                                     {slots.morning && <Sun className="h-3 w-3 text-amber-500" />}
@@ -1664,104 +1764,58 @@ export default function AdminDashboard() {
                           )}
                         </div>
 
-                        <div className="grid gap-6">
-                          {/* Regular Clean Pricing */}
-                          <div className="p-4 rounded-lg border border-blue-100 bg-blue-50">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div>
-                                <h4 className="text-lg font-medium text-blue-700">
-                                  {t["settings.pricing.regular.title"]}
-                                </h4>
-                                <p className="text-sm text-blue-600 mt-1">
-                                  {t["settings.pricing.regular.description"]}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-blue-700">
-                                  $
-                                  {isEditingPricing ? (
-                                    <Input
-                                      type="number"
-                                      value={tempPricing.regularClean}
-                                      onChange={(e) =>
-                                        setTempPricing({
-                                          ...tempPricing,
-                                          regularClean: Number.parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      className="w-24 h-8 inline-block text-center"
-                                    />
-                                  ) : (
-                                    pricing.regularClean
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        {Object.entries(tempPricing || pricing).map(([key, value]) => {
+          const colorScheme = colorSchemes[key] || {
+            bg: "bg-slate-50",
+            border: "border-slate-100",
+            text: "text-slate-700",
+            textLight: "text-slate-600",
+          }
 
-                          {/* Deep Clean Pricing */}
-                          <div className="p-4 rounded-lg border border-green-100 bg-green-50">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div>
-                                <h4 className="text-lg font-medium text-green-700">
-                                  {t["settings.pricing.deep.title"]}
-                                </h4>
-                                <p className="text-sm text-green-600 mt-1">{t["settings.pricing.deep.description"]}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-green-700">
-                                  $
-                                  {isEditingPricing ? (
-                                    <Input
-                                      type="number"
-                                      value={tempPricing.deepClean}
-                                      onChange={(e) =>
-                                        setTempPricing({
-                                          ...tempPricing,
-                                          deepClean: Number.parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      className="w-24 h-8 inline-block text-center"
-                                    />
-                                  ) : (
-                                    pricing.deepClean
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+          // Format the key for display (convert camelCase to Title Case with spaces)
+          const formattedKey = key
+            .replace(/([A-Z])/g, " $1") // Add space before capital letters
+            .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+            .replace(/Price$/, " Price") // Add space before "Price" if it's at the end
 
-                          {/* Move In/Out Pricing */}
-                          <div className="p-4 rounded-lg border border-purple-100 bg-purple-50">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div>
-                                <h4 className="text-lg font-medium text-purple-700">
-                                  {t["settings.pricing.move.title"]}
-                                </h4>
-                                <p className="text-sm text-purple-600 mt-1">{t["settings.pricing.move.description"]}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-purple-700">
-                                  $
-                                  {isEditingPricing ? (
-                                    <Input
-                                      type="number"
-                                      value={tempPricing.moveInOut}
-                                      onChange={(e) =>
-                                        setTempPricing({
-                                          ...tempPricing,
-                                          moveInOut: Number.parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      className="w-24 h-8 inline-block text-center"
-                                    />
-                                  ) : (
-                                    pricing.moveInOut
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+          return (
+            <div key={key} className={`p-4 rounded-lg border ${colorScheme.border} ${colorScheme.bg}`}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h4 className={`text-lg font-medium ${colorScheme.text}`}>
+                    {t[`settings.pricing.${key}.title`] || formattedKey}
+                  </h4>
+                  <p className={`text-sm ${colorScheme.textLight} mt-1`}>
+                    {t[`settings.pricing.${key}.description`] ||
+                      `Set the price for ${formattedKey.toLowerCase()} services`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-2xl font-bold ${colorScheme.text}`}>
+                    $
+                    {isEditingPricing ? (
+                      <Input
+                        type="number"
+                        value={tempPricing[key]}
+                        onChange={(e) =>
+                          setTempPricing({
+                            ...tempPricing,
+                            [key]: Number.parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-24 h-8 inline-block text-center"
+                      />
+                    ) : (
+                      pricing[key]
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
                         </div>
 
                         {!isEditingPricing && (
@@ -1900,7 +1954,7 @@ export default function AdminDashboard() {
                           disabled
                           className="font-bold"
                           id="service"
-                          defaultValue={matchService(selectedAppointment.service)}
+                          defaultValue={t[selectedAppointment.service]}
                         />
                       </div>
                     </div>
@@ -1931,12 +1985,12 @@ export default function AdminDashboard() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="time">{t["dialog.appointment.label.time"]}</Label>
-                        <Input disabled className="font-bold" id="time" defaultValue={selectedAppointment.time} />
+                        <Input disabled className="font-bold" id="time" defaultValue={t[selectedAppointment.time]} />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="time">{t["dialog.appointment.label.status"]}</Label>
-                      <Input disabled className="font-bold" id="time" defaultValue={selectedAppointment.status} />
+                      <Input disabled className="font-bold" id="time" defaultValue={t[selectedAppointment.status.toLowerCase()]} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="notes">{t["dialog.appointment.label.notes"]}</Label>

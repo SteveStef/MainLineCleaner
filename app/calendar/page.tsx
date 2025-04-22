@@ -29,6 +29,7 @@ import {
   CreditCard,
   Info,
   Loader2,
+  MapPin,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -37,14 +38,119 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, formatDateToSpanish } from "@/lib/utils"
 import Header from "../Header"
 import Footer from "../Footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 
-// Note: The original timeSlotNames mapping has been moved
-// so that it can use the translation hook inside the component.
+export interface ServiceType {
+  id: string
+  name: string // translation key for the title
+  description: string // translation key for the description
+  price: string // dollars
+  duration: string // e.g. "2–3 hours"
+  features: string[] // translation keys for each feature
+}
+
+const serviceTypesDefaults: ServiceType[] = [
+  {
+    id: "REGULAR",
+    name: "regularService",
+    description: "regularServiceDesc",
+    price: "",
+    duration: "2–3 hours",
+    features: ["weeklyService", "allRoomsCleaned"],
+  },
+  {
+    id: "ENVIRONMENT",
+    name: "environmentService",
+    description: "environmentServiceDesc",
+    price: "",
+    duration: "3–4 hours",
+    features: ["ecoFriendlyProducts", "sustainableMethods"],
+  },
+  {
+    id: "DEEP",
+    name: "deepService",
+    description: "deepServiceDesc",
+    price: "",
+    duration: "4–5 hours",
+    features: ["recommendedQuarterly", "hardToReachAreas"],
+  },
+  {
+    id: "HAZMAT",
+    name: "hazmatService",
+    description: "hazmatServiceDesc",
+    price: "",
+    duration: "5–6 hours",
+    features: ["certifiedTechnicians", "safetyProtocols"],
+  },
+  {
+    id: "FIRE",
+    name: "fireService",
+    description: "fireServiceDesc",
+    price: "",
+    duration: "5–6 hours",
+    features: ["smokeRemoval", "odorElimination"],
+  },
+  {
+    id: "WATER",
+    name: "waterService",
+    description: "waterServiceDesc",
+    price: "",
+    duration: "5–6 hours",
+    features: ["waterExtraction", "moldPrevention"],
+  },
+  {
+    id: "MOVE_IN_OUT",
+    name: "moveService",
+    description: "moveServiceDesc",
+    price: "",
+    duration: "3–4 hours",
+    features: ["oneTimeDeep", "applianceCleaning"],
+  },
+  {
+    id: "DECEASED",
+    name: "deceasedService",
+    description: "deceasedServiceDesc",
+    price: "",
+    duration: "4–5 hours",
+    features: ["discreetService", "thoroughSanitization"],
+  },
+  {
+    id: "EXPLOSIVE_RESIDUE",
+    name: "explosiveResidueService",
+    description: "explosiveResidueServiceDesc",
+    price: "",
+    duration: "6–7 hours",
+    features: ["expertTechnicians", "completeDecontamination"],
+  },
+  {
+    id: "MOLD",
+    name: "moldService",
+    description: "moldServiceDesc",
+    price: "",
+    duration: "5–6 hours",
+    features: ["moldTesting", "completeRemoval"],
+  },
+  {
+    id: "CONSTRUCTION",
+    name: "constructionService",
+    description: "constructionServiceDesc",
+    price: "",
+    duration: "3–4 hours",
+    features: ["debrisRemoval", "dustElimination"],
+  },
+  {
+    id: "COMMERCIAL",
+    name: "commercialService",
+    description: "commercialServiceDesc",
+    price: "",
+    duration: "6–7 hours",
+    features: ["afterHoursService", "customizedPlans"],
+  },
+]
 
 interface FormErrors {
   firstName?: string
@@ -52,6 +158,7 @@ interface FormErrors {
   email?: string
   phone?: string
   address?: string
+  city?: string
 }
 
 function generateRequestId() {
@@ -80,50 +187,7 @@ export default function BookingPage() {
   const [availability, setAvailability] = useState<any>([])
   const [paymentError, setPaymentError] = useState<string>("")
 
-  // Service types using translation keys in their values.
-  const [serviceTypes, setServiceTypes] = useState<any>([
-    {
-      id: "regular",
-      name: "label.service_regular_name",
-      description: "label.service_regular_description",
-      price: "$",
-      duration: "2-3 hours",
-      features: [
-        "feature.regular.feature1",
-        "feature.regular.feature2",
-        "feature.regular.feature3",
-        "feature.regular.feature4",
-      ],
-    },
-    {
-      id: "deep",
-      name: "label.service_deep_name",
-      description: "label.service_deep_description",
-      price: "$",
-      duration: "4-6 hours",
-      features: [
-        "feature.deep.feature1",
-        "feature.deep.feature2",
-        "feature.deep.feature3",
-        "feature.deep.feature4",
-        "feature.deep.feature5",
-      ],
-    },
-    {
-      id: "move",
-      name: "label.service_move_name",
-      description: "label.service_move_description",
-      price: "$",
-      duration: "5-8 hours",
-      features: [
-        "feature.move.feature1",
-        "feature.move.feature2",
-        "feature.move.feature3",
-        "feature.move.feature4",
-        "feature.move.feature5",
-      ],
-    },
-  ])
+  const [serviceTypes, setServiceTypes] = useState<any>(serviceTypesDefaults)
 
   const [bookingId, setBookingId] = useState<string>("")
   const [userInfo, setUserInfo] = useState({
@@ -132,6 +196,7 @@ export default function BookingPage() {
     email: "",
     phone: "",
     address: "",
+    city: "",
     notes: "",
   })
 
@@ -151,6 +216,8 @@ export default function BookingPage() {
     general?: string
   }>({})
 
+  const [searchQuery, setSearchQuery] = useState<string>("")
+
   // Create localized time slot names using bracket-notation.
   const localizedTimeSlotNames: { [key: string]: string } = {
     morning: t["timeslot.morning"],
@@ -167,14 +234,17 @@ export default function BookingPage() {
     for (let i = 0; i < availability.length; i++) {
       if (availability[i].date === key) {
         const tmp: any = []
-        if (availability[i].morning) tmp.push(localizedTimeSlotNames.morning)
-        if (availability[i].afternoon) tmp.push(localizedTimeSlotNames.afternoon)
-        if (availability[i].night) tmp.push(localizedTimeSlotNames.night)
-        setTimeSlots(tmp)
+        if (availability[i].morning) tmp.push( { value: "MORNING", label: localizedTimeSlotNames.morning} )
+        if (availability[i].afternoon) tmp.push({value:"AFTERNOON", label:localizedTimeSlotNames.afternoon})
+        if (availability[i].night) tmp.push({value:"NIGHT",label:localizedTimeSlotNames.night})
+        setTimeSlots(tmp);
         break
       }
     }
   }
+  useEffect(() => {
+    if(selectedDate)handleDateSelect(selectedDate);
+  }, [language])
 
   async function getServicePrices() {
     setIsLoadingPrices(true)
@@ -183,11 +253,20 @@ export default function BookingPage() {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
       const response = await fetch(url)
       if (response.ok) {
-        const details: any = await response.json()
-        const tmp = [...serviceTypes]
-        tmp[0].price = details.regularPrice
-        tmp[1].price = details.deepCleanPrice
-        tmp[2].price = details.moveInOutPrice
+        const details: any = await response.json();
+        const tmp = [...serviceTypes];
+        tmp[0].price = details.regularPrice;
+        tmp[1].price = details.environmentPrice;
+        tmp[2].price = details.deepCleanPrice;
+        tmp[3].price = details.hazmat;
+        tmp[4].price = details.firePrice;
+        tmp[5].price = details.waterPrice;
+        tmp[6].price = details.moveInOutPrice;
+        tmp[7].price = details.deceasedPrice;
+        tmp[8].price = details.explosiveResidue;
+        tmp[9].price = details.moldPrice;
+        tmp[10].price = details.constructionPrice;
+        tmp[11].price = details.commercialPrice;
         setServiceTypes(tmp)
       } else {
         setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }))
@@ -209,6 +288,7 @@ export default function BookingPage() {
       setIsLoadingPrices(false)
     }
   }
+  console.log(serviceTypes);
 
   const isDateAvailable = (date: Date) => {
     return availableDays.some((availableDate) => isSameDay(date, availableDate))
@@ -224,6 +304,7 @@ export default function BookingPage() {
     const newErrors: FormErrors = {}
     if (!userInfo.firstName.trim()) newErrors.firstName = t["error.first_name_required"]
     if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"]
+    if (!userInfo.city.trim()) newErrors.city = t["error.city_required"]
     if (!userInfo.email.trim()) {
       newErrors.email = t["error.email_required"]
     } else if (!/\S+@\S+\.\S+/.test(userInfo.email)) {
@@ -258,6 +339,8 @@ export default function BookingPage() {
     }
   }
 
+  console.log(selectedService);
+
   const handleSubmit = async (orderId: string) => {
     setIsSubmitting(true)
     setPaymentError("")
@@ -270,15 +353,17 @@ export default function BookingPage() {
         email: userInfo.email,
         phone: userInfo.phone,
         address: userInfo.address,
-        time: selectedTimeSlot,
-        service: selectedService,
+        city: userInfo.city,
+        time: selectedTimeSlot, // MORNING or NIGHT or AFTERNOON
+        service: selectedService, // REGULAR // these are enums must conform
         notes: userInfo.notes,
         appointmentDate: selectedDate,
       }
+
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
       const options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
 
-      const response: any = await fetch(url, options)
+      const response: any = await fetch(url, options);
       if (response.ok) {
         const data = await response.json()
         setBookingId(data.bookingId)
@@ -365,9 +450,6 @@ export default function BookingPage() {
 
   useEffect(() => {
     getAvailability()
-  }, [])
-
-  useEffect(() => {
     getServicePrices()
   }, [])
 
@@ -394,6 +476,18 @@ export default function BookingPage() {
 
   const getServiceById = (id: string) => {
     return serviceTypes.find((service) => service.id === id)
+  }
+
+  const getFilteredServices = () => {
+    if (!searchQuery.trim()) return serviceTypes
+
+    const query = searchQuery.toLowerCase()
+    return serviceTypes.filter((service: ServiceType) => {
+      const nameMatch = t[service.name].toLowerCase().includes(query)
+      const descMatch = t[service.description].toLowerCase().includes(query)
+      const featuresMatch = service.features.some((feature) => t[feature].toLowerCase().includes(query))
+      return nameMatch || descMatch || featuresMatch
+    })
   }
 
   const getStepTitle = () => {
@@ -545,7 +639,7 @@ export default function BookingPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t["label.date"]}</p>
-                  <p className="font-medium">{format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
+                  <p className="font-medium">{language === "es" ? formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy")) : format(selectedDate, "EEEE, MMMM d yyyy")}</p>
                 </div>
               </div>
 
@@ -556,7 +650,7 @@ export default function BookingPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t["label.time"]}</p>
-                    <p className="font-medium">{selectedTimeSlot}</p>
+                    <p className="font-medium">{t[""+selectedTimeSlot]}</p>
                   </div>
                 </div>
               )}
@@ -913,28 +1007,28 @@ export default function BookingPage() {
                       </p>
 
                       <RadioGroup
-                        value={selectedTimeSlot}
-                        onValueChange={setSelectedTimeSlot}
-                        className="grid gap-3 max-w-md mx-auto"
+                      value={selectedTimeSlot}
+                      onValueChange={setSelectedTimeSlot}
+                      className="grid gap-3 max-w-md mx-auto"
                       >
-                        {timeSlots.map((slot: string) => (
-                          <div
-                            key={slot}
+                      {timeSlots.map((slot) => (
+                            <div
+                            key={slot.value}
                             className={cn(
-                              "flex items-center space-x-2 p-4 rounded-md border transition-all",
-                              selectedTimeSlot === slot
+                                "flex items-center space-x-2 p-4 rounded-md border transition-all",
+                                selectedTimeSlot === slot.value
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200 hover:border-blue-300",
-                            )}
-                          >
-                            <RadioGroupItem value={slot} id={slot} className="text-blue-600" />
-                            <Label htmlFor={slot} className="flex items-center gap-2 text-base cursor-pointer w-full">
-                              <Clock className="h-5 w-5 text-blue-500" />
-                              {slot}
+                                )}
+                            >
+                            <RadioGroupItem value={slot.value} id={slot.value} className="text-blue-600" />
+                            <Label htmlFor={slot.value} className="flex items-center gap-2 text-base cursor-pointer w-full">
+                            <Clock className="h-5 w-5 text-blue-500" />
+                            {slot.label}
                             </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
+                            </div>
+                            ))}
+                  </RadioGroup>
                     </div>
                   )}
 
@@ -1009,7 +1103,24 @@ export default function BookingPage() {
                           {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
+                        {/* City */}
+                        <div className="space-y-2">
+                          <Label htmlFor="city" className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {t["label.city"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="city"
+                            name="city"
+                            value={userInfo.city}
+                            onChange={handleInputChange}
+                            className={errors.city ? "border-red-500" : ""}
+                            maxLength={50}
+                          />
+                          {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
+                        </div>
+
+                        <div className="space-y-2">
                           <Label htmlFor="address" className="flex items-center gap-1">
                             <Home className="h-4 w-4" />
                             {t["label.address"]} <span className="text-red-500">*</span>
@@ -1056,57 +1167,129 @@ export default function BookingPage() {
                           <p className="text-muted-foreground">{t["loading.service_options"]}</p>
                         </div>
                       ) : (
-                        <RadioGroup
-                          value={selectedService}
-                          onValueChange={setSelectedService}
-                          className="grid gap-4 max-w-2xl mx-auto"
-                        >
-                          {serviceTypes.map((service: any) => (
-                            <div
-                              key={service.id}
-                              className={cn(
-                                "flex flex-col p-4 rounded-md border transition-all",
-                                selectedService === service.id
-                                  ? "border-blue-500 bg-blue-50 shadow-md"
-                                  : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
-                              )}
-                            >
-                              <div className="flex items-start">
-                                <RadioGroupItem value={service.id} id={service.id} className="text-blue-600 mt-1" />
-                                <div className="ml-2 flex-1">
-                                  <div className="flex justify-between items-start">
-                                    <Label htmlFor={service.id} className="text-lg font-medium cursor-pointer">
-                                      {t[service.name]}
-                                    </Label>
-                                    <div className="font-bold text-lg text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                      ${service.price}
-                                    </div>
-                                  </div>
-                                  <p className="text-muted-foreground">{t[service.description]}</p>
-
-                                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                                    <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
-                                      <Clock className="h-4 w-4 text-blue-500" />
-                                      <span>{service.duration}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {service.features.map((feature: string, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="flex items-center gap-1.5 text-sm bg-gray-50 p-1.5 rounded-md"
-                                      >
-                                        <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                        <span>{t[feature]}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
+                        <div className="space-y-4 max-w-4xl mx-auto">
+                          <div className="relative">
+                            <Input
+                              type="text"
+                              placeholder={t["search.services_placeholder"] || "Search services..."}
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pl-10"
+                            />
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="lucide lucide-search"
+                              >
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                              </svg>
                             </div>
-                          ))}
-                        </RadioGroup>
+                          </div>
+
+                          <RadioGroup value={selectedService} onValueChange={setSelectedService} className="grid gap-4">
+                            {getFilteredServices().length > 0 ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {getFilteredServices().map((service: any) => (
+                                  <div
+                                    key={service.id}
+                                    className={cn(
+                                      "flex flex-col p-3 rounded-md border transition-all h-full",
+                                      selectedService === service.id
+                                        ? "border-blue-500 bg-blue-50 shadow-md"
+                                        : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
+                                    )}
+                                  >
+                                    <div className="flex items-start">
+                                      <RadioGroupItem
+                                        value={service.id}
+                                        id={service.id}
+                                        className="text-blue-600 mt-1"
+                                      />
+                                      <div className="ml-2 flex-1">
+                                        <div className="flex justify-between items-start">
+                                          <Label htmlFor={service.id} className="text-base font-medium cursor-pointer">
+                                            {t[service.name]}
+                                          </Label>
+                                          <div className="font-bold text-base text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                            ${service.price}
+                                          </div>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm">{t[service.description]}</p>
+
+                                        <div className="mt-2 flex items-center gap-1 text-xs">
+                                          <Clock className="h-3 w-3 text-blue-500" />
+                                          <span>{service.duration}</span>
+                                        </div>
+
+                                        <div className="mt-2 grid grid-cols-1 gap-1">
+                                          {service.features.map((feature: string, index: number) => (
+                                            <div
+                                              key={index}
+                                              className="flex items-center gap-1 text-xs bg-gray-50 p-1 rounded-md"
+                                            >
+                                              <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                              <span>{t[feature]}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <div className="rounded-full bg-gray-100 p-3 mb-3">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="text-gray-400"
+                                  >
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.3-4.3"></path>
+                                  </svg>
+                                </div>
+                                <h3 className="font-medium mb-1">
+                                  {t["search.no_results_title"] || "No services found"}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {t["search.no_results_description"] ||
+                                    "Try a different search term or browse all services"}
+                                </p>
+                                <Button variant="outline" className="mt-4" onClick={() => setSearchQuery("")}>
+                                  {t["search.clear"] || "Clear search"}
+                                </Button>
+                              </div>
+                            )}
+                          </RadioGroup>
+
+                          {getFilteredServices().length > 0 && (
+                            <div className="text-center text-sm text-muted-foreground">
+                              {getFilteredServices().length === 1
+                                ? t["search.showing_single"] || "Showing 1 service"
+                                : t["search.showing_multiple"]?.replace(
+                                    "{count}",
+                                    getFilteredServices().length.toString(),
+                                  ) || `Showing ${getFilteredServices().length} services`}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

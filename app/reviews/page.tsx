@@ -196,12 +196,20 @@ export default function ReviewPage() {
                           <SelectTrigger id="serviceType" className="h-12">
                             <SelectValue placeholder={t["serviceTypePlaceholder"]} />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="regular">{t["regularCleaning"]}</SelectItem>
-                            <SelectItem value="deep">{t["deepCleaning"]}</SelectItem>
-                            <SelectItem value="move">{t["moveInOutCleaning"]}</SelectItem>
-                            <SelectItem value="other">{t["other"]}</SelectItem>
-                          </SelectContent>
+                            <SelectContent>
+                            <SelectItem value="REGULAR">{t["regularService"]}</SelectItem>
+                            <SelectItem value="ENVIRONMENT">{t["environmentService"]}</SelectItem>
+                            <SelectItem value="DEEP">{t["deepService"]}</SelectItem>
+                            <SelectItem value="HAZMAT">{t["hazmatService"]}</SelectItem>
+                            <SelectItem value="FIRE">{t["fireService"]}</SelectItem>
+                            <SelectItem value="WATER">{t["waterService"]}</SelectItem>
+                            <SelectItem value="MOVE_IN_OUT">{t["moveService"]}</SelectItem>
+                            <SelectItem value="DECEASED">{t["deceasedService"]}</SelectItem>
+                            <SelectItem value="EXPLOSIVE_RESIDUE">{t["explosiveResidueService"]}</SelectItem>
+                            <SelectItem value="MOLD">{t["moldService"]}</SelectItem>
+                            <SelectItem value="CONSTRUCTION">{t["constructionService"]}</SelectItem>
+                            <SelectItem value="COMMERCIAL">{t["commercialService"]}</SelectItem>
+                            </SelectContent>
                         </Select>
                       </div>
 
