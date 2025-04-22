@@ -9,7 +9,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -49,76 +48,78 @@ import Login from "./login"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
-import { tes, formatDateToSpanish } from "@/lib/utils";
+import { tes, formatDateToSpanish } from "@/lib/utils"
+import RevenueChart from "@/components/chart";
+
 
 const colorSchemes = {
-regularClean: {
-bg: "bg-blue-50",
+  regularClean: {
+    bg: "bg-blue-50",
     border: "border-blue-100",
     text: "text-blue-700",
     textLight: "text-blue-600",
-              },
-deepClean: {
-bg: "bg-green-50",
+  },
+  deepClean: {
+    bg: "bg-green-50",
     border: "border-green-100",
     text: "text-green-700",
     textLight: "text-green-600",
-           },
-moveInOut: {
-bg: "bg-purple-50",
+  },
+  moveInOut: {
+    bg: "bg-purple-50",
     border: "border-purple-100",
     text: "text-purple-700",
     textLight: "text-purple-600",
-           },
-environmentPrice: {
-bg: "bg-teal-50",
+  },
+  environmentPrice: {
+    bg: "bg-teal-50",
     border: "border-teal-100",
     text: "text-teal-700",
     textLight: "text-teal-600",
-                  },
-firePrice: { bg: "bg-red-50", border: "border-red-100", text: "text-red-700", textLight: "text-red-600" },
-           waterPrice: {
-bg: "bg-cyan-50",
+  },
+  firePrice: { bg: "bg-red-50", border: "border-red-100", text: "text-red-700", textLight: "text-red-600" },
+  waterPrice: {
+    bg: "bg-cyan-50",
     border: "border-cyan-100",
     text: "text-cyan-700",
     textLight: "text-cyan-600",
-           },
-deceasedPrice: {
-bg: "bg-gray-50",
+  },
+  deceasedPrice: {
+    bg: "bg-gray-50",
     border: "border-gray-100",
     text: "text-gray-700",
     textLight: "text-gray-600",
-               },
-hazmat: {
-bg: "bg-yellow-50",
+  },
+  hazmat: {
+    bg: "bg-yellow-50",
     border: "border-yellow-100",
     text: "text-yellow-700",
     textLight: "text-yellow-600",
-        },
-explosiveResidue: {
-bg: "bg-orange-50",
+  },
+  explosiveResidue: {
+    bg: "bg-orange-50",
     border: "border-orange-100",
     text: "text-orange-700",
     textLight: "text-orange-600",
-                  },
-moldPrice: {
-bg: "bg-emerald-50",
+  },
+  moldPrice: {
+    bg: "bg-emerald-50",
     border: "border-emerald-100",
     text: "text-emerald-700",
     textLight: "text-emerald-600",
-           },
-constructionPrice: {
-bg: "bg-amber-50",
+  },
+  constructionPrice: {
+    bg: "bg-amber-50",
     border: "border-amber-100",
     text: "text-amber-700",
     textLight: "text-amber-600",
-                   },
-commercialPrice: {
-bg: "bg-indigo-50",
+  },
+  commercialPrice: {
+    bg: "bg-indigo-50",
     border: "border-indigo-100",
     text: "text-indigo-700",
     textLight: "text-indigo-600",
-                 },
+  },
 }
 
 interface Appointment {
@@ -136,18 +137,18 @@ interface Appointment {
 }
 
 const defaultPricing = {
-    regularClean: 0,
-    deepClean: 0,
-    moveInOut: 0,
-    environmentPrice: 0,
-    firePrice:        0,
-    waterPrice:        0,
-    deceasedPrice:     0,
-    hazmat:            0,
-    explosiveResidue:  0,
-    moldPrice:         0,
-    constructionPrice: 0,
-    commercialPrice:   0,
+  regularClean: 0,
+  deepClean: 0,
+  moveInOut: 0,
+  environmentPrice: 0,
+  firePrice: 0,
+  waterPrice: 0,
+  deceasedPrice: 0,
+  hazmat: 0,
+  explosiveResidue: 0,
+  moldPrice: 0,
+  constructionPrice: 0,
+  commercialPrice: 0,
 }
 
 export interface TimeSlot {
@@ -181,6 +182,29 @@ export default function AdminDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   //const [calendarView, setCalendarView] = useState<boolean>(true)
 
+  const [revenueData, setRevenueData] = useState([
+      { month: "Apr", revenue: 16800 },
+      { month: "May", revenue: 21500 },
+      { month: "Jun", revenue: 19700 },
+      { month: "Jul", revenue: 22300 },
+      { month: "Aug", revenue: 26100 },
+      { month: "Sep", revenue: 24800 },
+      { month: "Oct", revenue: 27500 },
+      { month: "Nov", revenue: 29800 },
+      { month: "Dec", revenue: 32400 },
+      { month: "Jan", revenue: 12500 },
+      { month: "Feb", revenue: 15000 },
+  ]);
+
+  const [yearlyRevenue, setYearlyRevenue] = useState([
+      { year: 2021, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+      { year: 2022, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+      { year: 2023, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+      { year: 2024, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+      { year: 2025, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+      { year: 2026, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
+  ]);
+
   // State for financial metrics
   const [financialMetrics, setFinancialMetrics] = useState({
     profit: 0,
@@ -189,6 +213,9 @@ export default function AdminDashboard() {
     paypalFees: 0,
   })
 
+  // Add a new state for tracking the selected week view date
+  const [weekViewDate, setWeekViewDate] = useState<Date>(new Date())
+
   const { language, setLanguage } = useContext(LanguageContext)
   const t = translations[language as Language]
 
@@ -196,15 +223,11 @@ export default function AdminDashboard() {
     setLanguage(language === "en" ? "es" : "en")
   }
 
-  //console.log(translateDateToSpanish("Monday, April 5 2025"));
-
-  // State for pricing management
-  const [pricing, setPricing] = useState(defaultPricing);
-  const [tempPricing, setTempPricing] = useState(defaultPricing);
+  const [pricing, setPricing] = useState(defaultPricing)
+  const [tempPricing, setTempPricing] = useState(defaultPricing)
 
   const [isEditingPricing, setIsEditingPricing] = useState(false)
 
-  // State for admin email management
   const [adminEmail, setAdminEmail] = useState("admin@cleaningservice.com")
   const [tempAdminEmail, setTempAdminEmail] = useState("admin@cleaningservice.com")
   const [isEditingAdminEmail, setIsEditingAdminEmail] = useState(false)
@@ -281,7 +304,7 @@ export default function AdminDashboard() {
             appointments[i].status = "completed"
           }
         }
-        setAllAppointments(appointments)
+        setAllAppointments(appointments);
       }
     } catch (err) {
       console.log(err)
@@ -326,22 +349,22 @@ export default function AdminDashboard() {
         if (response.ok) {
           const details: any = await response.json()
           const vals = {
-regularClean:   Number.parseFloat(details.regularPrice),
-deepClean:      Number.parseFloat(details.deepCleanPrice),
-moveInOut:      Number.parseFloat(details.moveInOutPrice),
-environmentPrice: Number.parseFloat(details.environmentPrice),
-hazmat:             Number.parseFloat(details.hazmat),
-firePrice:          Number.parseFloat(details.firePrice),
-waterPrice:         Number.parseFloat(details.waterPrice),
-deceasedPrice:      Number.parseFloat(details.deceasedPrice),
-explosiveResidue:   Number.parseFloat(details.explosiveResidue),
-moldPrice:          Number.parseFloat(details.moldPrice),
-constructionPrice:  Number.parseFloat(details.constructionPrice),
-commercialPrice:    Number.parseFloat(details.commercialPrice),
-          };
+            regularClean: Number.parseFloat(details.regularPrice),
+            deepClean: Number.parseFloat(details.deepCleanPrice),
+            moveInOut: Number.parseFloat(details.moveInOutPrice),
+            environmentPrice: Number.parseFloat(details.environmentPrice),
+            hazmat: Number.parseFloat(details.hazmat),
+            firePrice: Number.parseFloat(details.firePrice),
+            waterPrice: Number.parseFloat(details.waterPrice),
+            deceasedPrice: Number.parseFloat(details.deceasedPrice),
+            explosiveResidue: Number.parseFloat(details.explosiveResidue),
+            moldPrice: Number.parseFloat(details.moldPrice),
+            constructionPrice: Number.parseFloat(details.constructionPrice),
+            commercialPrice: Number.parseFloat(details.commercialPrice),
+          }
 
-          setPricing(vals);
-          setTempPricing(vals);
+          setPricing(vals)
+          setTempPricing(vals)
           setAdminEmail(details.email)
           setTempAdminEmail(details.email)
         }
@@ -442,14 +465,14 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
           moveInOutPrice: tempPricing.moveInOut,
           deepCleanPrice: tempPricing.deepClean,
           environmentPrice: tempPricing.environmentPrice,
-          firePrice:         tempPricing.firePrice,
-          waterPrice:        tempPricing.waterPrice,
-          deceasedPrice:     tempPricing.deceasedPrice,
-          hazmat:            tempPricing.hazmat,
-          explosiveResidue:  tempPricing.explosiveResidue,
-          moldPrice:         tempPricing.moldPrice,
+          firePrice: tempPricing.firePrice,
+          waterPrice: tempPricing.waterPrice,
+          deceasedPrice: tempPricing.deceasedPrice,
+          hazmat: tempPricing.hazmat,
+          explosiveResidue: tempPricing.explosiveResidue,
+          moldPrice: tempPricing.moldPrice,
           constructionPrice: tempPricing.constructionPrice,
-          commercialPrice:   tempPricing.commercialPrice,
+          commercialPrice: tempPricing.commercialPrice,
         }),
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`
@@ -590,6 +613,38 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
   // Format date to YYYY-MM-DD for use as keys
   const formatDateKey = (date: Date): string => {
     return format(date, "yyyy-MM-dd")
+  }
+
+  // Get start and end dates of a week
+  const getWeekDates = (date: Date) => {
+    const day = date.getDay() // 0 is Sunday, 6 is Saturday
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+    const monday = new Date(date)
+    monday.setDate(diff)
+    monday.setHours(0, 0, 0, 0)
+
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    sunday.setHours(23, 59, 59, 999)
+
+    return { monday, sunday }
+  }
+
+  // Get appointments for a specific week
+  const getWeekAppointments = (date: Date) => {
+    const { monday, sunday } = getWeekDates(date)
+
+    return allAppointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.appointmentDate)
+      return appointmentDate >= monday && appointmentDate <= sunday
+    })
+  }
+
+  // Navigate to previous or next week
+  const navigateWeek = (direction: "prev" | "next") => {
+    const newDate = new Date(weekViewDate)
+    newDate.setDate(newDate.getDate() + (direction === "prev" ? -7 : 7))
+    setWeekViewDate(newDate)
   }
 
   const isDateInPast = (date: Date): boolean => {
@@ -744,8 +799,8 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
       const response = await fetch(url, options)
       setIsEditDialogOpen(false)
       if (response.ok) {
-        await getAppointments();
-        await getRevenueDetails();
+        await getAppointments()
+        await getRevenueDetails()
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
@@ -783,7 +838,6 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 {t["admin.dashboard.title"]}
               </h1>
-
               <Button
                 variant="ghost"
                 size="icon"
@@ -810,6 +864,13 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                 >
                   {t["tabs.overview"]}
                 </TabsTrigger>
+
+                <TabsTrigger
+                  value="weekView"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+                >
+                  {t["tabs.week_view"] || "Week View"}
+                </TabsTrigger>
                 <TabsTrigger
                   value="appointments"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
@@ -822,6 +883,14 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                 >
                   {t["tabs.availability"]}
                 </TabsTrigger>
+
+                <TabsTrigger
+                  value="Graph"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+                >
+                  Revenue Chart
+                </TabsTrigger>
+
                 <TabsTrigger
                   value="settings"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
@@ -829,6 +898,80 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                   {t["tabs.settings"]}
                 </TabsTrigger>
               </TabsList>
+<TabsContent value="Graph">
+          <RevenueChart
+            data={revenueData}
+            title="Monthly Gross Revenue"
+            description=""
+            showDataLabels={true}
+            lineColor="rgb(59, 130, 246)"
+            fillColor="rgba(59, 130, 246, 0.1)"
+          />
+
+          {/* —— YEARLY REVENUE TABLE —— */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-2">
+              {t["chart.yearly_revenue"] || 'Past Yearly Revenue'}
+            </h3>
+            <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-gray-200">
+  <thead className="bg-gray-50">
+    <tr>
+      <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+        {t["table.year"] || 'Year'}
+      </th>
+      <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
+        {t["table.revenue"] || 'Revenue'}
+      </th>
+      <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
+        {t["table.profit"] || 'Profit'}
+      </th>
+      <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
+        {t["table.sales_tax_due"] || 'Sales Tax Due'}
+      </th>
+      <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
+        {t["table.paypal_fee"] || 'PayPal Fee'}
+      </th>
+    </tr>
+  </thead>
+  <tbody className="bg-white divide-y divide-gray-200">
+    {yearlyRevenue.map(({ year, revenue, profit, salesTax, paypalFee }) => (
+      <tr key={year}>
+        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
+          {year}
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+          {revenue.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+          })}
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+          {profit.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+          })}
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+          {salesTax.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+          })}
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+          {paypalFee.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+          })}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+            </div>
+          </div>
+          {/* —— end table —— */}
+        </TabsContent>
 
               {/* Overview Tab */}
               <TabsContent value="overview">
@@ -898,7 +1041,9 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                       <div className="inline-flex items-center justify-center p-2 bg-green-100 rounded-full mb-2">
                         <Landmark className="h-5 w-5 text-green-600" />
                       </div>
-                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.gross"]}</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {t["admin.dashboard.gross"]}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-green-600">
@@ -912,7 +1057,9 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                       <div className="inline-flex items-center justify-center p-2 bg-emerald-100 rounded-full mb-2">
                         <Sparkles className="h-5 w-5 text-emerald-600" />
                       </div>
-                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.profit"]}</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {t["admin.dashboard.profit"]}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-emerald-600">${financialMetrics.profit.toFixed(2)}</div>
@@ -924,7 +1071,9 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                       <div className="inline-flex items-center justify-center p-2 bg-amber-100 rounded-full mb-2">
                         <Landmark className="h-5 w-5 text-amber-600" />
                       </div>
-                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.sales_tax"]}</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {t["admin.dashboard.sales_tax"]}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-amber-600">${financialMetrics.salesTax.toFixed(2)}</div>
@@ -936,7 +1085,9 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                       <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
                         <Landmark className="h-5 w-5 text-purple-600" />
                       </div>
-                      <CardTitle className="text-sm font-medium text-muted-foreground">{t["admin.dashboard.paypal_fees"]}</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {t["admin.dashboard.paypal_fees"]}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-purple-600">
@@ -993,7 +1144,13 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                         <Clock className="h-5 w-5 text-blue-600" />
                       </div>
                       <CardTitle>{t["today.title"]}</CardTitle>
-                      <CardDescription>{date && language === "es" ? formatDateToSpanish(format(date, "EEEE, MMMM d, yyyy")) : date && language === "en" ? format(date, "EEE, MMM d, yyyy"): t["select.a.date"]}</CardDescription>
+                      <CardDescription>
+                        {date && language === "es"
+                          ? formatDateToSpanish(format(date, "EEEE, MMMM d, yyyy"))
+                          : date && language === "en"
+                            ? format(date, "EEE, MMM d, yyyy")
+                            : t["select.a.date"]}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {todaysAppointments.length > 0 ? (
@@ -1022,9 +1179,9 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                       variant="outline"
                                       size="sm"
                                       onClick={async () => {
-                                        if(language === "es") appointment.notes = await tes(appointment.notes);
-                                        setSelectedAppointment(appointment)
-                                        setIsEditDialogOpen(true)
+                                        if (language === "es") appointment.notes = await tes(appointment.notes);
+                                        setSelectedAppointment(appointment);
+                                        setIsEditDialogOpen(true);
                                       }}
                                       className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                                     >
@@ -1079,8 +1236,14 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                   <TableCell className="font-medium">{appointment.clientName}</TableCell>
                                   <TableCell>
                                     <div className="flex flex-col">
-                                      <span>{language === "en" ? format(new Date(appointment.appointmentDate), "MMM d, yyyy") 
-                                      : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), false) }</span>
+                                      <span>
+                                        {language === "en"
+                                          ? format(new Date(appointment.appointmentDate), "MMM d, yyyy")
+                                          : formatDateToSpanish(
+                                              format(new Date(appointment.appointmentDate), "MMM d, yyyy"),
+                                              false,
+                                            )}
+                                      </span>
                                       <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
                                     </div>
                                   </TableCell>
@@ -1102,9 +1265,10 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => {
-                                        setSelectedAppointment(appointment)
-                                        setIsEditDialogOpen(true)
+                                      onClick={async () => {
+                                        if (language === "es") appointment.notes = await tes(appointment.notes);
+                                        setSelectedAppointment(appointment);
+                                        setIsEditDialogOpen(true);
                                       }}
                                       className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                                     >
@@ -1119,17 +1283,6 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                     ) : (
                       <div className="text-center py-8 text-muted-foreground border rounded-lg">
                         {t["upcoming.no_appointments"]}
-                      </div>
-                    )}
-                    {upcomingAppointments.length > 5 && (
-                      <div className="mt-4 text-center">
-                        <Button
-                          variant="outline"
-                          onClick={() => setActiveTab("upcoming")}
-                          className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          {t["upcoming.view_all"]}
-                        </Button>
                       </div>
                     )}
                   </CardContent>
@@ -1204,9 +1357,15 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                 <TableCell className="font-medium">{appointment.clientName}</TableCell>
                                 <TableCell>
                                   <div className="flex flex-col">
-                                      <span>{language === "en" ? format(new Date(appointment.appointmentDate), "MMM d, yyyy") 
-                                      : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), false) }</span>
-                                      <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
+                                    <span>
+                                      {language === "en"
+                                        ? format(new Date(appointment.appointmentDate), "MMM d, yyyy")
+                                        : formatDateToSpanish(
+                                            format(new Date(appointment.appointmentDate), "MMM d, yyyy"),
+                                            false,
+                                          )}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
                                   </div>
                                 </TableCell>
                                 <TableCell>{t[appointment.service]}</TableCell>
@@ -1224,10 +1383,11 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                      setSelectedAppointment(appointment)
-                                      setIsEditDialogOpen(true)
-                                    }}
+                                      onClick={async () => {
+                                        if (language === "es") appointment.notes = await tes(appointment.notes);
+                                        setSelectedAppointment(appointment);
+                                        setIsEditDialogOpen(true);
+                                      }}
                                     className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                                   >
                                     {t["button.view_details"]}
@@ -1244,6 +1404,178 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                           )}
                         </TableBody>
                       </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Week View Tab */}
+              <TabsContent value="weekView">
+                <Card className="border-blue-100 hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+                      <CalendarIcon className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <CardTitle>{t["week_view.title"] || "Weekly Schedule"}</CardTitle>
+                    <CardDescription>
+                      {t["week_view.description"] || "View and manage appointments for the week"}
+                    </CardDescription>
+
+                    <div className="flex items-center justify-between mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigateWeek("prev")}
+                        className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <ChevronLeft className="mr-2 h-4 w-4" />
+                        {t["week_view.prev_week"] || "Previous Week"}
+                      </Button>
+
+                      <div className="text-center font-medium">
+                        {(() => {
+                          const { monday, sunday } = getWeekDates(weekViewDate)
+                          return language === "en"
+                            ? `${format(monday, "MMM d")} - ${format(sunday, "MMM d, yyyy")}`
+                            : `${formatDateToSpanish(format(monday, "MMM d, yyyy"), false)} - ${formatDateToSpanish(format(sunday, "MMM d, yyyy"), false)}`
+                        })()}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigateWeek("next")}
+                        className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        {t["week_view.next_week"] || "Next Week"}
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                      {Array.from({ length: 7 }).map((_, index) => {
+                        const date = new Date(getWeekDates(weekViewDate).monday)
+                        date.setDate(date.getDate() + index)
+
+                        return (
+                          <div key={index} className="text-center">
+                            <div className="font-medium mb-1">
+                              {language === "en"
+                                ? format(date, "EEE")
+                                : formatDateToSpanish(format(date, "EEE"), true)}
+                            </div>
+                            <div
+                              className={`text-sm rounded-full w-8 h-8 flex items-center justify-center mx-auto
+                              ${areDatesOnSameDay(date, new Date()) ? "bg-blue-500 text-white" : ""}`}
+                            >
+                              {date.getDate()}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div className="space-y-4">
+                      {(() => {
+                        const weekAppointments = getWeekAppointments(weekViewDate)
+
+                        if (weekAppointments.length === 0) {
+                          return (
+                            <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                              {t["week_view.no_appointments"] || "No appointments scheduled for this week"}
+                            </div>
+                          )
+                        }
+
+                        // Group appointments by day
+                        const dayGroups = Array.from({ length: 7 }).map((_, index) => {
+                          const date = new Date(getWeekDates(weekViewDate).monday)
+                          date.setDate(date.getDate() + index)
+
+                          const dayAppointments = weekAppointments.filter((appointment) =>
+                            areDatesOnSameDay(new Date(appointment.appointmentDate), date),
+                          )
+
+                          return { date, appointments: dayAppointments }
+                        })
+
+                        return dayGroups
+                          .map((group, groupIndex) => {
+                            if (group.appointments.length === 0) return null
+
+                            return (
+                              <div key={groupIndex} className="border rounded-lg overflow-hidden">
+                                <div
+                                  className={`py-2 px-4 font-medium ${
+                                    areDatesOnSameDay(group.date, new Date())
+                                      ? "bg-blue-500 text-white"
+                                      : "bg-blue-50 text-blue-700"
+                                  }`}
+                                >
+                                  {language === "en"
+                                    ? format(group.date, "EEEE, MMMM d, yyyy")
+                                    : formatDateToSpanish(format(group.date, "EEEE, MMMM d, yyyy"))}
+                                </div>
+
+                                <div className="divide-y">
+                                  {group.appointments.map((appointment, index) => {
+                                    const serviceColor = (() => {
+                                      switch (appointment.service) {
+                                        case "regularClean":
+                                          return colorSchemes.regularClean
+                                        case "deepClean":
+                                          return colorSchemes.deepClean
+                                        case "moveInOut":
+                                          return colorSchemes.moveInOut
+                                        default:
+                                          return colorSchemes.regularClean
+                                      }
+                                    })()
+
+                                    return (
+                                      <div key={index} className="p-4 hover:bg-gray-50">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-start gap-3">
+                                            <div
+                                              className={`w-2 h-full min-h-[24px] rounded-full ${serviceColor.bg} ${serviceColor.border}`}
+                                            ></div>
+                                            <div>
+                                              <div className="font-medium">{appointment.clientName}</div>
+                                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                <Clock className="h-3 w-3" />
+                                                {t[appointment.time]}
+                                              </div>
+                                              <div className="text-sm text-muted-foreground mt-1">
+                                                {t[appointment.service]}
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            {getStatusBadge(appointment.status)}
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                setSelectedAppointment(appointment)
+                                                setIsEditDialogOpen(true)
+                                              }}
+                                              className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                            >
+                                              {t["button.view_details"]}
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )
+                          })
+                          .filter(Boolean)
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -1409,11 +1741,11 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                                           >
                                             <div className="flex items-center gap-2">
                                               <div>
-                                                <div className="font-medium text-sm">{
-                                                  language === "en" ? 
-                                                  format(date, "MMM d, yyyy"):
-                                                  formatDateToSpanish(format(date, "MMM d, yyyy"),true)
-                                                  }</div>
+                                                <div className="font-medium text-sm">
+                                                  {language === "en"
+                                                    ? format(date, "MMM d, yyyy")
+                                                    : formatDateToSpanish(format(date, "MMM d, yyyy"), true)}
+                                                </div>
                                                 {hasSlots && (
                                                   <div className="flex gap-1 mt-1">
                                                     {slots.morning && <Sun className="h-3 w-3 text-amber-500" />}
@@ -1764,58 +2096,60 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
                           )}
                         </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-        {Object.entries(tempPricing || pricing).map(([key, value]) => {
-          const colorScheme = colorSchemes[key] || {
-            bg: "bg-slate-50",
-            border: "border-slate-100",
-            text: "text-slate-700",
-            textLight: "text-slate-600",
-          }
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                          {Object.entries(tempPricing || pricing).map(([key, value]) => {
+                            const colorScheme = colorSchemes[key] || {
+                              bg: "bg-slate-50",
+                              border: "border-slate-100",
+                              text: "text-slate-700",
+                              textLight: "text-slate-600",
+                            }
 
-          // Format the key for display (convert camelCase to Title Case with spaces)
-          const formattedKey = key
-            .replace(/([A-Z])/g, " $1") // Add space before capital letters
-            .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
-            .replace(/Price$/, " Price") // Add space before "Price" if it's at the end
+                            // Format the key for display (convert camelCase to Title Case with spaces)
+                            const formattedKey = key
+                              .replace(/([A-Z])/g, " $1") // Add space before capital letters
+                              .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+                              .replace(/Price$/, " Price") // Add space before "Price" if it's at the end
 
-          return (
-            <div key={key} className={`p-4 rounded-lg border ${colorScheme.border} ${colorScheme.bg}`}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h4 className={`text-lg font-medium ${colorScheme.text}`}>
-                    {t[`settings.pricing.${key}.title`] || formattedKey}
-                  </h4>
-                  <p className={`text-sm ${colorScheme.textLight} mt-1`}>
-                    {t[`settings.pricing.${key}.description`] ||
-                      `Set the price for ${formattedKey.toLowerCase()} services`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-2xl font-bold ${colorScheme.text}`}>
-                    $
-                    {isEditingPricing ? (
-                      <Input
-                        type="number"
-                        value={tempPricing[key]}
-                        onChange={(e) =>
-                          setTempPricing({
-                            ...tempPricing,
-                            [key]: Number.parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        className="w-24 h-8 inline-block text-center"
-                      />
-                    ) : (
-                      pricing[key]
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-
+                            return (
+                              <div
+                                key={key}
+                                className={`p-4 rounded-lg border ${colorScheme.border} ${colorScheme.bg}`}
+                              >
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                  <div>
+                                    <h4 className={`text-lg font-medium ${colorScheme.text}`}>
+                                      {t[`settings.pricing.${key}.title`] || formattedKey}
+                                    </h4>
+                                    <p className={`text-sm ${colorScheme.textLight} mt-1`}>
+                                      {t[`settings.pricing.${key}.description`] ||
+                                        `Set the price for ${formattedKey.toLowerCase()} services`}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-2xl font-bold ${colorScheme.text}`}>
+                                      $
+                                      {isEditingPricing ? (
+                                        <Input
+                                          type="number"
+                                          value={tempPricing[key]}
+                                          onChange={(e) =>
+                                            setTempPricing({
+                                              ...tempPricing,
+                                              [key]: Number.parseFloat(e.target.value) || 0,
+                                            })
+                                          }
+                                          className="w-24 h-8 inline-block text-center"
+                                        />
+                                      ) : (
+                                        pricing[key]
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
 
                         {!isEditingPricing && (
@@ -1930,95 +2264,117 @@ commercialPrice:    Number.parseFloat(details.commercialPrice),
             </Tabs>
 
             {/* Edit Appointment Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>{t["dialog.appointment.title"]}</DialogTitle>
-                  <DialogDescription>{t["dialog.appointment.description"]}</DialogDescription>
-                </DialogHeader>
-                {selectedAppointment && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="clientName">{t["dialog.appointment.label.client_name"]}</Label>
-                        <Input
-                          disabled
-                          className="font-bold"
-                          id="clientName"
-                          defaultValue={selectedAppointment.clientName}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="service">{t["dialog.appointment.label.service"]}</Label>
-                        <Input
-                          disabled
-                          className="font-bold"
-                          id="service"
-                          defaultValue={t[selectedAppointment.service]}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">{t["dialog.appointment.label.email"]}</Label>
-                        <Input disabled className="font-bold" id="email" defaultValue={selectedAppointment.email} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">{t["dialog.appointment.label.phone"]}</Label>
-                        <Input disabled className="font-bold" id="phone" defaultValue={selectedAppointment.phone} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">{t["dialog.appointment.label.address"]}</Label>
-                      <Input disabled className="font-bold" id="address" defaultValue={selectedAppointment.address} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="date">{t["dialog.appointment.label.date"]}</Label>
-                        <Input
-                          disabled
-                          id="date"
-                          className="font-bold"
-                          defaultValue={format(new Date(selectedAppointment.appointmentDate), "yyyy-MM-dd")}
-                          type="date"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="time">{t["dialog.appointment.label.time"]}</Label>
-                        <Input disabled className="font-bold" id="time" defaultValue={t[selectedAppointment.time]} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="time">{t["dialog.appointment.label.status"]}</Label>
-                      <Input disabled className="font-bold" id="time" defaultValue={t[selectedAppointment.status.toLowerCase()]} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">{t["dialog.appointment.label.notes"]}</Label>
-                      <Textarea disabled className="font-bold" id="notes" defaultValue={selectedAppointment.notes} />
-                    </div>
-                  </div>
-                )}
-                <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:gap-0">
-                  {selectedAppointment && selectedAppointment.status.toLowerCase() !== "canceled" && (
-                    <Button
-                      variant="destructive"
-                      onClick={() => cancelAppointment(selectedAppointment)}
-                      disabled={loading}
-                      className="w-full sm:w-auto"
-                    >
-                      {t["dialog.appointment.button.cancel"]}
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
-                    className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto"
-                  >
-                    {t["dialog.appointment.button.close"]}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>{t["dialog.appointment.title"]}</DialogTitle>
+          <DialogDescription>{t["dialog.appointment.description"]}</DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-6">
+          {/* Client Information */}
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.client_name"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.clientName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.service"]}</p>
+                <p className="font-medium">{selectedAppointment && t[selectedAppointment.service]}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.email"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.phone"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.phone}</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Location Information */}
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.address"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.address}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["label.city"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.city}</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Appointment Details */}
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.date"]}</p>
+                <p className="font-medium">
+                  {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "yyyy-MM-dd")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.time"]}</p>
+                <p className="font-medium">{selectedAppointment &&t[selectedAppointment.time]}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["label.bookingId"]}</p>
+                <p className="font-medium">{selectedAppointment &&selectedAppointment.bookingId}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t["dialog.appointment.label.status"]}</p>
+                <p className="font-medium">
+                {
+selectedAppointment &&
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                    selectedAppointment.status.toLowerCase() === "confirmed" 
+                      ? "bg-green-100 text-green-800" 
+                      : selectedAppointment.status.toLowerCase() === "pending" 
+                      ? "bg-yellow-100 text-yellow-800" 
+                      : "bg-red-100 text-red-800"
+                  }`}>
+                    {t[selectedAppointment.status.toLowerCase()]}
+                  </span>
+                }
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Notes */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">
+              {t["dialog.appointment.label.notes"]}
+            </h3>
+            <p className="font-medium whitespace-pre-wrap">{selectedAppointment && selectedAppointment.notes}</p>
+          </Card>
+        </div>
+
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:gap-0">
+          {selectedAppointment && selectedAppointment.status.toLowerCase() !== "canceled" && (
+            <Button
+              variant="destructive"
+              onClick={() => cancelAppointment(selectedAppointment)}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              {t["dialog.appointment.button.cancel"]}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setIsEditDialogOpen(false)}
+            className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto"
+          >
+            {t["dialog.appointment.button.close"]}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
           </div>
         </div>
       )}

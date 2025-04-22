@@ -280,7 +280,7 @@ export const es = {
   "tabs.overview": "Resumen",
   "tabs.all_appointments": "Todas las Citas",
   "tabs.upcoming": "Próximas",
-  "tabs.availability": "Gestionar Disponibilidad",
+  "tabs.availability": "Disponibilidad",
   "tabs.settings": "Configuración",
   "overview.total_appointments": "Total de Citas",
   "overview.upcoming": "Próximas",
@@ -531,5 +531,12 @@ export const es = {
   "COMMERCIAL": "Limpieza Comercial",
   "filter": "Filtrar",
 
+  "week_view.title": "Horario semanal",
+  "week_view.description": "Ver y gestionar las citas de la semana",
+  "week_view.prev_week": "Semana anterior",
+  "week_view.next_week": "Semana siguiente",
+  "label.bookingId": "ID de reserva",
+  "tabs.week_view" : "Vista semanal",
 }
+
 

@@ -27,7 +27,7 @@ export default function Header() {
           <div className="flex items-center">
             <Sparkles className="h-6 w-6 text-gradient-to-r from-blue-600 to-cyan-500 mr-2" />
             <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              {t.companyName}
+              Dos Chicas
             </div>
           </div>
         </Link>

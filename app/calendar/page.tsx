@@ -250,8 +250,8 @@ export default function BookingPage() {
     setIsLoadingPrices(true)
     setApiErrors((prev) => ({ ...prev, prices: undefined }))
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
-      const response = await fetch(url)
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`;
+      const response = await fetch(url);
       if (response.ok) {
         const details: any = await response.json();
         const tmp = [...serviceTypes];
@@ -267,7 +267,7 @@ export default function BookingPage() {
         tmp[9].price = details.moldPrice;
         tmp[10].price = details.constructionPrice;
         tmp[11].price = details.commercialPrice;
-        setServiceTypes(tmp)
+        setServiceTypes(tmp);
       } else {
         setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }))
         toast({
@@ -288,7 +288,6 @@ export default function BookingPage() {
       setIsLoadingPrices(false)
     }
   }
-  console.log(serviceTypes);
 
   const isDateAvailable = (date: Date) => {
     return availableDays.some((availableDate) => isSameDay(date, availableDate))
@@ -338,8 +337,6 @@ export default function BookingPage() {
       setCurrentStep((prev) => prev - 1)
     }
   }
-
-  console.log(selectedService);
 
   const handleSubmit = async (orderId: string) => {
     setIsSubmitting(true)

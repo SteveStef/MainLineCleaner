@@ -272,7 +272,7 @@ export const en = {
   "tabs.overview": "Overview",
   "tabs.all_appointments": "All Appointments",
   "tabs.upcoming": "Upcoming",
-  "tabs.availability": "Manage Availability",
+  "tabs.availability": "Availability",
   "tabs.settings": "Settings",
   "overview.total_appointments": "Total Appointments",
   "overview.upcoming": "Upcoming",
@@ -522,5 +522,12 @@ export const en = {
   "COMMERCIAL": "Commercial Clean",
   "filter": "Filter",
 
+  "week_view.title": "Weekly Schedule",
+  "week_view.description": "View and manage appointments for the week",
+  "week_view.prev_week": "Previous Week",
+  "week_view.next_week": "Next Week",
+  "tabs.week_view" : "Week View",
+  "label.bookingId": "Booking ID"
 
 }
+
