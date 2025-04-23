@@ -107,13 +107,9 @@ export default function Header() {
                 <SheetTitle className="flex items-center">
                   <Sparkles className="h-6 w-6 text-blue-600 mr-2" />
                   <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    {t.companyName}
+                    Dos Chicas
                   </span>
                 </SheetTitle>
-                <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-                  <X className="h-5 w-5" />
-                  <span className="sr-only">Close</span>
-                </SheetClose>
               </SheetHeader>
 
               <div className="flex flex-col gap-6 py-6">
@@ -148,6 +144,14 @@ export default function Header() {
                 >
                   <Clock className="h-5 w-5" />
                   <span>{t.bookNow}</span>
+                </Link>
+                <Link
+                  href="/reviews"
+                  className="flex items-center gap-3 text-base font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Star className="h-5 w-5" />
+                  <span>{t.reviews}</span>
                 </Link>
 
                 <Button

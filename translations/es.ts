@@ -537,6 +537,15 @@ export const es = {
   "week_view.next_week": "Semana siguiente",
   "label.bookingId": "ID de reserva",
   "tabs.week_view" : "Vista semanal",
+
+  "table.revenue": "Ingresos",
+  "table.profit": "Beneficio",
+  "table.sales_tax_due": "Impuesto de ventas adeudado",
+  "table.paypal_fee": "Tarifa de PayPal",
+  "table.year": "Año",
+  "chart.yearly_revenue": "Ingresos anuales",
+  "revenue.chart": "Ganancia",
+  "monthly.gross.revenue": "Ingresos Brutos Mensuales",
 }
 
 

@@ -134,6 +134,7 @@ interface Appointment {
   appointmentDate: Date
   status: string
   bookingId: string
+  city: string
 }
 
 const defaultPricing = {
@@ -174,36 +175,15 @@ export default function AdminDashboard() {
   const [auth, setAuth] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // State for availability management
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
   const [timeSlots, setTimeSlots] = useState<TimeSlotMap>({})
   const [selectedDateForTimeSlot, setSelectedDateForTimeSlot] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  //const [calendarView, setCalendarView] = useState<boolean>(true)
 
-  const [revenueData, setRevenueData] = useState([
-      { month: "Apr", revenue: 16800 },
-      { month: "May", revenue: 21500 },
-      { month: "Jun", revenue: 19700 },
-      { month: "Jul", revenue: 22300 },
-      { month: "Aug", revenue: 26100 },
-      { month: "Sep", revenue: 24800 },
-      { month: "Oct", revenue: 27500 },
-      { month: "Nov", revenue: 29800 },
-      { month: "Dec", revenue: 32400 },
-      { month: "Jan", revenue: 12500 },
-      { month: "Feb", revenue: 15000 },
-  ]);
+  const [revenueData, setRevenueData] = useState([]);
 
-  const [yearlyRevenue, setYearlyRevenue] = useState([
-      { year: 2021, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-      { year: 2022, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-      { year: 2023, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-      { year: 2024, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-      { year: 2025, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-      { year: 2026, revenue: 220200, profit: 154140, salesTax: 13212, paypalFee: 6385 },
-  ]);
+  const [yearlyRevenue, setYearlyRevenue] = useState([]);
 
   // State for financial metrics
   const [financialMetrics, setFinancialMetrics] = useState({
@@ -329,6 +309,8 @@ export default function AdminDashboard() {
       const response = await fetch(url, options)
       if (response.ok) {
         const details = await response.json()
+        setYearlyRevenue(details.yearlyRevenue);
+        setRevenueData(details.monthlyRevenue);
         setFinancialMetrics({
           profit: details.profit || 0,
           grossRevenue: details.gross || 0,
@@ -888,7 +870,7 @@ export default function AdminDashboard() {
                   value="Graph"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
                 >
-                  Revenue Chart
+                  {t["revenue.chart"]}
                 </TabsTrigger>
 
                 <TabsTrigger
@@ -901,7 +883,7 @@ export default function AdminDashboard() {
 <TabsContent value="Graph">
           <RevenueChart
             data={revenueData}
-            title="Monthly Gross Revenue"
+            title={t["monthly.gross.revenue"]}
             description=""
             showDataLabels={true}
             lineColor="rgb(59, 130, 246)"

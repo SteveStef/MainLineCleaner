@@ -527,7 +527,17 @@ export const en = {
   "week_view.prev_week": "Previous Week",
   "week_view.next_week": "Next Week",
   "tabs.week_view" : "Week View",
-  "label.bookingId": "Booking ID"
+  "label.bookingId": "Booking ID",
+
+  "chart.yearly_revenue": "Past Yearly Revenue",
+  "table.year": "Year",
+
+  "table.revenue": "Revenue",
+  "table.profit": "Profit",
+  "table.sales_tax_due": "Sales Tax Due",
+  "table.paypal_fee": "PayPal Fee",
+  "revenue.chart": "Revenue",
+  "monthly.gross.revenue": "Monthly Gross Revenue",
 
 }
 

@@ -14,34 +14,15 @@ import {
   Filler,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
-
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-/**
- * RevenueData interface defines the structure of each revenue data point
- * @property month - The month name (e.g., 'January', 'February')
- * @property revenue - The gross revenue amount for that month
- */
 export interface RevenueData {
   month: string
   revenue: number
 }
 
-/**
- * RevenueChartProps interface defines the props for the RevenueChart component
- * @property data - Array of revenue data objects
- * @property title - Optional title for the chart
- * @property description - Optional description for the chart
- * @property lineColor - Optional color for the line (defaults to rgb(59, 130, 246))
- * @property fillColor - Optional color for the area fill (defaults to rgba(59, 130, 246, 0.1))
- * @property showDataLabels - Optional flag to show data labels (defaults to false)
- * @property currencySymbol - Optional currency symbol (defaults to $)
- */
 export interface RevenueChartProps {
   data: RevenueData[]
   title?: string
@@ -183,26 +164,10 @@ export default function RevenueChart({
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ArrowUpDown className="mr-2 h-4 w-4" />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortOrder("none")}>Default Order</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder("asc")}>Lowest to Highest</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder("desc")}>Highest to Lowest</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Total Revenue</p>
             <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
           </div>
         </div>
