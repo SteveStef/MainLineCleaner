@@ -3,7 +3,7 @@ import { LanguageProvider } from "@/contexts/language-context"
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Main Line Cleaning',
+  title: 'Dos Chicas',
   description: '',
   generator: 'Stephen Stefanatos',
 }

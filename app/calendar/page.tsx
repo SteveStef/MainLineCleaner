@@ -418,6 +418,7 @@ export default function BookingPage() {
           if (!isDateInPast(currDate)) tmp.push(currDate)
         }
         setAvailableDays(tmp)
+        console.log(tmp);
       } else {
         setApiErrors((prev) => ({
           ...prev,
@@ -1008,9 +1009,9 @@ export default function BookingPage() {
                       onValueChange={setSelectedTimeSlot}
                       className="grid gap-3 max-w-md mx-auto"
                       >
-                      {timeSlots.map((slot) => (
+                      {timeSlots.map((slot, idx) => (
                             <div
-                            key={slot.value}
+                            key={idx}
                             className={cn(
                                 "flex items-center space-x-2 p-4 rounded-md border transition-all",
                                 selectedTimeSlot === slot.value
