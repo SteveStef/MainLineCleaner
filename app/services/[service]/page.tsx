@@ -1,6 +1,6 @@
 "use client"
-
-import { useState, useEffect, useRef } from "react"
+import { useParams } from "next/navigation"
+import { useState, useEffect, useRef, useContext } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, useInView, AnimatePresence } from "framer-motion"
@@ -8,103 +8,37 @@ import { CheckCircle, ArrowRight, Clock, Shield, Award, Users, ChevronLeft, Chev
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Header from "../../Header"
+import { serviceInfo, serviceInfoES } from "./serviceInfo"
 
-// This would normally come from your translation file or CMS
-const serviceData = {
-  cleaning: {
-    title: "Professional Cleaning Services",
-    shortDesc: "Expert cleaning solutions tailored to your specific needs",
-    longDesc:
-      "Our professional cleaning services are designed to provide comprehensive solutions for homes and businesses of all sizes. We use eco-friendly products and advanced techniques to ensure spotless results every time.",
-    gradientFrom: "blue-600",
-    gradientTo: "cyan-500",
-    features: [
-      "Deep cleaning of all surfaces",
-      "Eco-friendly cleaning products",
-      "Trained and vetted cleaning professionals",
-      "Flexible scheduling options",
-      "Satisfaction guarantee",
-      "Custom cleaning plans",
-    ],
-    benefits: [
-      {
-        title: "Save Time",
-        description: "Reclaim your valuable time while we handle the cleaning",
-        icon: Clock,
-      },
-      {
-        title: "Health & Safety",
-        description: "Improve indoor air quality and reduce allergens",
-        icon: Shield,
-      },
-      {
-        title: "Professional Results",
-        description: "Enjoy consistently superior cleaning outcomes",
-        icon: Award,
-      },
-      {
-        title: "Customized Service",
-        description: "Solutions tailored to your specific requirements",
-        icon: Users,
-      },
-    ],
-    faqs: [
-      {
-        question: "How often should I schedule cleaning services?",
-        answer:
-          "The frequency depends on your specific needs. We offer weekly, bi-weekly, monthly, and one-time cleaning services to accommodate different requirements.",
-      },
-      {
-        question: "Are your cleaning products safe for pets and children?",
-        answer:
-          "Yes, we use eco-friendly, non-toxic cleaning products that are safe for children, pets, and the environment while still delivering excellent cleaning results.",
-      },
-      {
-        question: "How long does a typical cleaning service take?",
-        answer:
-          "The duration varies based on the size of your space and the type of cleaning requested. A standard cleaning for an average-sized home typically takes 2-3 hours with our professional team.",
-      },
-      {
-        question: "Do I need to be present during the cleaning service?",
-        answer:
-          "No, you don't need to be present. Many of our clients provide a key or access instructions, allowing our trusted professionals to clean while you're away.",
-      },
-    ],
-    process: [
-      "Initial consultation to understand your needs",
-      "Customized cleaning plan development",
-      "Scheduling at your convenience",
-      "Professional cleaning execution",
-      "Quality inspection and feedback",
-    ],
-    testimonials: [
-      {
-        name: "Sarah Johnson",
-        role: "Homeowner",
-        comment: "The cleaning team was professional, thorough, and efficient. My home has never looked better!",
-        rating: 5,
-      },
-      {
-        name: "Michael Chen",
-        role: "Office Manager",
-        comment:
-          "We've been using their services for our office for over a year now. Consistently excellent results and reliable service.",
-        rating: 5,
-      },
-      {
-        name: "Emily Rodriguez",
-        role: "Property Manager",
-        comment:
-          "Their attention to detail is impressive. They've become our go-to cleaning service for all our properties.",
-        rating: 4,
-      },
-    ],
-  },
-}
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
+import Services from "@/components/services"
 
-export default function ServicePage({ params }: { params: { service: string } }) {
+export default function ServicePage() {
   const [activeTab, setActiveTab] = useState("overview")
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
+
+  const { service } = useParams<{ service: string }>()
+
+  const { language } = useContext(LanguageContext)
+  const t = translations[language as Language]
+
+  const [serviced, setServiced] = useState(() => {
+    if (!service) return null
+    const key = service.toUpperCase()
+    return language === "es" ? (serviceInfoES[key]?.cleaning ?? null) : (serviceInfo[key]?.cleaning ?? null)
+  })
+
+  useEffect(() => {
+    if (!service) return
+    const key = service.toUpperCase()
+    if (language === "es") {
+      setServiced(serviceInfoES[key]?.cleaning ?? null)
+    } else {
+      setServiced(serviceInfo[key]?.cleaning ?? null)
+    }
+  }, [service, language])
 
   // Refs for scroll animations
   const overviewRef = useRef<HTMLDivElement>(null)
@@ -113,6 +47,7 @@ export default function ServicePage({ params }: { params: { service: string } })
   const benefitsRef = useRef<HTMLDivElement>(null)
   const faqsRef = useRef<HTMLDivElement>(null)
   const testimonialsRef = useRef<HTMLDivElement>(null)
+  const engagementRef = useRef<HTMLDivElement>(null)
 
   // Check if sections are in view
   const overviewInView = useInView(overviewRef, { once: false, amount: 0.3 })
@@ -121,6 +56,7 @@ export default function ServicePage({ params }: { params: { service: string } })
   const benefitsInView = useInView(benefitsRef, { once: false, amount: 0.3 })
   const faqsInView = useInView(faqsRef, { once: false, amount: 0.3 })
   const testimonialsInView = useInView(testimonialsRef, { once: false, amount: 0.3 })
+  const engagementInView = useInView(engagementRef, { once: false, amount: 0.3 })
 
   // Update active tab based on scroll position
   useEffect(() => {
@@ -128,13 +64,13 @@ export default function ServicePage({ params }: { params: { service: string } })
     else if (featuresInView) setActiveTab("features")
     else if (processInView) setActiveTab("process")
     else if (benefitsInView) setActiveTab("benefits")
+    else if (engagementInView) setActiveTab("engagement")
     else if (faqsInView) setActiveTab("faqs")
     else if (testimonialsInView) setActiveTab("testimonials")
-  }, [overviewInView, featuresInView, processInView, benefitsInView, faqsInView, testimonialsInView])
+  }, [overviewInView, featuresInView, processInView, benefitsInView, engagementInView, faqsInView, testimonialsInView])
 
   // In a real application, you would fetch this data based on the service parameter
   // For this example, we'll just use the cleaning service data
-  const service = serviceData.cleaning
 
   // Animation variants
   const fadeIn = {
@@ -164,9 +100,9 @@ export default function ServicePage({ params }: { params: { service: string } })
       transition={{ duration: 0.5 }}
       className="flex flex-col min-h-screen"
     >
-    <Header />
+      <Header />
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 relative overflow-hidden">
+      <section className="w-full py-12 md:py-24 lg:py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-cyan-50 z-0">
           <motion.div
             className="absolute inset-0 opacity-10"
@@ -197,11 +133,11 @@ export default function ServicePage({ params }: { params: { service: string } })
           >
             <motion.div variants={fadeIn}>
               <Link
-                href="/services"
+                href="../#services"
                 className="flex items-center text-sm font-medium text-blue-600 hover:underline transition-all duration-300 hover:text-blue-800"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Back to Services
+                {t["back.to.services"]}
               </Link>
             </motion.div>
 
@@ -216,11 +152,11 @@ export default function ServicePage({ params }: { params: { service: string } })
             <motion.div className="space-y-2" variants={fadeIn}>
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
                 <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm">
-                  {service.title}
+                  {serviced.title}
                 </span>
               </h1>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                {service.shortDesc}
+                {serviced.shortDesc}
               </p>
               <motion.div
                 className="h-1 w-24 mx-auto rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"
@@ -229,14 +165,10 @@ export default function ServicePage({ params }: { params: { service: string } })
                 transition={{ delay: 0.5, duration: 0.8 }}
               />
             </motion.div>
-
             <motion.div variants={fadeIn} className="pt-6" whileHover={{ scale: 1.03 }}>
-              <Button
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                size="lg"
-              >
-                Get Started
-              </Button>
+              <Link href="/calendar">
+                <Button>{t["book.now"]}</Button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -257,15 +189,16 @@ export default function ServicePage({ params }: { params: { service: string } })
                   <Card className="overflow-hidden border-0 shadow-lg">
                     <div className="h-2 bg-gradient-to-r from-blue-600 to-cyan-500" />
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-bold mb-4">Quick Navigation</h3>
+                      <h3 className="text-xl font-bold mb-4">{t["quick.navigation"]}</h3>
                       <nav className="space-y-2">
                         {[
-                          { id: "overview", label: "Overview" },
-                          { id: "features", label: "Features" },
-                          { id: "process", label: "Process" },
-                          { id: "benefits", label: "Benefits" },
-                          { id: "faqs", label: "FAQs" },
-                          { id: "testimonials", label: "Testimonials" },
+                          { id: "overview", label: t["nav.overview"] },
+                          { id: "features", label: t["nav.features"] },
+                          { id: "process", label: t["nav.process"] },
+                          { id: "benefits", label: t["nav.benefits"] },
+                          { id: "engagement", label: t["nav.working.with.us"] },
+                          { id: "faqs", label: t["nav.faqs"] },
+                          { id: "testimonials", label: t["nav.testimonials"] },
                         ].map((item) => (
                           <motion.a
                             key={item.id}
@@ -297,12 +230,14 @@ export default function ServicePage({ params }: { params: { service: string } })
                   <Card className="overflow-hidden border-0 shadow-lg">
                     <div className="h-2 bg-gradient-to-r from-blue-600 to-cyan-500" />
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-bold mb-4">Ready to Get Started?</h3>
-                      <p className="text-muted-foreground mb-4">Contact us today for a free consultation and quote.</p>
+                      <h3 className="text-xl font-bold mb-4">{t["ready.to.get.started"]}</h3>
+                      <p className="text-muted-foreground mb-4">{t["contact.us.for.quote"]}</p>
                       <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                        <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-md hover:shadow-lg transition-all duration-300">
-                          Request a Quote
-                        </Button>
+                        <Link href="../#contact">
+                          <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-md hover:shadow-lg transition-all duration-300">
+                            {t["request.quote"]}
+                          </Button>
+                        </Link>
                       </motion.div>
                     </CardContent>
                   </Card>
@@ -323,28 +258,42 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <h2 className="text-2xl font-bold tracking-tight mb-6">
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Service Overview
+                    {t["service.overview"]}
                   </span>
                 </h2>
                 <div className="prose max-w-none">
-                  <p className="text-lg text-muted-foreground mb-6">{service.longDesc}</p>
+                  <p className="text-lg text-muted-foreground mb-6">{serviced.longDesc}</p>
                   <motion.div
                     className="relative rounded-xl overflow-hidden h-64 md:h-80 lg:h-96 my-8 shadow-xl"
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.3 }}
                   >
                     <Image
-                      src="/placeholder.svg?height=600&width=1200"
+                      src={serviced.image || "/placeholder.svg"}
                       alt="Professional cleaning service"
                       fill
                       className="object-cover"
                     />
                   </motion.div>
-                  <p className="text-muted-foreground">
-                    Our professional team brings years of experience and specialized knowledge to every cleaning
-                    project. Whether you need residential cleaning, commercial cleaning, or specialized cleaning
-                    services, we have the expertise and equipment to exceed your expectations.
-                  </p>
+
+                  <p className="text-muted-foreground">{t["professional.team.description"]}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold text-blue-700">{t["comprehensive.solutions"]}</h3>
+                      <p className="text-muted-foreground">
+                        {t["comprehensive.solutions.description"]?.replace("{service}", serviced.title.toLowerCase())}
+                      </p>
+                      <h3 className="text-xl font-semibold text-blue-700">{t["customized.approach"]}</h3>
+                      <p className="text-muted-foreground">{t["customized.approach.description"]}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold text-blue-700">{t["trained.professionals"]}</h3>
+                      <p className="text-muted-foreground">{t["trained.professionals.description"]}</p>
+                      <h3 className="text-xl font-semibold text-blue-700">{t["quality.assurance"]}</h3>
+                      <p className="text-muted-foreground">{t["quality.assurance.description"]}</p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
 
@@ -359,11 +308,11 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Key Features
+                    {t["key.features"]}
                   </span>
                 </motion.h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {service.features.map((feature, index) => (
+                  {serviced.features.map((feature, index) => (
                     <motion.div
                       key={index}
                       className="flex items-start space-x-4 p-4 rounded-lg hover:bg-blue-50 transition-colors duration-300"
@@ -379,12 +328,8 @@ export default function ServicePage({ params }: { params: { service: string } })
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-medium text-blue-800">{feature}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {index % 2 === 0
-                            ? "Our comprehensive approach ensures no detail is overlooked."
-                            : "We customize our services to meet your specific requirements."}
-                        </p>
+                        <h3 className="font-medium text-blue-800">{feature.title}</h3>
+                        <p className="text-sm text-muted-foreground">{feature.description}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -402,11 +347,11 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Our Process
+                    {t["our.process"]}
                   </span>
                 </motion.h2>
                 <div className="relative border-l-2 border-blue-200 pl-8 ml-4 space-y-10">
-                  {service.process.map((step, index) => (
+                  {serviced.process.map((step, index) => (
                     <motion.div key={index} className="relative" variants={itemFadeIn} custom={index}>
                       <motion.div
                         className="absolute -left-[42px] flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg"
@@ -417,14 +362,14 @@ export default function ServicePage({ params }: { params: { service: string } })
                       <h3 className="text-lg font-medium text-blue-800">{step}</h3>
                       <p className="text-muted-foreground">
                         {index === 0
-                          ? "We begin by understanding your specific cleaning needs and preferences."
+                          ? t["process.step1.description"]
                           : index === 1
-                            ? "Based on your requirements, we develop a tailored cleaning plan."
+                            ? t["process.step2.description"]
                             : index === 2
-                              ? "We work around your schedule to minimize disruption."
+                              ? t["process.step3.description"]
                               : index === 3
-                                ? "Our professional team executes the cleaning plan with precision."
-                                : "We ensure your complete satisfaction with our service."}
+                                ? t["process.step4.description"]
+                                : t["process.step5.description"]}
                       </p>
                     </motion.div>
                   ))}
@@ -442,11 +387,11 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Benefits
+                    {t["benefits"]}
                   </span>
                 </motion.h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {service.benefits.map((benefit, index) => (
+                  {serviced.benefits.map((benefit, index) => (
                     <motion.div
                       key={index}
                       variants={itemFadeIn}
@@ -477,6 +422,62 @@ export default function ServicePage({ params }: { params: { service: string } })
                 </div>
               </motion.div>
 
+              {/* Client Engagement Process */}
+              <motion.div
+                id="engagement"
+                className="scroll-mt-24"
+                ref={engagementRef}
+                initial="hidden"
+                animate={engagementInView ? "visible" : "hidden"}
+                variants={staggerContainer}
+              >
+                <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
+                  <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                    {t["working.with.us"]}
+                  </span>
+                </motion.h2>
+                <Card className="overflow-hidden border-0 shadow-lg">
+                  <div className="h-2 bg-gradient-to-r from-blue-600 to-cyan-500" />
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <motion.div
+                        className="flex flex-col items-center text-center p-4"
+                        variants={itemFadeIn}
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="rounded-full bg-blue-100 p-3 mb-4">
+                          <Clock className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="font-medium text-blue-800 mb-2">{t["initial.consultation"]}</h3>
+                        <p className="text-sm text-muted-foreground">{t["initial.consultation.description"]}</p>
+                      </motion.div>
+                      <motion.div
+                        className="flex flex-col items-center text-center p-4"
+                        variants={itemFadeIn}
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="rounded-full bg-blue-100 p-3 mb-4">
+                          <Shield className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="font-medium text-blue-800 mb-2">{t["service.agreement"]}</h3>
+                        <p className="text-sm text-muted-foreground">{t["service.agreement.description"]}</p>
+                      </motion.div>
+                      <motion.div
+                        className="flex flex-col items-center text-center p-4"
+                        variants={itemFadeIn}
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="rounded-full bg-blue-100 p-3 mb-4">
+                          <Award className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="font-medium text-blue-800 mb-2">{t["ongoing.service"]}</h3>
+                        <p className="text-sm text-muted-foreground">{t["ongoing.service.description"]}</p>
+                      </motion.div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
               {/* FAQs */}
               <motion.div
                 id="faqs"
@@ -488,11 +489,11 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Frequently Asked Questions
+                    {t["frequently.asked.questions"]}
                   </span>
                 </motion.h2>
                 <div className="space-y-4">
-                  {service.faqs.map((faq, index) => (
+                  {serviced.faqs.map((faq, index) => (
                     <motion.div
                       key={index}
                       variants={itemFadeIn}
@@ -540,11 +541,11 @@ export default function ServicePage({ params }: { params: { service: string } })
               >
                 <motion.h2 className="text-2xl font-bold tracking-tight mb-6" variants={fadeIn}>
                   <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    Client Testimonials
+                    {t["client.testimonials"]}
                   </span>
                 </motion.h2>
                 <div className="grid grid-cols-1 gap-6">
-                  {service.testimonials.map((testimonial, index) => (
+                  {serviced.testimonials.map((testimonial, index) => (
                     <motion.div key={index} variants={itemFadeIn} whileHover={{ scale: 1.02 }}>
                       <Card className="overflow-hidden border-0 shadow-lg">
                         <CardContent className="p-6">
@@ -598,11 +599,15 @@ export default function ServicePage({ params }: { params: { service: string } })
                 <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-8 text-white">
                   <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-8">
                     <div>
-                      <h3 className="text-xl font-bold mb-2">Ready to experience our premium cleaning service?</h3>
-                      <p>Contact us today for a free consultation and quote.</p>
+                      <h3 className="text-xl font-bold mb-2">{t["ready.to.experience"]}</h3>
+                      <p>{t["contact.today"]}</p>
                     </div>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg">Get Started</Button>
+                      <Link href="../calendar">
+                        <Button className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg">
+                          {t["get.started"]}
+                        </Button>
+                      </Link>
                     </motion.div>
                   </div>
                 </div>
@@ -611,141 +616,7 @@ export default function ServicePage({ params }: { params: { service: string } })
           </div>
         </div>
       </section>
-
-      {/* Related Services */}
-      <section className="w-full py-12 md:py-24 bg-gradient-to-b from-white to-gray-50">
-        <div className="container px-4 md:px-6">
-          <motion.div
-            className="flex flex-col items-center space-y-4 text-center mb-12"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                Related Services
-              </span>
-            </h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Discover our other professional services
-            </p>
-            <motion.div
-              className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"
-              initial={{ width: 0 }}
-              whileInView={{ width: "3rem" }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            />
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.2,
-                },
-              },
-            }}
-          >
-            {[1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                variants={{
-                  hidden: { opacity: 0, y: 50 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-                }}
-                whileHover={{
-                  y: -15,
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group relative flex flex-col items-center space-y-4 rounded-xl border bg-white p-6 shadow-lg"
-              >
-                <motion.div
-                  className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 p-1 shadow-lg"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <div className="rounded-full bg-white p-3">
-                    <CheckCircle className="h-7 w-7 text-blue-600" />
-                  </div>
-                </motion.div>
-
-                <h3 className="mt-8 text-xl font-bold text-blue-600">
-                  {i === 1 ? "Commercial Cleaning" : i === 2 ? "Specialized Cleaning" : "Residential Cleaning"}
-                </h3>
-                <motion.div
-                  className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "3rem" }}
-                  viewport={{ once: true }}
-                />
-                <p className="text-center text-muted-foreground h-[80px]">
-                  {i === 1
-                    ? "Professional cleaning solutions for offices and commercial spaces"
-                    : i === 2
-                      ? "Specialized cleaning for unique surfaces and environments"
-                      : "Comprehensive cleaning services for homes of all sizes"}
-                </p>
-
-                <ul className="mt-2 space-y-2 text-sm">
-                  {[1, 2, 3].map((j) => (
-                    <motion.li
-                      key={j}
-                      className="flex items-center gap-2"
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: j * 0.1 }}
-                    >
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span>
-                        {i === 1
-                          ? j === 1
-                            ? "Office cleaning"
-                            : j === 2
-                              ? "Retail spaces"
-                              : "Industrial facilities"
-                          : i === 2
-                            ? j === 1
-                              ? "Carpet cleaning"
-                              : j === 2
-                                ? "Window cleaning"
-                                : "Post-construction"
-                            : j === 1
-                              ? "Regular cleaning"
-                              : j === 2
-                                ? "Deep cleaning"
-                                : "Move-in/out cleaning"}
-                      </span>
-                    </motion.li>
-                  ))}
-                </ul>
-
-                <div className="mt-auto pt-4">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-cyan-500 hover:bg-cyan-50 text-blue-600 group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-cyan-500 group-hover:text-white transition-all duration-300"
-                    >
-                      <Link href={`/services/${i === 1 ? "commercial" : i === 2 ? "specialized" : "residential"}`}>
-                        Learn More
-                      </Link>
-                    </Button>
-                  </motion.div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <Services />
     </motion.div>
   )
 }
