@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
 import Link from "next/link"
 import {
   Calendar,
@@ -33,13 +33,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Header from "../Header";
 import Footer from "../Footer";
 
+import { LanguageContext } from "@/contexts/language-context"
+import { translations } from "@/translations"
+import type { Language } from "@/translations"
+
 interface AppointmentData {
   bookingId: string
   appointmentDate: string
   time: string
   service: string
   address: string
-  amountCharged: string
+  chargedAmount: string
 }
 
 interface TimeSlot {
@@ -86,11 +90,26 @@ export default function AppointmentManagerPage() {
     email: "",
     reason: "",
   })
+  const { language } = useContext(LanguageContext)
+  const t = translations[language as Language]
 
   const isDateInPast = (date: Date): boolean => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     return date <= today
+  }
+  function isTwoOrMoreDaysAway(dateInput) {
+    const target = new Date(dateInput);
+    const today = new Date();
+
+    // Normalize both to midnight to compare whole days
+    target.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const msInDay = 24 * 60 * 60 * 1000;
+    const daysDiff = Math.floor((target - today) / msInDay);
+
+    return daysDiff >= 2;
   }
   // Mock available dates (in a real app, this would come from an API)
   useEffect(() => {
@@ -273,7 +292,7 @@ export default function AppointmentManagerPage() {
 
     try {
       if (selectedAction === "cancel") {
-        const response = await fetch(`http://localhost:9080/customer-cancel-appointment`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customer-cancel-appointment`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -282,7 +301,6 @@ export default function AppointmentManagerPage() {
             bookingId: formData.bookingId,
             email: formData.email,
             reason: formData.reason,
-            action: "cancel",
           }),
         })
 
@@ -294,7 +312,7 @@ export default function AppointmentManagerPage() {
           }
         }
       } else if (selectedAction === "reschedule" && selectedDate && selectedTimeSlot) {
-        const response = await fetch(`http://localhost:9080/customer-reschedule-appointment`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customer-reschedule-appointment`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -355,14 +373,12 @@ export default function AppointmentManagerPage() {
   const calculateRefundAmount = (): string => {
     if (!appointmentData) return "$0.00"
 
-    //const priceValue = Number.parseFloat(appointmentData.amountCharged.replace(/[^0-9.]/g, ""))
-    //return `$${(priceValue * 0.75).toFixed(2)}`
-    return "$0.00"
+    const priceValue = Number.parseFloat(appointmentData.chargedAmount.replace(/[^0-9.]/g, ""))
+    return `$${(priceValue * 0.75).toFixed(2)}`
   }
 
   const handleSelectAction = (action: ActionType) => {
     setSelectedAction(action)
-    // Reset form fields specific to each action
     if (action === "reschedule") {
       setSelectedDate(null)
       setSelectedTimeSlot(null)
@@ -528,11 +544,11 @@ export default function AppointmentManagerPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Time:</span>
-                          <span className="font-medium">{appointmentData.time}</span>
+                          <span className="font-medium">{t[appointmentData.time]}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Service:</span>
-                          <span className="font-medium">{appointmentData.service}</span>
+                          <span className="font-medium">{t[appointmentData.service]}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Address:</span>
@@ -540,7 +556,7 @@ export default function AppointmentManagerPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Price:</span>
-                          <span className="font-medium">{appointmentData.chargedAmount}</span>
+                          <span className="font-medium">${appointmentData && appointmentData.chargedAmount.split(" ")[0]}</span>
                         </div>
                       </div>
                     </div>
@@ -838,7 +854,7 @@ export default function AppointmentManagerPage() {
                                 <AlertDescription>
                                   When you cancel an appointment, you will receive a 75% refund of the original payment
                                   amount. The refund will be processed to your original payment method within 3-5
-                                  business days.
+                                  business days. 
                                 </AlertDescription>
                               </Alert>
 
@@ -847,12 +863,19 @@ export default function AppointmentManagerPage() {
                                 <div className="grid gap-2">
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Total Price Paid:</span>
-                                    <span className="font-medium">{appointmentData.price}</span>
+                                    <span className="font-medium">${appointmentData && appointmentData.chargedAmount.split(" ")[0]}</span>
                                   </div>
+                                  {
+                                    isTwoOrMoreDaysAway(appointmentData.appointmentDate) ?  
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Refund Amount (75%):</span>
                                     <span className="font-medium">{calculateRefundAmount()}</span>
-                                  </div>
+                                  </div> : 
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Refund Amount: </span>
+                                    <span className="font-medium">$0.00</span>
+                                  </div> 
+                                  }
                                 </div>
                               </div>
                             </div>
@@ -938,11 +961,11 @@ export default function AppointmentManagerPage() {
                           <div className="grid gap-2">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Booking ID:</span>
-                              <span className="font-medium">{appointmentData.id}</span>
+                              <span className="font-medium">{appointmentData.bookingId}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Service:</span>
-                              <span className="font-medium">{appointmentData.service}</span>
+                          <span className="font-medium">{t[appointmentData.service]}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Address:</span>
@@ -969,11 +992,11 @@ export default function AppointmentManagerPage() {
                             <div className="grid gap-2">
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Date:</span>
-                                <span className="font-medium">{appointmentData.date}</span>
+                                <span className="font-medium">{format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Time:</span>
-                                <span className="font-medium">{appointmentData.time}</span>
+                                <span className="font-medium">{t[appointmentData.time]}</span>
                               </div>
                             </div>
                           </div>
@@ -981,27 +1004,15 @@ export default function AppointmentManagerPage() {
                       </div>
                     ) : (
                       <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-left mb-6">
-                        <h3 className="font-medium text-lg mb-3">Cancellation Details</h3>
+                        <h3 className="font-medium text-lg mb-3">Appointment Deta</h3>
                         <div className="grid gap-2">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Booking ID:</span>
-                            <span className="font-medium">{appointmentData.id}</span>
+                            <span className="font-medium">{appointmentData.bookingId}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Cancelled Date:</span>
-                            <span className="font-medium">{appointmentData.date}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Cancelled Time:</span>
-                            <span className="font-medium">{appointmentData.time}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Refund Method:</span>
-                            <span className="font-medium">Original Payment Method</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total Price Paid:</span>
-                            <span className="font-medium">{appointmentData.price}</span>
+                            <span className="text-muted-foreground">Amount Paid:</span>
+                            <span className="font-medium">${appointmentData?.chargedAmount?.split(" ")[0]}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Refund Amount (75%):</span>
@@ -1012,8 +1023,8 @@ export default function AppointmentManagerPage() {
                     )}
                   </CardContent>
                   <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 pb-8">
-                    <Button asChild variant="outline" size="lg">
-                      <Link href="/appointments">View My Appointments</Link>
+                    <Button onClick={() => setSelectedAction(null)} asChild variant="outline" size="lg">
+                      <div>Cancel another Appointment</div>
                     </Button>
                     <Button
                       asChild
