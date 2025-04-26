@@ -1,7 +1,7 @@
 "use client"
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect, useContext, useRef } from "react"
 import type React from "react"
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion"
 
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -49,7 +49,7 @@ const fadeIn = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
+      duration: 0.4,
       ease: "easeOut",
     },
   },
@@ -85,7 +85,7 @@ const scaleUp = {
     scale: 1,
     opacity: 1,
     transition: {
-      duration: 0.5,
+      duration: 0.2,
     },
   },
 }
@@ -93,7 +93,7 @@ const scaleUp = {
 const pulseAnimation = {
   scale: [1, 1.05, 1],
   transition: {
-    duration: 2,
+    duration: 1,
     repeat: Number.POSITIVE_INFINITY,
     repeatType: "reverse" as const,
   },
@@ -132,6 +132,27 @@ function MainLineCleanersContent() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0)
+
+  // Smooth scroll function
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }
+  }
+
+  // Scroll-linked animations
+  const aboutRef = useRef(null)
+  const isAboutInView = useInView(aboutRef, { once: false, amount: 0.3 })
+
+  const testimonialsRef = useRef(null)
+  const isTestimonialsInView = useInView(testimonialsRef, { once: false, amount: 0.3 })
+
+  const contactRef = useRef(null)
+  const isContactInView = useInView(contactRef, { once: false, amount: 0.3 })
 
   // Get translations based on current language
   const t = translations[language as Language]
@@ -320,6 +341,7 @@ function MainLineCleanersContent() {
       <main className="flex-1">
         {/* Hero Section with Parallax Effect */}
         <motion.section
+          id="hero"
           className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white relative"
           initial="hidden"
           animate="visible"
@@ -380,8 +402,9 @@ function MainLineCleanersContent() {
                       size="lg"
                       variant="outline"
                       className="border-blue-200 hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => scrollToSection("about")}
                     >
-                      <Link href="#about">{t.learnMore}</Link>
+                      {t.learnMore}
                     </Button>
                   </motion.div>
                 </motion.div>
@@ -492,10 +515,10 @@ function MainLineCleanersContent() {
         {/* About Section */}
         <motion.section
           id="about"
+          ref={aboutRef}
           className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white"
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate={isAboutInView ? "visible" : "hidden"}
           variants={staggerContainer}
         >
           <div className="container px-4 md:px-6">
@@ -592,10 +615,10 @@ function MainLineCleanersContent() {
         {/* Testimonials Section */}
         <motion.section
           id="testimonials"
+          ref={testimonialsRef}
           className="w-full py-12 md:py-24 lg:py-24"
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate={isTestimonialsInView ? "visible" : "hidden"}
           variants={staggerContainer}
         >
           <div className="container px-4 md:px-6">
@@ -765,10 +788,10 @@ function MainLineCleanersContent() {
         {/* Contact Section */}
         <motion.section
           id="contact"
+          ref={contactRef}
           className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white"
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate={isContactInView ? "visible" : "hidden"}
           variants={staggerContainer}
         >
           <div className="container px-4 md:px-6">
@@ -1132,6 +1155,69 @@ function MainLineCleanersContent() {
             </div>
           </div>
         </motion.section>
+        {/* Floating Navigation */}
+        <motion.div
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <motion.button
+            onClick={() => scrollToSection("hero")}
+            className={`w-3 h-3 rounded-full ${scrollYProgress.get() < 0.2 ? "bg-blue-600 scale-125" : "bg-gray-300"}`}
+            whileHover={{ scale: 1.5 }}
+            aria-label="Scroll to top"
+          />
+          <motion.button
+            onClick={() => scrollToSection("about")}
+            className={`w-3 h-3 rounded-full ${
+              scrollYProgress.get() >= 0.2 && scrollYProgress.get() < 0.5 ? "bg-blue-600 scale-125" : "bg-gray-300"
+            }`}
+            whileHover={{ scale: 1.5 }}
+            aria-label="Scroll to about section"
+          />
+          <motion.button
+            onClick={() => scrollToSection("testimonials")}
+            className={`w-3 h-3 rounded-full ${
+              scrollYProgress.get() >= 0.5 && scrollYProgress.get() < 0.8 ? "bg-blue-600 scale-125" : "bg-gray-300"
+            }`}
+            whileHover={{ scale: 1.5 }}
+            aria-label="Scroll to testimonials section"
+          />
+          <motion.button
+            onClick={() => scrollToSection("contact")}
+            className={`w-3 h-3 rounded-full ${scrollYProgress.get() >= 0.8 ? "bg-blue-600 scale-125" : "bg-gray-300"}`}
+            whileHover={{ scale: 1.5 }}
+            aria-label="Scroll to contact section"
+          />
+        </motion.div>
+        {/* Scroll to top button */}
+        <motion.button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white rounded-full p-3 shadow-lg"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{
+            opacity: scrollYProgress.get() > 0.2 ? 1 : 0,
+            scale: scrollYProgress.get() > 0.2 ? 1 : 0,
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          aria-label="Scroll to top"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m18 15-6-6-6 6" />
+          </svg>
+        </motion.button>
       </main>
       <Footer />
     </div>

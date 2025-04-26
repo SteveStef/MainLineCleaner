@@ -103,7 +103,7 @@ const serviceTypesDefaults: ServiceType[] = [
     features: ["waterExtraction", "moldPrevention"],
   },
   {
-    id: "MOVE_IN_OUT",
+    id: "MOVE",
     name: "moveService",
     description: "moveServiceDesc",
     price: "",
@@ -119,7 +119,7 @@ const serviceTypesDefaults: ServiceType[] = [
     features: ["discreetService", "thoroughSanitization"],
   },
   {
-    id: "EXPLOSIVE_RESIDUE",
+    id: "EXPLOSIVE",
     name: "explosiveResidueService",
     description: "explosiveResidueServiceDesc",
     price: "",
@@ -234,40 +234,40 @@ export default function BookingPage() {
     for (let i = 0; i < availability.length; i++) {
       if (availability[i].date === key) {
         const tmp: any = []
-        if (availability[i].morning) tmp.push( { value: "MORNING", label: localizedTimeSlotNames.morning} )
-        if (availability[i].afternoon) tmp.push({value:"AFTERNOON", label:localizedTimeSlotNames.afternoon})
-        if (availability[i].night) tmp.push({value:"NIGHT",label:localizedTimeSlotNames.night})
-        setTimeSlots(tmp);
+        if (availability[i].morning) tmp.push({ value: "MORNING", label: localizedTimeSlotNames.morning })
+        if (availability[i].afternoon) tmp.push({ value: "AFTERNOON", label: localizedTimeSlotNames.afternoon })
+        if (availability[i].night) tmp.push({ value: "NIGHT", label: localizedTimeSlotNames.night })
+        setTimeSlots(tmp)
         break
       }
     }
   }
   useEffect(() => {
-    if(selectedDate)handleDateSelect(selectedDate);
+    if (selectedDate) handleDateSelect(selectedDate)
   }, [language])
 
   async function getServicePrices() {
     setIsLoadingPrices(true)
     setApiErrors((prev) => ({ ...prev, prices: undefined }))
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`;
-      const response = await fetch(url);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
+      const response = await fetch(url)
       if (response.ok) {
-        const details: any = await response.json();
-        const tmp = [...serviceTypes];
-        tmp[0].price = details.regularPrice;
-        tmp[1].price = details.environmentPrice;
-        tmp[2].price = details.deepCleanPrice;
-        tmp[3].price = details.hazmat;
-        tmp[4].price = details.firePrice;
-        tmp[5].price = details.waterPrice;
-        tmp[6].price = details.moveInOutPrice;
-        tmp[7].price = details.deceasedPrice;
-        tmp[8].price = details.explosiveResidue;
-        tmp[9].price = details.moldPrice;
-        tmp[10].price = details.constructionPrice;
-        tmp[11].price = details.commercialPrice;
-        setServiceTypes(tmp);
+        const details: any = await response.json()
+        const tmp = [...serviceTypes]
+        tmp[0].price = details.regularPrice
+        tmp[1].price = details.environmentPrice
+        tmp[2].price = details.deepCleanPrice
+        tmp[3].price = details.hazmat
+        tmp[4].price = details.firePrice
+        tmp[5].price = details.waterPrice
+        tmp[6].price = details.moveInOutPrice
+        tmp[7].price = details.deceasedPrice
+        tmp[8].price = details.explosiveResidue
+        tmp[9].price = details.moldPrice
+        tmp[10].price = details.constructionPrice
+        tmp[11].price = details.commercialPrice
+        setServiceTypes(tmp)
       } else {
         setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }))
         toast({
@@ -327,6 +327,7 @@ export default function BookingPage() {
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1)
     }
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
   }
 
   const handlePreviousStep = () => {
@@ -336,6 +337,7 @@ export default function BookingPage() {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1)
     }
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
   }
 
   const handleSubmit = async (orderId: string) => {
@@ -360,7 +362,7 @@ export default function BookingPage() {
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
       const options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
 
-      const response: any = await fetch(url, options);
+      const response: any = await fetch(url, options)
       if (response.ok) {
         const data = await response.json()
         setBookingId(data.bookingId)
@@ -418,7 +420,6 @@ export default function BookingPage() {
           if (!isDateInPast(currDate)) tmp.push(currDate)
         }
         setAvailableDays(tmp)
-        console.log(tmp);
       } else {
         setApiErrors((prev) => ({
           ...prev,
@@ -637,7 +638,11 @@ export default function BookingPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t["label.date"]}</p>
-                  <p className="font-medium">{language === "es" ? formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy")) : format(selectedDate, "EEEE, MMMM d yyyy")}</p>
+                  <p className="font-medium">
+                    {language === "es"
+                      ? formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy"))
+                      : format(selectedDate, "EEEE, MMMM d yyyy")}
+                  </p>
                 </div>
               </div>
 
@@ -648,7 +653,7 @@ export default function BookingPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t["label.time"]}</p>
-                    <p className="font-medium">{t[""+selectedTimeSlot]}</p>
+                    <p className="font-medium">{t["" + selectedTimeSlot]}</p>
                   </div>
                 </div>
               )}
@@ -859,7 +864,7 @@ export default function BookingPage() {
                 <p className="text-center mt-2 max-w-md">
                   {t["booking.scheduled"]
                     .replace("{date}", selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "")
-                    .replace("{time}", selectedTimeSlot || "")}
+                    .replace("{time}", t[selectedTimeSlot] || "")}
                 </p>
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100 max-w-md w-full">
                   <h4 className="font-medium">{t["booking.reference"]}</h4>
@@ -1005,28 +1010,31 @@ export default function BookingPage() {
                       </p>
 
                       <RadioGroup
-                      value={selectedTimeSlot}
-                      onValueChange={setSelectedTimeSlot}
-                      className="grid gap-3 max-w-md mx-auto"
+                        value={selectedTimeSlot}
+                        onValueChange={setSelectedTimeSlot}
+                        className="grid gap-3 max-w-md mx-auto"
                       >
-                      {timeSlots.map((slot, idx) => (
-                            <div
+                        {timeSlots.map((slot, idx) => (
+                          <div
                             key={idx}
                             className={cn(
-                                "flex items-center space-x-2 p-4 rounded-md border transition-all",
-                                selectedTimeSlot === slot.value
+                              "flex items-center space-x-2 p-4 rounded-md border transition-all",
+                              selectedTimeSlot === slot.value
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200 hover:border-blue-300",
-                                )}
-                            >
+                            )}
+                          >
                             <RadioGroupItem value={slot.value} id={slot.value} className="text-blue-600" />
-                            <Label htmlFor={slot.value} className="flex items-center gap-2 text-base cursor-pointer w-full">
-                            <Clock className="h-5 w-5 text-blue-500" />
-                            {slot.label}
+                            <Label
+                              htmlFor={slot.value}
+                              className="flex items-center gap-2 text-base cursor-pointer w-full"
+                            >
+                              <Clock className="h-5 w-5 text-blue-500" />
+                              {slot.label}
                             </Label>
-                            </div>
-                            ))}
-                  </RadioGroup>
+                          </div>
+                        ))}
+                      </RadioGroup>
                     </div>
                   )}
 
@@ -1165,7 +1173,7 @@ export default function BookingPage() {
                           <p className="text-muted-foreground">{t["loading.service_options"]}</p>
                         </div>
                       ) : (
-                        <div className="space-y-4 max-w-4xl mx-auto">
+                        <div className="space-y-6 max-w-4xl mx-auto">
                           <div className="relative">
                             <Input
                               type="text"
@@ -1193,53 +1201,72 @@ export default function BookingPage() {
                             </div>
                           </div>
 
-                          <RadioGroup value={selectedService} onValueChange={setSelectedService} className="grid gap-4">
+                          <RadioGroup value={selectedService} onValueChange={setSelectedService} className="grid gap-6">
                             {getFilteredServices().length > 0 ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {getFilteredServices().map((service: any) => (
                                   <div
                                     key={service.id}
                                     className={cn(
-                                      "flex flex-col p-3 rounded-md border transition-all h-full",
+                                      "relative flex flex-col rounded-lg border transition-all",
                                       selectedService === service.id
                                         ? "border-blue-500 bg-blue-50 shadow-md"
                                         : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
                                     )}
                                   >
-                                    <div className="flex items-start">
-                                      <RadioGroupItem
-                                        value={service.id}
-                                        id={service.id}
-                                        className="text-blue-600 mt-1"
-                                      />
-                                      <div className="ml-2 flex-1">
-                                        <div className="flex justify-between items-start">
-                                          <Label htmlFor={service.id} className="text-base font-medium cursor-pointer">
-                                            {t[service.name]}
-                                          </Label>
-                                          <div className="font-bold text-base text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                            ${service.price}
-                                          </div>
-                                        </div>
-                                        <p className="text-muted-foreground text-sm">{t[service.description]}</p>
+                                    <div className="absolute top-4 right-4">
+                                      <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
+                                    </div>
 
-                                        <div className="mt-2 flex items-center gap-1 text-xs">
-                                          <Clock className="h-3 w-3 text-blue-500" />
-                                          <span>{service.duration}</span>
+                                    <div className="p-5 cursor-pointer" onClick={() => setSelectedService(service.id)}>
+                                      <div className="flex justify-between items-start mb-3">
+                                        <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
+                                          {t[service.name]}
+                                        </Label>
+                                        <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 ml-2">
+                                          ${service.price}
                                         </div>
+                                      </div>
 
-                                        <div className="mt-2 grid grid-cols-1 gap-1">
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <div className="bg-blue-100 p-1.5 rounded-full">
+                                          <Clock className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <span className="text-sm font-medium text-blue-700">{service.duration}</span>
+                                      </div>
+
+                                      <p className="text-muted-foreground mb-4">{t[service.description]}</p>
+
+                                      <div className="space-y-2 mb-4">
+                                        <h4 className="text-sm font-medium text-gray-700">
+                                          {t["service.features"] || "Features"}:
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-2">
                                           {service.features.map((feature: string, index: number) => (
                                             <div
                                               key={index}
-                                              className="flex items-center gap-1 text-xs bg-gray-50 p-1 rounded-md"
+                                              className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-md"
                                             >
-                                              <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                              <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                                               <span>{t[feature]}</span>
                                             </div>
                                           ))}
                                         </div>
                                       </div>
+                                    </div>
+
+                                    <div className="mt-auto border-t p-4">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={(e) => {
+                                          e.preventDefault()
+                                          window.open(`/services/${service.id.toLowerCase()}`, "_blank")
+                                        }}
+                                      >
+                                        {t["button.learn_more"] || "Learn More"} →
+                                      </Button>
                                     </div>
                                   </div>
                                 ))}

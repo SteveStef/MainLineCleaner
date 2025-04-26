@@ -1,9 +1,10 @@
 "use client"
 
+import { CardFooter } from "@/components/ui/card"
+
 import type React from "react"
 
 import { useState, useEffect, useContext } from "react"
-import Link from "next/link"
 import {
   Calendar,
   Clock,
@@ -11,7 +12,6 @@ import {
   CheckCircle,
   Info,
   Search,
-  ArrowRight,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -21,17 +21,15 @@ import {
 import { format, addDays, isToday, isSameDay, addMonths, startOfMonth, getDay, isSameMonth, isAfter } from "date-fns"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { cn, formatDateToSpanish } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Header from "../Header";
-import Footer from "../Footer";
+import Header from "../Header"
 
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
@@ -65,6 +63,7 @@ type ActionType = "reschedule" | "cancel" | null
 
 export default function AppointmentManagerPage() {
   const { toast } = useToast()
+
   const [step, setStep] = useState<number>(1)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -75,7 +74,7 @@ export default function AppointmentManagerPage() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null)
   const [availableDates, setAvailableDates] = useState<Date[]>([])
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([])
-  const [timeSlotPicked, setTimeSlotPicked] = useState("");
+  const [timeSlotPicked, setTimeSlotPicked] = useState("")
   const [selectedAction, setSelectedAction] = useState<ActionType>(null)
   const [errors, setErrors] = useState<{
     bookingId?: string
@@ -99,17 +98,17 @@ export default function AppointmentManagerPage() {
     return date <= today
   }
   function isTwoOrMoreDaysAway(dateInput) {
-    const target = new Date(dateInput);
-    const today = new Date();
+    const target = new Date(dateInput)
+    const today = new Date()
 
     // Normalize both to midnight to compare whole days
-    target.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
 
-    const msInDay = 24 * 60 * 60 * 1000;
-    const daysDiff = Math.floor((target - today) / msInDay);
+    const msInDay = 24 * 60 * 60 * 1000
+    const daysDiff = Math.floor((target - today) / msInDay)
 
-    return daysDiff >= 2;
+    return daysDiff >= 2
   }
   // Mock available dates (in a real app, this would come from an API)
   useEffect(() => {
@@ -118,7 +117,7 @@ export default function AppointmentManagerPage() {
       const fetchAvailableDates = async () => {
         setIsLoadingAvailability(true)
         try {
-          const response = await fetch(`http://localhost:9080/availability`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/availability`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -130,12 +129,12 @@ export default function AppointmentManagerPage() {
           }
 
           const json = await response.json()
-          setAvailableTimeSlots(json);
+          setAvailableTimeSlots(json)
           const tmp = []
           for (let i = 0; i < json.length; i++) {
             const [year, month, day] = json[i].date.split("-").map(Number)
-              const currDate = new Date(year, month - 1, day)
-              if (!isDateInPast(currDate)) tmp.push(currDate)
+            const currDate = new Date(year, month - 1, day)
+            if (!isDateInPast(currDate)) tmp.push(currDate)
           }
           setAvailableDates(tmp)
         } catch (error) {
@@ -168,7 +167,7 @@ export default function AppointmentManagerPage() {
 
     if (!formData.bookingId.trim()) {
       newErrors.bookingId = "Booking ID is required"
-    } else if (!/^BK-[A-Za-z0-9]{4}-[A-Za-z0-9]{3}$/i.test(formData.bookingId)) {
+    } else if (!/^BK-[A-Za-z0-9]{4}-[A-Za-z0-9]{3}$/i.test(formData.bookingId.trim())) {
       newErrors.bookingId = "Invalid booking ID format. Should be like BK-1234-567"
     }
 
@@ -197,22 +196,9 @@ export default function AppointmentManagerPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const validateCancellationForm = (): boolean => {
-    const newErrors: { reason?: string } = {}
+  const validateCancellationForm = (): boolean => {}
 
-    if (!formData.reason.trim()) {
-      newErrors.reason = "Please provide a reason for cancellation"
-    } else if (formData.reason.trim().length < 10) {
-      newErrors.reason = "Please provide a more detailed reason (at least 10 characters)"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleFindAppointment = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleFindAppointment = async () => {
     if (!validateFindForm()) {
       return
     }
@@ -233,7 +219,7 @@ export default function AppointmentManagerPage() {
       })
 
       if (!response.ok) {
-        const status = response.status;
+        const status = response.status
         throw {
           message: status === 400 ? "Failed to find appointment" : "Something went wrong, try again later",
           status: response.status,
@@ -262,28 +248,30 @@ export default function AppointmentManagerPage() {
   }
 
   function areDatesOnSameDay(date1, date2) {
-    return date1.getFullYear() === date2.getFullYear() &&
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
       date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate();
+      date1.getDate() === date2.getDate()
+    )
   }
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
-    for(let i = 0; i < availableTimeSlots.length; i++) {
-      if(areDatesOnSameDay(date, new Date(availableTimeSlots[i].expirationDate))) {
-        setSelectedTimeSlot(availableTimeSlots[i]);
+    for (let i = 0; i < availableTimeSlots.length; i++) {
+      if (areDatesOnSameDay(date, new Date(availableTimeSlots[i].expirationDate))) {
+        setSelectedTimeSlot(availableTimeSlots[i])
       }
     }
   }
 
-  const handleSubmitAction = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (selectedAction === "reschedule" && !validateRescheduleForm()) {
-      return
+  useEffect(() => {
+    if (step === 3) {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
     }
+  }, [step])
 
-    if (selectedAction === "cancel" && !validateCancellationForm()) {
+  const handleSubmitAction = async () => {
+    if (selectedAction === "reschedule" && !validateRescheduleForm()) {
       return
     }
 
@@ -312,7 +300,7 @@ export default function AppointmentManagerPage() {
           }
         }
       } else if (selectedAction === "reschedule" && selectedDate && selectedTimeSlot) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customer-reschedule-appointment`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reschedule`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -320,9 +308,8 @@ export default function AppointmentManagerPage() {
           body: JSON.stringify({
             bookingId: formData.bookingId,
             email: formData.email,
-            newDate: format(selectedDate, "yyyy-MM-dd"),
-            newTimeSlot: selectedTimeSlot.id,
-            action: "reschedule",
+            newAppointmentDate: selectedDate,
+            newTime: timeSlotPicked,
           }),
         })
 
@@ -354,9 +341,8 @@ export default function AppointmentManagerPage() {
         } appointment. Please try again later.`,
         variant: "destructive",
       })
-    } finally {
-      setIsSubmitting(false)
     }
+    setIsSubmitting(false)
   }
 
   const isDateAvailable = (date: Date): boolean => {
@@ -390,7 +376,6 @@ export default function AppointmentManagerPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-
       <main className="flex-1 bg-gradient-to-b from-blue-50 to-white">
         <section className="w-full py-4 md:py-8 lg:py-12">
           <div className="container px-4 md:px-6">
@@ -400,12 +385,9 @@ export default function AppointmentManagerPage() {
               </div>
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Manage Your Cleaning Appointment
+                  {t["appointment.manage.title"]}
                 </h1>
-                <p className="max-w-[800px] text-muted-foreground md:text-xl">
-                  Need to reschedule or cancel your cleaning appointment? We've got you covered. Follow the steps below
-                  to manage your booking.
-                </p>
+                <p className="max-w-[800px] text-muted-foreground md:text-xl">{t["appointment.manage.description"]}</p>
               </div>
             </div>
 
@@ -426,7 +408,11 @@ export default function AppointmentManagerPage() {
                         {step > i ? <CheckCircle className="h-5 w-5" /> : i}
                       </div>
                       <span className={`text-sm ${step >= i ? "text-blue-600 font-medium" : "text-gray-400"}`}>
-                        {i === 1 ? "Find Appointment" : i === 2 ? "Edit Appointment" : "Complete"}
+                        {i === 1
+                          ? t["appointment.step.find"]
+                          : i === 2
+                            ? t["appointment.step.edit"]
+                            : t["appointment.step.complete"]}
                       </span>
                     </div>
                   ))}
@@ -446,37 +432,33 @@ export default function AppointmentManagerPage() {
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg border-b">
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Search className="h-6 w-6 text-blue-600" />
-                      Find Your Appointment
+                      {t["appointment.find.title"]}
                     </CardTitle>
-                    <CardDescription className="text-base">
-                      Enter your booking ID and email to locate your appointment
-                    </CardDescription>
+                    <CardDescription className="text-base">{t["appointment.find.description"]}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6">
-                    <form onSubmit={handleFindAppointment} className="space-y-6">
+                    <div className="space-y-6">
                       <div className="space-y-2">
                         <Label htmlFor="bookingId" className="text-lg">
-                          Booking ID
+                          {t["appointment.bookingId"]}
                         </Label>
                         <Input
                           id="bookingId"
                           name="bookingId"
                           value={formData.bookingId}
                           onChange={handleInputChange}
-                          placeholder="e.g., BK-1234-567"
+                          placeholder={t["appointment.bookingId.placeholder"]}
                           className={`h-12 ${errors.bookingId ? "border-red-500" : ""}`}
                           disabled={isLoading}
                           required
                         />
                         {errors.bookingId && <p className="text-sm text-red-500 mt-1">{errors.bookingId}</p>}
-                        <p className="text-sm text-muted-foreground">
-                          Your booking ID was sent to you in your confirmation email
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t["appointment.bookingId.help"]}</p>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-lg">
-                          Email Address
+                          {t["appointment.email"]}
                         </Label>
                         <Input
                           id="email"
@@ -484,7 +466,7 @@ export default function AppointmentManagerPage() {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          placeholder="your.email@example.com"
+                          placeholder={t["appointment.email.placeholder"]}
                           className={`h-12 ${errors.email ? "border-red-500" : ""}`}
                           disabled={isLoading}
                           required
@@ -495,26 +477,26 @@ export default function AppointmentManagerPage() {
                       {errors.api && (
                         <Alert variant="destructive">
                           <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Error</AlertTitle>
+                          <AlertTitle>{t["error.title"]}</AlertTitle>
                           <AlertDescription>{errors.api}</AlertDescription>
                         </Alert>
                       )}
 
                       <Button
-                        type="submit"
+                        onClick={handleFindAppointment}
                         className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                         disabled={isLoading}
                       >
                         {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Finding Appointment...
+                            {t["appointment.find.loading"]}
                           </>
                         ) : (
-                          "Find Appointment"
+                          t["appointment.find.button"]
                         )}
                       </Button>
-                    </form>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -524,53 +506,59 @@ export default function AppointmentManagerPage() {
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg border-b">
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Calendar className="h-6 w-6 text-blue-600" />
-                      Manage Your Appointment
+                      {t["appointment.manage.title"]}
                     </CardTitle>
-                    <CardDescription className="text-base">
-                      Choose to reschedule or cancel your cleaning appointment
-                    </CardDescription>
+                    <CardDescription className="text-base">{t["appointment.manage.subtitle"]}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6">
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                      <h3 className="font-medium text-lg mb-3">Current Appointment</h3>
+                      <h3 className="font-medium text-lg mb-3">{t["appointment.current.title"]}</h3>
                       <div className="grid gap-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Booking ID:</span>
+                          <span className="text-muted-foreground">{t["appointment.bookingId.label"]}</span>
                           <span className="font-medium">{appointmentData.bookingId}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Date:</span>
-                          <span className="font-medium">{format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")}</span>
+                          <span className="text-muted-foreground">{t["appointment.date.label"]}</span>
+                          <span className="font-medium">
+
+                            {
+                              language === "es" ?
+                                    formatDateToSpanish(format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")):
+                              format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")}
+                          </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Time:</span>
+                          <span className="text-muted-foreground">{t["appointment.time.label"]}</span>
                           <span className="font-medium">{t[appointmentData.time]}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Service:</span>
+                          <span className="text-muted-foreground">{t["appointment.service.label"]}</span>
                           <span className="font-medium">{t[appointmentData.service]}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Address:</span>
+                          <span className="text-muted-foreground">{t["appointment.address.label"]}</span>
                           <span className="font-medium">{appointmentData.address}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Price:</span>
-                          <span className="font-medium">${appointmentData && appointmentData.chargedAmount.split(" ")[0]}</span>
+                          <span className="text-muted-foreground">{t["appointment.price.label"]}</span>
+                          <span className="font-medium">
+                            ${appointmentData && appointmentData.chargedAmount.split(" ")[0]}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     {!selectedAction ? (
                       <div className="space-y-6">
-                        <h3 className="text-lg font-medium text-center">What would you like to do?</h3>
+                        <h3 className="text-lg font-medium text-center">{t["appointment.action.question"]}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Button
                             onClick={() => handleSelectAction("reschedule")}
                             className="h-20 text-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                           >
                             <CalendarDays className="mr-2 h-5 w-5" />
-                            Reschedule Appointment
+                            {t["appointment.action.reschedule"]}
                           </Button>
                           <Button
                             onClick={() => handleSelectAction("cancel")}
@@ -578,15 +566,17 @@ export default function AppointmentManagerPage() {
                             className="h-20 text-lg border-red-300 text-red-600 hover:bg-red-50"
                           >
                             <X className="mr-2 h-5 w-5" />
-                            Cancel Appointment
+                            {t["appointment.action.cancel"]}
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <form onSubmit={handleSubmitAction} className="space-y-6">
+                      <div className="space-y-6">
                         <div className="flex items-center justify-between border-b pb-4 mb-4">
                           <h3 className="text-lg font-medium">
-                            {selectedAction === "reschedule" ? "Reschedule Appointment" : "Cancel Appointment"}
+                            {selectedAction === "reschedule"
+                              ? t["appointment.action.reschedule"]
+                              : t["appointment.action.cancel"]}
                           </h3>
                           <Button
                             type="button"
@@ -595,7 +585,7 @@ export default function AppointmentManagerPage() {
                             onClick={() => setSelectedAction(null)}
                             className="text-muted-foreground"
                           >
-                            Change Action
+                            {t["appointment.action.change"]}
                           </Button>
                         </div>
 
@@ -607,12 +597,12 @@ export default function AppointmentManagerPage() {
 
                           <TabsContent value="reschedule" className="space-y-6">
                             <div className="space-y-4">
-                              <h3 className="text-lg font-medium">1. Select a New Date</h3>
+                              <h3 className="text-lg font-medium">{t["appointment.reschedule.selectDate"]}</h3>
 
                               {errors.date && (
                                 <Alert variant="destructive" className="mb-4">
                                   <AlertCircle className="h-4 w-4" />
-                                  <AlertTitle>Error</AlertTitle>
+                                  <AlertTitle>{t["error.title"]}</AlertTitle>
                                   <AlertDescription>{errors.date}</AlertDescription>
                                 </Alert>
                               )}
@@ -626,7 +616,7 @@ export default function AppointmentManagerPage() {
                                     className="rounded-full hover:bg-blue-100 hover:text-blue-600"
                                   >
                                     <ChevronLeft className="h-5 w-5" />
-                                    <span className="sr-only">Previous Month</span>
+                                    <span className="sr-only">{t["calendar.previousMonth"]}</span>
                                   </Button>
                                   <div className="text-2xl font-medium">{format(currentMonth, "MMMM yyyy")}</div>
                                   <Button
@@ -636,12 +626,20 @@ export default function AppointmentManagerPage() {
                                     className="rounded-full hover:bg-blue-100 hover:text-blue-600"
                                   >
                                     <ChevronRight className="h-5 w-5" />
-                                    <span className="sr-only">Next Month</span>
+                                    <span className="sr-only">{t["calendar.nextMonth"]}</span>
                                   </Button>
                                 </div>
 
                                 <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-3">
-                                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
+                                  {[
+                                    t["calendar.day.sun"],
+                                    t["calendar.day.mon"],
+                                    t["calendar.day.tue"],
+                                    t["calendar.day.wed"],
+                                    t["calendar.day.thu"],
+                                    t["calendar.day.fri"],
+                                    t["calendar.day.sat"],
+                                  ].map((day, idx) => (
                                     <div key={idx} className="text-blue-700 py-2 text-base">
                                       {day}
                                     </div>
@@ -690,11 +688,11 @@ export default function AppointmentManagerPage() {
                                 <div className="mt-4 flex items-center justify-center gap-4 text-sm">
                                   <div className="flex items-center gap-1">
                                     <div className="h-4 w-4 rounded-full bg-green-500"></div>
-                                    <span>Available</span>
+                                    <span>{t["calendar.available"]}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <div className="h-4 w-4 rounded-full bg-gray-300"></div>
-                                    <span>Unavailable</span>
+                                    <span>{t["calendar.unavailable"]}</span>
                                   </div>
                                 </div>
                               </div>
@@ -702,119 +700,119 @@ export default function AppointmentManagerPage() {
 
                             {selectedDate && (
                               <div className="space-y-4 pt-4 border-t">
-                                <h3 className="text-lg font-medium">2. Select a New Time Slot</h3>
+                                <h3 className="text-lg font-medium">{t["appointment.reschedule.selectTime"]}</h3>
 
                                 {errors.time && (
                                   <Alert variant="destructive" className="mb-4">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertTitle>{t["error.title"]}</AlertTitle>
                                     <AlertDescription>{errors.time}</AlertDescription>
                                   </Alert>
                                 )}
 
                                 <div className="bg-blue-50 p-4 rounded-lg mb-4">
                                   <p className="font-medium text-blue-800">
-                                    Selected Date: <span className="font-bold">{getFormattedDate(selectedDate)}</span>
+                                    {t["appointment.selectedDate"]}{" "}
+                                    <span className="font-bold">{
+
+                                    language === "es" ? 
+                                    formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy")):
+                                      getFormattedDate(selectedDate)}</span>
                                   </p>
                                 </div>
-                                {
-                                  selectedTimeSlot &&
+                                {selectedTimeSlot && (
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if(selectedTimeSlot.morning) setTimeSlotPicked("MORNING");
-                                        }}
-                                        className={cn(
-                                          "p-4 rounded-lg border transition-all",
-                                          selectedTimeSlot.morning
-                                            ? "hover:border-blue-500 hover:bg-blue-50"
-                                            : "bg-gray-50 cursor-not-allowed opacity-60",
-                                          "MORNING" === timeSlotPicked
-                                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                                            : "border-gray-200",
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (selectedTimeSlot.morning) setTimeSlotPicked("MORNING")
+                                      }}
+                                      className={cn(
+                                        "p-4 rounded-lg border transition-all",
+                                        selectedTimeSlot.morning
+                                          ? "hover:border-blue-500 hover:bg-blue-50"
+                                          : "bg-gray-50 cursor-not-allowed opacity-60",
+                                        "MORNING" === timeSlotPicked
+                                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                                          : "border-gray-200",
+                                      )}
+                                      disabled={!selectedTimeSlot.morning}
+                                    >
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{t["timeSlot.morning"]}</span>
+                                        {selectedTimeSlot.morning ? (
+                                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                                            {t["calendar.available"]}
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="bg-gray-100">
+                                            {t["timeSlot.booked"]}
+                                          </Badge>
                                         )}
-                                        disabled={!selectedTimeSlot.morning}
-                                      >
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Morning, 8:00AM - 11:00AM</span>
-                                          {selectedTimeSlot.morning ? (
-                                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                                              Available
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="outline" className="bg-gray-100">
-                                              Booked
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => selectedTimeSlot.afternoon && setTimeSlotPicked("AFTERNOON")}
-                                        className={cn(
-                                          "p-4 rounded-lg border transition-all",
-                                          selectedTimeSlot.afternoon
-                                            ? "hover:border-blue-500 hover:bg-blue-50"
-                                            : "bg-gray-50 cursor-not-allowed opacity-60",
-                                          "AFTERNOON" === timeSlotPicked
-                                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                                            : "border-gray-200",
+                                      </div>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => selectedTimeSlot.afternoon && setTimeSlotPicked("AFTERNOON")}
+                                      className={cn(
+                                        "p-4 rounded-lg border transition-all",
+                                        selectedTimeSlot.afternoon
+                                          ? "hover:border-blue-500 hover:bg-blue-50"
+                                          : "bg-gray-50 cursor-not-allowed opacity-60",
+                                        "AFTERNOON" === timeSlotPicked
+                                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                                          : "border-gray-200",
+                                      )}
+                                      disabled={!selectedTimeSlot.afternoon}
+                                    >
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{t["timeSlot.afternoon"]}</span>
+                                        {selectedTimeSlot.afternoon ? (
+                                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                                            {t["calendar.available"]}
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="bg-gray-100">
+                                            {t["timeSlot.booked"]}
+                                          </Badge>
                                         )}
-                                        disabled={!selectedTimeSlot.afternoon}
-                                      >
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Afternoon, 12:00PM - 5:00PM</span>
-                                          {selectedTimeSlot.afternoon ? (
-                                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                                              Available
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="outline" className="bg-gray-100">
-                                              Booked
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => selectedTimeSlot.afternoon && setTimeSlotPicked("NIGHT")}
-                                        className={cn(
-                                          "p-4 rounded-lg border transition-all",
-                                          selectedTimeSlot.night
-                                            ? "hover:border-blue-500 hover:bg-blue-50"
-                                            : "bg-gray-50 cursor-not-allowed opacity-60",
-                                          "NIGHT" === timeSlotPicked
-                                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                                            : "border-gray-200",
+                                      </div>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => selectedTimeSlot.afternoon && setTimeSlotPicked("NIGHT")}
+                                      className={cn(
+                                        "p-4 rounded-lg border transition-all",
+                                        selectedTimeSlot.night
+                                          ? "hover:border-blue-500 hover:bg-blue-50"
+                                          : "bg-gray-50 cursor-not-allowed opacity-60",
+                                        "NIGHT" === timeSlotPicked
+                                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                                          : "border-gray-200",
+                                      )}
+                                      disabled={!selectedTimeSlot.night}
+                                    >
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{t["timeSlot.night"]}</span>
+                                        {selectedTimeSlot.night ? (
+                                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                                            {t["calendar.available"]}
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="bg-gray-100">
+                                            {t["timeSlot.booked"]}
+                                          </Badge>
                                         )}
-                                        disabled={!selectedTimeSlot.night}
-                                      >
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Night, 6:00PM - 9:00PM</span>
-                                          {selectedTimeSlot.night ? (
-                                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                                              Available
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="outline" className="bg-gray-100">
-                                              Booked
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      </button>
+                                      </div>
+                                    </button>
 
                                     {availableTimeSlots.length === 0 && !isLoadingAvailability && (
                                       <div className="col-span-2 p-8 text-center border rounded-lg bg-gray-50">
-                                        <p className="text-muted-foreground">
-                                          No time slots available for this date. Please select another date.
-                                        </p>
+                                        <p className="text-muted-foreground">{t["timeSlot.none"]}</p>
                                       </div>
                                     )}
                                   </div>
-                                }
-
-
+                                )}
                               </div>
                             )}
                           </TabsContent>
@@ -823,25 +821,21 @@ export default function AppointmentManagerPage() {
                             <div className="space-y-4">
                               <Alert className="mb-6">
                                 <Info className="h-4 w-4" />
-                                <AlertTitle>Cancellation Policy</AlertTitle>
-                                <AlertDescription>
-                                  Cancellations made at least 24 hours before the scheduled appointment are eligible for
-                                  a 75% refund. Cancellations made less than 24 hours in advance will not receive any
-                                  refund.
-                                </AlertDescription>
+                                <AlertTitle>{t["cancellation.policy.title"]}</AlertTitle>
+                                <AlertDescription>{t["cancellation.policy.description"]}</AlertDescription>
                               </Alert>
 
                               <div className="space-y-2">
                                 <Label htmlFor="reason" className="text-lg">
-                                  Reason for Cancellation
+                                  {t["cancellation.reason.label"]}
                                 </Label>
-                                <Textarea
+                                <Input
                                   id="reason"
                                   name="reason"
                                   value={formData.reason}
                                   onChange={handleInputChange}
-                                  placeholder="Please let us know why you're canceling"
-                                  className={`min-h-[100px] ${errors.reason ? "border-red-500" : ""}`}
+                                  placeholder={t["cancellation.reason.placeholder"]}
+                                  className={`h-12 ${errors.reason ? "border-red-500" : ""}`}
                                   disabled={isSubmitting}
                                   required
                                 />
@@ -850,32 +844,30 @@ export default function AppointmentManagerPage() {
 
                               <Alert className="mb-6 bg-amber-50 border-amber-200">
                                 <AlertCircle className="h-4 w-4 text-amber-600" />
-                                <AlertTitle>Refund Policy</AlertTitle>
-                                <AlertDescription>
-                                  When you cancel an appointment, you will receive a 75% refund of the original payment
-                                  amount. The refund will be processed to your original payment method within 3-5
-                                  business days. 
-                                </AlertDescription>
+                                <AlertTitle>{t["refund.policy.title"]}</AlertTitle>
+                                <AlertDescription>{t["refund.policy.description"]}</AlertDescription>
                               </Alert>
 
                               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                <h3 className="font-medium text-lg mb-3">Refund Details</h3>
+                                <h3 className="font-medium text-lg mb-3">{t["refund.details.title"]}</h3>
                                 <div className="grid gap-2">
                                   <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Total Price Paid:</span>
-                                    <span className="font-medium">${appointmentData && appointmentData.chargedAmount.split(" ")[0]}</span>
+                                    <span className="text-muted-foreground">{t["refund.totalPaid"]}</span>
+                                    <span className="font-medium">
+                                      ${appointmentData && appointmentData.chargedAmount.split(" ")[0]}
+                                    </span>
                                   </div>
-                                  {
-                                    isTwoOrMoreDaysAway(appointmentData.appointmentDate) ?  
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Refund Amount (75%):</span>
-                                    <span className="font-medium">{calculateRefundAmount()}</span>
-                                  </div> : 
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Refund Amount: </span>
-                                    <span className="font-medium">$0.00</span>
-                                  </div> 
-                                  }
+                                  {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">{t["refund.amount.partial"]}</span>
+                                      <span className="font-medium">{calculateRefundAmount()}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">{t["refund.amount.label"]}</span>
+                                      <span className="font-medium">$0.00</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -885,7 +877,7 @@ export default function AppointmentManagerPage() {
                         {errors.api && (
                           <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Error</AlertTitle>
+                            <AlertTitle>{t["error.title"]}</AlertTitle>
                             <AlertDescription>{errors.api}</AlertDescription>
                           </Alert>
                         )}
@@ -895,37 +887,38 @@ export default function AppointmentManagerPage() {
                             type="button"
                             variant="outline"
                             className="flex-1 h-12"
-                            onClick={() => setStep(1)}
+                            onClick={() => {
+                              setStep(1)
+                              window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+                            }}
                             disabled={isSubmitting}
                           >
-                            Back
+                            {t["navigation.back"]}
                           </Button>
                           <Button
-                            type="submit"
+                            onClick={handleSubmitAction}
                             className={`flex-1 h-12 ${
                               selectedAction === "cancel"
                                 ? "bg-red-600 hover:bg-red-700"
                                 : "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                             }`}
                             disabled={
-                              isSubmitting ||
-                              (selectedAction === "reschedule" && (!selectedDate || !selectedTimeSlot)) ||
-                              (selectedAction === "cancel" && !formData.reason)
+                              isSubmitting || (selectedAction === "reschedule" && (!selectedDate || !selectedTimeSlot))
                             }
                           >
                             {isSubmitting ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Processing...
+                                {t["processing"]}
                               </>
                             ) : selectedAction === "reschedule" ? (
-                              "Confirm Reschedule"
+                              t["appointment.reschedule.confirm"]
                             ) : (
-                              "Confirm Cancellation"
+                              t["appointment.cancel.confirm"]
                             )}
                           </Button>
                         </div>
-                      </form>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -944,58 +937,70 @@ export default function AppointmentManagerPage() {
                       <CheckCircle className="h-12 w-12 text-green-600" />
                     </div>
                     <CardTitle className="text-3xl mt-4">
-                      {selectedAction === "reschedule" ? "Appointment Rescheduled" : "Appointment Cancelled"}
+                      {selectedAction === "reschedule" ? t["appointment.rescheduled"] : t["appointment.cancelled"]}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
-                      Your cleaning appointment has been successfully{" "}
-                      {selectedAction === "reschedule" ? "rescheduled" : "cancelled"}. A confirmation email has been
-                      sent to your email address.
+                      {t["appointment.success.prefix"]}
+                      {selectedAction === "reschedule"
+                        ? t["appointment.success.rescheduled"]
+                        : t["appointment.success.cancelled"]}
+                      {t["appointment.success.email"]}
                     </p>
 
                     {selectedAction === "reschedule" && selectedDate && selectedTimeSlot ? (
                       <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-left mb-6">
-                        <h3 className="font-medium text-lg mb-3">Rescheduled Appointment Details</h3>
+                        <h3 className="font-medium text-lg mb-3">{t["appointment.rescheduled.details"]}</h3>
                         <div className="grid gap-4">
                           <div className="grid gap-2">
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Booking ID:</span>
+                              <span className="text-muted-foreground">{t["appointment.bookingId.label"]}</span>
                               <span className="font-medium">{appointmentData.bookingId}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Service:</span>
-                          <span className="font-medium">{t[appointmentData.service]}</span>
+                              <span className="text-muted-foreground">{t["appointment.service.label"]}</span>
+                              <span className="font-medium">{t[appointmentData.service]}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Address:</span>
+                              <span className="text-muted-foreground">{t["appointment.address.label"]}</span>
                               <span className="font-medium">{appointmentData.address}</span>
                             </div>
                           </div>
 
                           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <h4 className="font-medium text-green-800 mb-2">New Appointment Time</h4>
+                            <h4 className="font-medium text-green-800 mb-2">{t["appointment.new.time"]}</h4>
                             <div className="grid gap-2">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Date:</span>
-                                <span className="font-medium">{getFormattedDate(selectedDate)}</span>
+                                <span className="text-muted-foreground">{t["appointment.date.label"]}</span>
+                                <span className="font-medium">{
+                                    language === "es" ? 
+                                    formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy")):
+                                  getFormattedDate(selectedDate)
+                                  }</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Time:</span>
-                                <span className="font-medium">{selectedTimeSlot.time}</span>
+                                <span className="text-muted-foreground">{t["appointment.time.label"]}</span>
+                                <span className="font-medium">{t[timeSlotPicked]}</span>
                               </div>
                             </div>
                           </div>
 
                           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <h4 className="font-medium text-amber-800 mb-2">Previous Appointment Time</h4>
+                            <h4 className="font-medium text-amber-800 mb-2">{t["appointment.previous.time"]}</h4>
                             <div className="grid gap-2">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Date:</span>
-                                <span className="font-medium">{format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")}</span>
+                                <span className="text-muted-foreground">{t["appointment.date.label"]}</span>
+                                <span className="font-medium">
+                                  {
+                                    language === "es" ? 
+                                    formatDateToSpanish(format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")):
+                                    format(appointmentData.appointmentDate, "EEEE, MMMM d yyyy")
+                                    }
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Time:</span>
+                                <span className="text-muted-foreground">{t["appointment.time.label"]}</span>
                                 <span className="font-medium">{t[appointmentData.time]}</span>
                               </div>
                             </div>
@@ -1004,37 +1009,42 @@ export default function AppointmentManagerPage() {
                       </div>
                     ) : (
                       <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-left mb-6">
-                        <h3 className="font-medium text-lg mb-3">Appointment Deta</h3>
+                        <h3 className="font-medium text-lg mb-3">{t["appointment.details"]}</h3>
                         <div className="grid gap-2">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Booking ID:</span>
+                            <span className="text-muted-foreground">{t["appointment.bookingId.label"]}</span>
                             <span className="font-medium">{appointmentData.bookingId}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Amount Paid:</span>
+                            <span className="text-muted-foreground">{t["payment.amount"]}</span>
                             <span className="font-medium">${appointmentData?.chargedAmount?.split(" ")[0]}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Refund Amount (75%):</span>
-                            <span className="font-medium">{calculateRefundAmount()}</span>
-                          </div>
+
+                          {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">{t["refund.amount.partial"]}</span>
+                              <span className="font-medium">{calculateRefundAmount()}</span>
+                            </div>
+                          ) : (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">{t["refund.amount.label"]}</span>
+                              <span className="font-medium">$0.00</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
                   </CardContent>
                   <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 pb-8">
-                    <Button onClick={() => setSelectedAction(null)} asChild variant="outline" size="lg">
-                      <div>Cancel another Appointment</div>
+                    <Button onClick={() => setStep(1)} variant="outline" size="lg">
+                      {t["navigation.back"]}
                     </Button>
                     <Button
                       asChild
                       size="lg"
                       className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     >
-                      <Link href="/">
-                        Return to Home
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
+                      <a href="/">{t["navigation.home"]}</a>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -1044,45 +1054,35 @@ export default function AppointmentManagerPage() {
             <div className="mt-16 max-w-4xl mx-auto bg-white rounded-lg border shadow-md p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                 <Info className="h-6 w-6 text-blue-600" />
-                Appointment Policies
+                {t["policies.title"]}
               </h2>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="flex flex-col p-4 bg-blue-50 rounded-lg">
                   <div className="rounded-full bg-blue-100 p-3 mb-3 self-start">
                     <CalendarDays className="h-6 w-6 text-blue-600" />
                   </div>
-                  <h3 className="font-medium mb-2">Free Rescheduling</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Reschedule your appointment at any time with no additional fees. We understand plans change.
-                  </p>
+                  <h3 className="font-medium mb-2">{t["policies.reschedule.title"]}</h3>
+                  <p className="text-sm text-muted-foreground">{t["policies.reschedule.description"]}</p>
                 </div>
                 <div className="flex flex-col p-4 bg-amber-50 rounded-lg">
                   <div className="rounded-full bg-amber-100 p-3 mb-3 self-start">
                     <Clock className="h-6 w-6 text-amber-600" />
                   </div>
-                  <h3 className="font-medium mb-2">24-Hour Notice</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Cancellations made at least 24 hours before the scheduled appointment are eligible for a 75% refund.
-                    Last-minute cancellations receive no refund.
-                  </p>
+                  <h3 className="font-medium mb-2">{t["policies.notice.title"]}</h3>
+                  <p className="text-sm text-muted-foreground">{t["policies.notice.description"]}</p>
                 </div>
                 <div className="flex flex-col p-4 bg-green-50 rounded-lg">
                   <div className="rounded-full bg-green-100 p-3 mb-3 self-start">
                     <Info className="h-6 w-6 text-green-600" />
                   </div>
-                  <h3 className="font-medium mb-2">Customer Support</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Need help with your appointment? Our customer service team is available 7 days a week to assist you
-                    with any questions or concerns.
-                  </p>
+                  <h3 className="font-medium mb-2">{t["policies.support.title"]}</h3>
+                  <p className="text-sm text-muted-foreground">{t["policies.support.description"]}</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   )
 }

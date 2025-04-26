@@ -2309,20 +2309,14 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">{t["dialog.appointment.label.status"]}</p>
-                <p className="font-medium">
+                <div className="font-medium">
                 {
 selectedAppointment &&
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                    selectedAppointment.status.toLowerCase() === "confirmed" 
-                      ? "bg-green-100 text-green-800" 
-                      : selectedAppointment.status.toLowerCase() === "pending" 
-                      ? "bg-yellow-100 text-yellow-800" 
-                      : "bg-red-100 text-red-800"
-                  }`}>
-                    {t[selectedAppointment.status.toLowerCase()]}
+                  <span>
+                  {getStatusBadge(selectedAppointment?.status)}
                   </span>
                 }
-                </p>
+                </div>
               </div>
             </div>
           </Card>
