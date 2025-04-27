@@ -112,6 +112,7 @@ function MainLineCleanersContent() {
     phone: "",
     service: "",
     message: "",
+    consent: false
   })
 
   const [errors, setErrors] = useState({
@@ -323,6 +324,7 @@ function MainLineCleanersContent() {
             phone: "",
             service: "",
             message: "",
+            consent: false
           })
         } else {
           console.error("Form submission failed")
@@ -1039,32 +1041,46 @@ function MainLineCleanersContent() {
                           )}
                         </motion.div>
 
-                        <motion.div className="space-y-2" variants={fadeIn}>
-                          <Label htmlFor="phone" className="text-sm font-medium leading-none flex items-center gap-1">
-                            <Phone className="h-4 w-4 text-blue-500" />
-                            {t.phone}
-                          </Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            placeholder={t.phone}
-                            className={errors.phone ? "border-red-500" : ""}
-                            value={requestQuoteForm.phone}
-                            onChange={handleInputChange}
-                          />
-                          {errors.phone && (
-                            <motion.p
-                              className="text-red-500 text-xs flex items-center mt-1"
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                            >
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              {errors.phone}
-                            </motion.p>
-                          )}
-                        </motion.div>
+<motion.div className="space-y-2" variants={fadeIn}>
+  <Label htmlFor="phone" className="text-sm font-medium leading-none flex items-center gap-1">
+    <Phone className="h-4 w-4 text-blue-500" />
+    {t.phone}
+  </Label>
+  <Input
+    id="phone"
+    name="phone"
+    type="tel"
+    placeholder={t.phone}
+    className={errors.phone ? "border-red-500" : ""}
+    value={requestQuoteForm.phone}
+    onChange={handleInputChange}
+  />
+  {errors.phone && (
+    <motion.p
+      className="text-red-500 text-xs flex items-center mt-1"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <AlertCircle className="h-3 w-3 mr-1" />
+      {errors.phone}
+    </motion.p>
+  )}
 
+  {/* Consent Checkbox */}
+  <motion.div className="flex items-center space-x-2 mt-1" variants={fadeIn}>
+    <Input
+      id="consent"
+      name="consent"
+      type="checkbox"
+      checked={requestQuoteForm.consent}
+      onChange={() => setRequestQuoteForm({...requestQuoteForm, consent: !requestQuoteForm.consent})}
+      className="h-4 w-4"
+    />
+    <Label htmlFor="consent" className="text-sm">
+    {t["consent.for.sms"]}
+    </Label>
+  </motion.div>
+  </motion.div>
                         <motion.div className="space-y-2" variants={fadeIn}>
                           <Label htmlFor="service" className="text-sm font-medium leading-none flex items-center gap-1">
                             <ClipboardCheck className="h-4 w-4 text-blue-500" />

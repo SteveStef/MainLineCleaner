@@ -673,6 +673,8 @@ export const es = {
   "policies.notice.description": "Las cancelaciones realizadas al menos 24 horas antes de la cita programada son elegibles para un reembolso del 75%. Las cancelaciones de último minuto no recibirán reembolso.",
   "policies.support.title": "Atención al Cliente",
   "policies.support.description": "¿Necesitas ayuda con tu cita? Nuestro equipo de atención al cliente está disponible los 7 días de la semana para ayudarte con cualquier pregunta o inquietud.",
+  "consent.for.sms": "Consiento recibir notificaciones SMS y ofertas de marketing de Dos Chicas.",
+  "search.services.placeholder": "Buscar servicios..."
 }
 
 

@@ -5,6 +5,7 @@ import type React from "react"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
+import { Checkbox } from "@/components/ui/checkbox"
 
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { useState, useEffect, useContext } from "react"
@@ -198,6 +199,7 @@ export default function BookingPage() {
     address: "",
     city: "",
     notes: "",
+    smsConsent: false
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -293,9 +295,18 @@ export default function BookingPage() {
     return availableDays.some((availableDate) => isSameDay(date, availableDate))
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setUserInfo((prev) => ({ ...prev, [name]: value }))
+//  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+ //k   const { name, value } = e.target
+   // setUserInfo((prev) => ({ ...prev, [name]: value }))
+ // }
+
+  const handleInputChange = (e: any) => {
+    const { name, value, type, checked } = e.target
+    setUserInfo((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }))
+    setErrors((prev) => ({ ...prev, [name]: undefined })) // Clear error on change
   }
 
   // Validate user info using t for error messages.
@@ -357,6 +368,7 @@ export default function BookingPage() {
         service: selectedService, // REGULAR // these are enums must conform
         notes: userInfo.notes,
         appointmentDate: selectedDate,
+        consent: userInfo.smsConsent
       }
 
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
@@ -1038,128 +1050,153 @@ export default function BookingPage() {
                     </div>
                   )}
 
-                  {currentStep === 3 && (
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground">{t["step3.instructions"]}</p>
+{currentStep === 3 && (
+        <div className="space-y-4">
+          <p className="text-muted-foreground">{t["step3.instructions"]}</p>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName" className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            {t["label.first_name"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            value={userInfo.firstName}
-                            onChange={handleInputChange}
-                            className={errors.firstName ? "border-red-500" : ""}
-                            maxLength={20}
-                          />
-                          {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
-                        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <div className="space-y-2">
+              <Label htmlFor="firstName" className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {t["label.first_name"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={userInfo.firstName}
+                onChange={handleInputChange}
+                className={errors.firstName ? "border-red-500" : ""}
+                maxLength={20}
+              />
+              {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName" className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            {t["label.last_name"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            value={userInfo.lastName}
-                            onChange={handleInputChange}
-                            className={errors.lastName ? "border-red-500" : ""}
-                            maxLength={20}
-                          />
-                          {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-                        </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName" className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {t["label.last_name"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={userInfo.lastName}
+                onChange={handleInputChange}
+                className={errors.lastName ? "border-red-500" : ""}
+                maxLength={20}
+              />
+              {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
+            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="flex items-center gap-1">
-                            <Mail className="h-4 w-4" />
-                            {t["label.email"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={userInfo.email}
-                            onChange={handleInputChange}
-                            className={errors.email ? "border-red-500" : ""}
-                            maxLength={40}
-                          />
-                          {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-                        </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1">
+                <Mail className="h-4 w-4" />
+                {t["label.email"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={userInfo.email}
+                onChange={handleInputChange}
+                className={errors.email ? "border-red-500" : ""}
+                maxLength={40}
+              />
+              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="phone" className="flex items-center gap-1">
-                            <Phone className="h-4 w-4" />
-                            {t["label.phone"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            value={userInfo.phone}
-                            onChange={handleInputChange}
-                            className={errors.phone ? "border-red-500" : ""}
-                            maxLength={20}
-                          />
-                          {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
-                        </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="flex items-center gap-1">
+                <Phone className="h-4 w-4" />
+                {t["label.phone"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={userInfo.phone}
+                onChange={handleInputChange}
+                className={errors.phone ? "border-red-500" : ""}
+                maxLength={20}
+              />
+              {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
+            </div>
 
-                        {/* City */}
-                        <div className="space-y-2">
-                          <Label htmlFor="city" className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {t["label.city"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="city"
-                            name="city"
-                            value={userInfo.city}
-                            onChange={handleInputChange}
-                            className={errors.city ? "border-red-500" : ""}
-                            maxLength={50}
-                          />
-                          {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
-                        </div>
+            {/* City */}
+            <div className="space-y-2">
+              <Label htmlFor="city" className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {t["label.city"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="city"
+                name="city"
+                value={userInfo.city}
+                onChange={handleInputChange}
+                className={errors.city ? "border-red-500" : ""}
+                maxLength={50}
+              />
+              {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
+            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="address" className="flex items-center gap-1">
-                            <Home className="h-4 w-4" />
-                            {t["label.address"]} <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="address"
-                            name="address"
-                            value={userInfo.address}
-                            onChange={handleInputChange}
-                            className={errors.address ? "border-red-500" : ""}
-                            maxLength={75}
-                          />
-                          {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
-                        </div>
+            <div className="space-y-2">
+              <Label htmlFor="address" className="flex items-center gap-1">
+                <Home className="h-4 w-4" />
+                {t["label.address"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="address"
+                name="address"
+                value={userInfo.address}
+                onChange={handleInputChange}
+                className={errors.address ? "border-red-500" : ""}
+                maxLength={75}
+              />
+              {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
+            </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="notes" className="flex items-center gap-1">
-                            <MessageSquare className="h-4 w-4" />
-                            {t["label.special_instructions"]}
-                          </Label>
-                          <Textarea
-                            id="notes"
-                            name="notes"
-                            placeholder={t["placeholder.special_instructions"]}
-                            value={userInfo.notes}
-                            onChange={handleInputChange}
-                            className="min-h-[100px]"
-                            maxLength={600}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            {/* SMS Consent Checkbox */}
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="smsConsent"
+                  name="smsConsent"
+                  checked={userInfo.smsConsent || false}
+                  onCheckedChange={(checked) => {
+                    handleInputChange({
+                      target: {
+                        name: "smsConsent",
+                        value: checked,
+                      },
+                    })
+                  }}
+                />
+                <Label
+                  htmlFor="smsConsent"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                {t["consent.for.sms"]}
+                </Label>
+              </div>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="notes" className="flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" />
+                {t["label.special_instructions"]}
+              </Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                placeholder={t["placeholder.special_instructions"]}
+                value={userInfo.notes}
+                onChange={handleInputChange}
+                className="min-h-[100px]"
+                maxLength={600}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
                   {currentStep === 4 && (
                     <div className="space-y-4">
@@ -1177,7 +1214,7 @@ export default function BookingPage() {
                           <div className="relative">
                             <Input
                               type="text"
-                              placeholder={t["search.services_placeholder"] || "Search services..."}
+                              placeholder={t["search.services.placeholder"]}
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               className="pl-10"

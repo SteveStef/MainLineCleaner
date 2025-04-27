@@ -667,9 +667,8 @@ export const en = {
   "policies.notice.description": "Cancellations made at least 24 hours before the scheduled appointment are eligible for a 75% refund. Last-minute cancellations receive no refund.",
   "policies.support.title": "Customer Support",
   "policies.support.description": "Need help with your appointment? Our customer service team is available 7 days a week to assist you with any questions or concerns.",
-
-
-
+  "consent.for.sms":"I consent to receive SMS notifications and marketing offers from Dos Chicas.",
+  "search.services.placeholder": "Search Servicies....."
 
 }
 
