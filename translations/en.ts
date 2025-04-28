@@ -168,7 +168,7 @@ export const en = {
   "error.phone_required": "Phone number is required",
   "error.phone_invalid": "Phone number is invalid",
   "error.address_required": "Address is required",
-  "error.city_required": "City is required",
+  "error.zipcode_required": "Zipcode is required",
 
   AFTERNOON: "Afternoon, 12:00 PM – 5:00 PM",
   MORNING: "Morning, 6:00 AM – 12:00 PM",
@@ -214,7 +214,7 @@ export const en = {
   "loading.service_options": "Loading service options...",
   "label.processing_payment": "Processing payment...",
   "payment.note_heading": "Please Note",
-  "payment.note_description": "By confirming this booking, you agree to our terms and conditions. We'll send a confirmation email with your booking details.",
+  "payment.note_description": "We'll send a confirmation email with your booking details and receipt.",
   "button.previous": "Previous",
   "button.next": "Next",
   "toast.error_loading_prices_title": "Error loading prices",
@@ -476,7 +476,7 @@ export const en = {
   afterHoursService: "After-hours service",
   customizedPlans: "Customized plans",
 
-  "label.city": "City",
+  "label.zipcode": "Zipcode",
 
   "settings.pricing.regularClean.title": "Regular Cleaning Price",
   "settings.pricing.regularClean.description": "Set the price for regular cleaning",
@@ -668,7 +668,18 @@ export const en = {
   "policies.support.title": "Customer Support",
   "policies.support.description": "Need help with your appointment? Our customer service team is available 7 days a week to assist you with any questions or concerns.",
   "consent.for.sms":"I consent to receive SMS notifications and marketing offers from Dos Chicas.",
-  "search.services.placeholder": "Search Servicies....."
+  "search.services.placeholder": "Search Servicies.....",
 
+  "search.no_results_title": "No services found",
+  "search.no_results_description": "Try a different search term or browse all services",
+  "search.clear": "Clear Search",
+  "search.showing_single": "Showing 1 service",
+  "search.showing_multiple": "Showing multiple services",
+  "service.features": "Features",
+  "button.learn_more": "Learn More",
+  "label.square_feet": "Square feet",
+  "tooltip.square_feet": "Enter the area’s size in square feet. This will impact the total price.",
+  "label.amount.charged": "Amount Charged",
+  "otherService": "Other",
 }
 

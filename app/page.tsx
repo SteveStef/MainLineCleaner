@@ -1067,7 +1067,7 @@ function MainLineCleanersContent() {
   )}
 
   {/* Consent Checkbox */}
-  <motion.div className="flex items-center space-x-2 mt-1" variants={fadeIn}>
+  <motion.div className="flex items-center space-x-2 mt-1 hidden" variants={fadeIn}>
     <Input
       id="consent"
       name="consent"
@@ -1095,11 +1095,18 @@ function MainLineCleanersContent() {
                             value={requestQuoteForm.service}
                             onChange={handleInputChange}
                           >
-                            <option value="">{t.selectService}</option>
-                            <option value="regular">{t.regularService}</option>
-                            <option value="deep">{t.deepService}</option>
-                            <option value="move">{t.moveService}</option>
-                            <option value="other">{t.otherService}</option>
+                            <option value="REGULAR">{t["regularService"]}</option>
+                            <option value="ENVIRONMENT">{t["environmentService"]}</option>
+                            <option value="DEEP">{t["deepService"]}</option>
+                            <option value="HAZMAT">{t["hazmatService"]}</option>
+                            <option value="FIRE">{t["fireService"]}</option>
+                            <option value="WATER">{t["waterService"]}</option>
+                            <option value="MOVE_IN_OUT">{t["moveService"]}</option>
+                            <option value="DECEASED">{t["deceasedService"]}</option>
+                            <option value="EXPLOSIVE_RESIDUE">{t["explosiveResidueService"]}</option>
+                            <option value="MOLD">{t["moldService"]}</option>
+                            <option value="CONSTRUCTION">{t["constructionService"]}</option>
+                            <option value="COMMERCIAL">{t["commercialService"]}</option>
                           </select>
                           {errors.service && (
                             <motion.p

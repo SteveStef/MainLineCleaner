@@ -173,7 +173,7 @@ export const es = {
   "error.phone_required": "El número de teléfono es obligatorio",
   "error.phone_invalid": "El número de teléfono no es válido",
   "error.address_required": "La dirección es obligatoria",
-  "error.city_required": "Se requiere ciudad",
+  "error.zipcode_required": "Se requiere el código postal",
 
   // time slot labels
   AFTERNOON: "Tarde, 12:00 PM – 5:00 PM",
@@ -220,7 +220,7 @@ export const es = {
   "loading.service_options": "Cargando opciones de servicio...",
   "label.processing_payment": "Procesando pago...",
   "payment.note_heading": "Nota",
-  "payment.note_description": "Al confirmar esta reserva, aceptas nuestros términos y condiciones. Enviaremos un correo de confirmación con los detalles de tu reserva.",
+  "payment.note_description": "Enviaremos un correo de confirmación con los detalles de su reserva y el recibo.",
   "button.previous": "Anterior",
   "button.next": "Siguiente",
   "toast.error_loading_prices_title": "Error al cargar los precios",
@@ -486,7 +486,7 @@ export const es = {
   customizedPlans: "Planes personalizados",
 
 
-  "label.city": "Ciudad",
+  "label.zipcode": "Código postal",
  "settings.pricing.regularClean.title": "Precio de limpieza regular",
   "settings.pricing.regularClean.description": "Establece el precio de la limpieza regular",
   "settings.pricing.deepClean.title": "Precio de limpieza profunda",
@@ -674,7 +674,19 @@ export const es = {
   "policies.support.title": "Atención al Cliente",
   "policies.support.description": "¿Necesitas ayuda con tu cita? Nuestro equipo de atención al cliente está disponible los 7 días de la semana para ayudarte con cualquier pregunta o inquietud.",
   "consent.for.sms": "Consiento recibir notificaciones SMS y ofertas de marketing de Dos Chicas.",
-  "search.services.placeholder": "Buscar servicios..."
+  "search.services.placeholder": "Buscar servicios...",
+
+  "search.no_results_title": "No se encontraron servicios",
+  "search.no_results_description": "Prueba con otro término de búsqueda o explora todos los servicios",
+  "search.clear": "Borrar búsqueda",
+  "search.showing_single": "Mostrando 1 servicio",
+  "search.showing_multiple": "Mostrando varios servicios",
+  "service.features": "Características",
+  "button.learn_more": "Más información",
+  "label.square_feet": "Pies cuadrados",
+  "tooltip.square_feet": "Ingrese el tamaño del área en pies cuadrados. Esto afectará el precio total.",
+  "label.amount.charged": "Importe cobrado",
+  "otherService": "Otro"
 }
 
 

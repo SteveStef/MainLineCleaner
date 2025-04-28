@@ -134,7 +134,10 @@ interface Appointment {
   appointmentDate: Date
   status: string
   bookingId: string
-  city: string
+  zipcode: string
+  chargedAmount: string
+  squareFeet: number
+  notesES?: string
 }
 
 const defaultPricing = {
@@ -1161,7 +1164,7 @@ export default function AdminDashboard() {
                                       variant="outline"
                                       size="sm"
                                       onClick={async () => {
-                                        if (language === "es") appointment.notes = await tes(appointment.notes);
+                                        if (language === "es") appointment.notesES = await tes(appointment.notes);
                                         setSelectedAppointment(appointment);
                                         setIsEditDialogOpen(true);
                                       }}
@@ -1248,7 +1251,7 @@ export default function AdminDashboard() {
                                       variant="outline"
                                       size="sm"
                                       onClick={async () => {
-                                        if (language === "es") appointment.notes = await tes(appointment.notes);
+                                        if (language === "es") appointment.notesES = await tes(appointment.notes);
                                         setSelectedAppointment(appointment);
                                         setIsEditDialogOpen(true);
                                       }}
@@ -2273,6 +2276,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">{t["dialog.appointment.label.phone"]}</p>
                 <p className="font-medium">{selectedAppointment && selectedAppointment.phone}</p>
               </div>
+
             </div>
           </Card>
 
@@ -2284,9 +2288,17 @@ export default function AdminDashboard() {
                 <p className="font-medium">{selectedAppointment && selectedAppointment.address}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">{t["label.city"]}</p>
-                <p className="font-medium">{selectedAppointment && selectedAppointment.city}</p>
+                <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
+                <p className="font-medium">{selectedAppointment && selectedAppointment.zipcode}</p>
               </div>
+          <div>
+            <p className="text-sm text-gray-500">{t["label.square_feet"]}</p>
+            <p className="font-medium">{selectedAppointment?.squareFeet?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">{t["label.amount.charged"]}</p>
+            <p className="font-medium">${selectedAppointment?.chargedAmount}</p>
+          </div>
             </div>
           </Card>
 
@@ -2326,7 +2338,7 @@ selectedAppointment &&
             <h3 className="text-sm font-medium text-gray-500 mb-3">
               {t["dialog.appointment.label.notes"]}
             </h3>
-            <p className="font-medium whitespace-pre-wrap">{selectedAppointment && selectedAppointment.notes}</p>
+            <p className="font-medium whitespace-pre-wrap">{selectedAppointment && (language === "en" ? selectedAppointment.notes : selectedAppointment.notesES)}</p>
           </Card>
         </div>
 

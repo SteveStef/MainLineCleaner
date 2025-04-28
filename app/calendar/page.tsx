@@ -31,8 +31,10 @@ import {
   Info,
   Loader2,
   MapPin,
+  Square,
 } from "lucide-react"
 
+import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -159,7 +161,8 @@ interface FormErrors {
   email?: string
   phone?: string
   address?: string
-  city?: string
+  zipcode?: string
+  squareFeet?: string
 }
 
 function generateRequestId() {
@@ -197,9 +200,10 @@ export default function BookingPage() {
     email: "",
     phone: "",
     address: "",
-    city: "",
+    zipcode: "",
     notes: "",
-    smsConsent: false
+    smsConsent: false,
+    squareFeet: 0
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -314,7 +318,7 @@ export default function BookingPage() {
     const newErrors: FormErrors = {}
     if (!userInfo.firstName.trim()) newErrors.firstName = t["error.first_name_required"]
     if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"]
-    if (!userInfo.city.trim()) newErrors.city = t["error.city_required"]
+    if (!userInfo.zipcode.trim()) newErrors.zipcode = t["error.zipcode_required"]
     if (!userInfo.email.trim()) {
       newErrors.email = t["error.email_required"]
     } else if (!/\S+@\S+\.\S+/.test(userInfo.email)) {
@@ -363,12 +367,13 @@ export default function BookingPage() {
         email: userInfo.email,
         phone: userInfo.phone,
         address: userInfo.address,
-        city: userInfo.city,
+        zipcode: userInfo.zipcode,
         time: selectedTimeSlot, // MORNING or NIGHT or AFTERNOON
         service: selectedService, // REGULAR // these are enums must conform
         notes: userInfo.notes,
         appointmentDate: selectedDate,
-        consent: userInfo.smsConsent
+        smsConsent: userInfo.smsConsent,
+        squareFeet: userInfo.squareFeet
       }
 
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
@@ -622,10 +627,8 @@ export default function BookingPage() {
   }
 
   function calculateSavings(service: string) {
-    // This is a placeholder - you would replace with actual logic based on your pricing model
     const basePrice = Number.parseFloat(getServiceById(service)?.price || "0")
-    // For example, if regular price is 10% higher
-    return (basePrice * 0.1).toFixed(2)
+    return (basePrice * 0.1).toFixed(2);
   }
 
   const renderBookingSummary = () => {
@@ -754,7 +757,7 @@ export default function BookingPage() {
 
               <div className="mt-3 flex items-center justify-center gap-2 bg-blue-50 p-2 rounded-md">
                 <Sparkles className="h-4 w-4 text-blue-600" />
-                <span className="text-xs text-blue-700 font-medium">{t["label.best_value"]}</span>
+                <span className="text-xs text-blue-700 font-medium">{t["label.best_value"] || "penguins"}</span>
               </div>
             </div>
           )}
@@ -817,7 +820,7 @@ export default function BookingPage() {
         </div>
 
         {/* Step Indicator */}
-        <div className="max-w-5xl mx-auto mb-8">
+        <div className="max-w-7xl mx-auto mb-8">
           <div className="flex items-center justify-between">
             {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex flex-col items-center">
@@ -897,7 +900,7 @@ export default function BookingPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6 max-w-8xl mx-auto">
             {/* Left Column - Booking Form */}
             <div className="lg:col-span-2">
               <Card className="border shadow-lg h-full">
@@ -1121,24 +1124,56 @@ export default function BookingPage() {
               {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
             </div>
 
-            {/* City */}
+            {/* Square Feet with Tooltip */}
             <div className="space-y-2">
-              <Label htmlFor="city" className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {t["label.city"]} <span className="text-red-500">*</span>
-              </Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="squareFeet" className="flex items-center gap-1">
+                  <Square className="h-4 w-4" />
+                  {t["label.square_feet"] || "Square Feet"} <span className="text-red-500">*</span>
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-help text-muted-foreground">
+                        <Info className="h-4 w-4" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t["tooltip.square_feet"]}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
-                id="city"
-                name="city"
-                value={userInfo.city}
+                id="squareFeet"
+                name="squareFeet"
+                type="number"
+                value={userInfo.squareFeet || ""}
                 onChange={handleInputChange}
-                className={errors.city ? "border-red-500" : ""}
-                maxLength={50}
+                className={errors.squareFeet ? "border-red-500" : ""}
+                min={1}
               />
-              {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
+              {errors.squareFeet && <p className="text-red-500 text-xs">{errors.squareFeet}</p>}
             </div>
 
+            {/* zipcode */}
             <div className="space-y-2">
+              <Label htmlFor="zipcode" className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {t["label.zipcode"]} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="zipcode"
+                name="zipcode"
+                value={userInfo.zipcode}
+                onChange={handleInputChange}
+                className={errors.zipcode? "border-red-500" : ""}
+                maxLength={5}
+              />
+              {errors.zipcode && <p className="text-red-500 text-xs">{errors.zipcode}</p>}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="address" className="flex items-center gap-1">
                 <Home className="h-4 w-4" />
                 {t["label.address"]} <span className="text-red-500">*</span>
@@ -1155,7 +1190,7 @@ export default function BookingPage() {
             </div>
 
             {/* SMS Consent Checkbox */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 md:col-span-2 hidden">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="smsConsent"
@@ -1174,7 +1209,7 @@ export default function BookingPage() {
                   htmlFor="smsConsent"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                {t["consent.for.sms"]}
+                  {t["consent.for.sms"]}
                 </Label>
               </div>
             </div>
@@ -1242,70 +1277,44 @@ export default function BookingPage() {
                             {getFilteredServices().length > 0 ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {getFilteredServices().map((service: any) => (
-                                  <div
-                                    key={service.id}
-                                    className={cn(
-                                      "relative flex flex-col rounded-lg border transition-all",
-                                      selectedService === service.id
-                                        ? "border-blue-500 bg-blue-50 shadow-md"
-                                        : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
-                                    )}
-                                  >
-                                    <div className="absolute top-4 right-4">
-                                      <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
-                                    </div>
+    <div
+      key={service.id}
+      className={cn(
+        "relative flex flex-col rounded-lg border transition-all",
+        selectedService === service.id
+          ? "border-blue-500 bg-blue-50 shadow-sm"
+          : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
+      )}
+      onClick={() => setSelectedService(service.id)}
+    >
+      {/* Top row with service name and price */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
+          <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
+            {t[service.name]}
+          </Label>
+        </div>
+        <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+          ${service.price}
+        </div>
+      </div>
 
-                                    <div className="p-5 cursor-pointer" onClick={() => setSelectedService(service.id)}>
-                                      <div className="flex justify-between items-start mb-3">
-                                        <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
-                                          {t[service.name]}
-                                        </Label>
-                                        <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 ml-2">
-                                          ${service.price}
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-center gap-2 mb-3">
-                                        <div className="bg-blue-100 p-1.5 rounded-full">
-                                          <Clock className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                        <span className="text-sm font-medium text-blue-700">{service.duration}</span>
-                                      </div>
-
-                                      <p className="text-muted-foreground mb-4">{t[service.description]}</p>
-
-                                      <div className="space-y-2 mb-4">
-                                        <h4 className="text-sm font-medium text-gray-700">
-                                          {t["service.features"] || "Features"}:
-                                        </h4>
-                                        <div className="grid grid-cols-1 gap-2">
-                                          {service.features.map((feature: string, index: number) => (
-                                            <div
-                                              key={index}
-                                              className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-md"
-                                            >
-                                              <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                              <span>{t[feature]}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="mt-auto border-t p-4">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={(e) => {
-                                          e.preventDefault()
-                                          window.open(`/services/${service.id.toLowerCase()}`, "_blank")
-                                        }}
-                                      >
-                                        {t["button.learn_more"] || "Learn More"} →
-                                      </Button>
-                                    </div>
-                                  </div>
+      {/* Bottom row with Learn More button */}
+      <div className="border-t p-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={(e) => {
+            e.preventDefault()
+            window.open(`/services/${service.id.toLowerCase()}`, "_blank")
+          }}
+        >
+          {t["button.learn_more"] || "Learn More"} →
+        </Button>
+      </div>
+    </div>
                                 ))}
                               </div>
                             ) : (
@@ -1335,7 +1344,7 @@ export default function BookingPage() {
                                     "Try a different search term or browse all services"}
                                 </p>
                                 <Button variant="outline" className="mt-4" onClick={() => setSearchQuery("")}>
-                                  {t["search.clear"] || "Clear search"}
+                                  {t["search.clear"]}
                                 </Button>
                               </div>
                             )}
@@ -1344,7 +1353,7 @@ export default function BookingPage() {
                           {getFilteredServices().length > 0 && (
                             <div className="text-center text-sm text-muted-foreground">
                               {getFilteredServices().length === 1
-                                ? t["search.showing_single"] || "Showing 1 service"
+                                ? t["search.showing_single"]
                                 : t["search.showing_multiple"]?.replace(
                                     "{count}",
                                     getFilteredServices().length.toString(),

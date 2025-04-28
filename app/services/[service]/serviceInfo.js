@@ -1,12 +1,18 @@
 import { Clock, Shield, Award, Users, Droplets, Flame, Home, Wind, Skull, Bomb, Building, Briefcase } from 'lucide-react'
 import fire from "../../../images/services/fire-damage.jpg";
+import regular from "../../../images/services/regular.jpg";
+import deep from "../../../images/services/deep.jpg";
+import enviroment from "../../../images/services/enviroment.jpg";
+import hazmat from "../../../images/services/haz.jpg";
+import water from "../../../images/services/water.jpg";
+import move from "../../../images/services/move.jpg";
 import clean from "../../../images/clean.jpg";
 import eco from "../../../images/clean.jpg";
 
 const serviceInfo = {
   REGULAR: {
     cleaning: {
-      image: fire,
+      image: regular,
       title: "Regular Cleaning Services",
       shortDesc:
         "Standard cleaning services for homes and businesses, providing consistent maintenance and cleanliness.",
@@ -152,7 +158,7 @@ const serviceInfo = {
 
   ENVIRONMENT: {
     cleaning: {
-      image: fire,
+      image: enviroment,
       title: "Environmental Cleaning Services",
       shortDesc:
         "Eco-friendly cleaning solutions that protect both your space and the planet, using sustainable practices and products.",
@@ -298,7 +304,7 @@ const serviceInfo = {
 
   DEEP: {
     cleaning: {
-      image: fire,
+      image: deep,
       title: "Deep Cleaning Services",
       shortDesc:
         "Intensive cleaning solutions that reach beyond the surface to eliminate built-up dirt, grime, and contaminants.",
@@ -447,7 +453,7 @@ const serviceInfo = {
 
   HAZMAT: {
     cleaning: {
-      image: fire,
+      image: hazmat,
       title: "Hazardous Materials Cleaning Services",
       shortDesc:
         "Specialized cleaning and decontamination services for environments affected by hazardous materials, ensuring safety and compliance.",
@@ -741,7 +747,7 @@ const serviceInfo = {
 
   WATER: {
     cleaning: {
-      image: fire,
+      image: water,
       title: "Water Damage Cleaning Services",
       shortDesc:
         "Emergency water extraction, drying, and restoration services for properties affected by water damage.",
@@ -887,7 +893,7 @@ const serviceInfo = {
 
   MOVE: {
     cleaning: {
-      image: fire,
+      image: move,
       title: "Move-In/Move-Out Cleaning Services",
       shortDesc:
         "Comprehensive cleaning services for transitioning between properties, ensuring spaces are pristine for new occupants.",
