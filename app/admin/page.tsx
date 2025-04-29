@@ -436,28 +436,30 @@ export default function AdminDashboard() {
       }, 3000)
     }
   }
+  console.log(tempPricing)
 
   const handleSavePricing = async () => {
     setPricing(tempPricing)
     setIsEditingPricing(false)
     try {
+      console.log(tempPricing.commercialPrice.toFixed(2));
       const token = Cookies.get("token")
       const options = {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
-          regularPrice: tempPricing.regularClean,
-          moveInOutPrice: tempPricing.moveInOut,
-          deepCleanPrice: tempPricing.deepClean,
-          environmentPrice: tempPricing.environmentPrice,
-          firePrice: tempPricing.firePrice,
-          waterPrice: tempPricing.waterPrice,
-          deceasedPrice: tempPricing.deceasedPrice,
-          hazmat: tempPricing.hazmat,
-          explosiveResidue: tempPricing.explosiveResidue,
-          moldPrice: tempPricing.moldPrice,
-          constructionPrice: tempPricing.constructionPrice,
-          commercialPrice: tempPricing.commercialPrice,
+          regularPrice: tempPricing.regularClean.toFixed(2),
+          moveInOutPrice: tempPricing.moveInOut.toFixed(2),
+          deepCleanPrice: tempPricing.deepClean.toFixed(2),
+          environmentPrice: tempPricing.environmentPrice.toFixed(2),
+          firePrice: tempPricing.firePrice.toFixed(2),
+          waterPrice: tempPricing.waterPrice.toFixed(2),
+          deceasedPrice: tempPricing.deceasedPrice.toFixed(2),
+          hazmat: tempPricing.hazmat.toFixed(2),
+          explosiveResidue: tempPricing.explosiveResidue.toFixed(2),
+          moldPrice: tempPricing.moldPrice.toFixed(2),
+          constructionPrice: tempPricing.constructionPrice.toFixed(2),
+          commercialPrice: tempPricing.commercialPrice.toFixed(2),
         }),
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`
@@ -2026,226 +2028,224 @@ export default function AdminDashboard() {
               </TabsContent>
 
               {/* Settings Tab */}
-              <TabsContent value="settings">
-                <Card className="border-blue-100 hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
-                      <Settings className="h-5 w-5 text-blue-600" />
+<TabsContent value="settings">
+  <Card className="border-blue-100 hover:shadow-md transition-shadow">
+    <CardHeader>
+      <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
+        <Settings className="h-5 w-5 text-blue-600" />
+      </div>
+      <CardTitle>{t["settings.pricing.title"]}</CardTitle>
+      <CardDescription>{t["settings.pricing.description"]}</CardDescription>
+    </CardHeader>
+    <CardContent>
+      {/* Success Message */}
+      {saveSuccess && (
+        <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-5 duration-300">
+          <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+          <div className="text-green-700 font-medium">{t["settings.updated_success"]}</div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-medium">{t["settings.pricing.header"]}</h3>
+            {!isEditingPricing ? (
+              <Button
+                variant="outline"
+                onClick={() => setIsEditingPricing(true)}
+                className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                {t["settings.pricing.edit"]}
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingPricing(false)
+                    setTempPricing(pricing)
+                  }}
+                  className="border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  {t["settings.pricing.cancel_edit"]}
+                </Button>
+                <Button
+                  onClick={handleSavePricing}
+                  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  {t["settings.pricing.save_changes"]}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            {Object.entries(tempPricing || pricing).map(([key, value]) => {
+              const colorScheme = colorSchemes[key] || {
+                bg: "bg-slate-50",
+                border: "border-slate-100",
+                text: "text-slate-700",
+                textLight: "text-slate-600",
+              }
+
+              // Format the key for display (convert camelCase to Title Case with spaces)
+              const formattedKey = key
+                .replace(/([A-Z])/g, " $1") // Add space before capital letters
+                .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+                .replace(/Price$/, " Price") // Add space before "Price" if it's at the end
+
+              return (
+                <div key={key} className={`p-4 rounded-lg border ${colorScheme.border} ${colorScheme.bg}`}>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <h4 className={`text-lg font-medium ${colorScheme.text}`}>
+                        {t[`settings.pricing.${key}.title`] || formattedKey}
+                      </h4>
+                      <p className={`text-sm ${colorScheme.textLight} mt-1`}>
+                        {t[`settings.pricing.${key}.description`] ||
+                          `Set the price for ${formattedKey.toLowerCase()} services`}
+                      </p>
                     </div>
-                    <CardTitle>{t["settings.pricing.title"]}</CardTitle>
-                    <CardDescription>{t["settings.pricing.description"]}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Success Message */}
-                    {saveSuccess && (
-                      <div className="flex items-center p-4 mb-4 text-sm rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-5 duration-300">
-                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                        <div className="text-green-700 font-medium">{t["settings.updated_success"]}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end">
+                        <span className={`text-2xl font-bold ${colorScheme.text}`}>
+                          $
+                          {isEditingPricing ? (
+                            <Input
+                              type="number"
+                              value={tempPricing[key]}
+                              onChange={(e) =>
+                                setTempPricing({
+                                  ...tempPricing,
+                                  [key]: Number.parseFloat(e.target.value) || 0,
+                                })
+                              }
+                              className="w-24 h-8 inline-block text-center"
+                            />
+                          ) : (
+                            pricing[key]
+                          )}
+                        </span>
+                        <span className={`text-xs ${colorScheme.textLight}`}>per square foot</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {!isEditingPricing && (
+            <div className="mt-6 p-4 rounded-lg border border-blue-100 bg-blue-50">
+              <div className="flex items-center">
+                <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                <p className="text-sm text-blue-700">
+                  {t["settings.pricing.info"]} All prices shown are rates per square foot of cleaning area.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Admin Settings Section */}
+      <div className="mt-8 space-y-6">
+        <Card className="border-blue-100 hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
+              <User className="h-5 w-5 text-purple-600" />
+            </div>
+            <CardTitle>{t["settings.admin.title"]}</CardTitle>
+            <CardDescription>{t["settings.admin.description"]}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium">{t["settings.admin.email_header"]}</h3>
+                {!isEditingAdminEmail ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditingAdminEmail(true)}
+                    className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    {t["settings.admin.email.edit"]}
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingAdminEmail(false)
+                        setTempAdminEmail(adminEmail)
+                        setEmailError(null)
+                      }}
+                      className="border-red-200 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      {t["settings.admin.email.cancel"]}
+                    </Button>
+                    <Button
+                      onClick={handleSaveAdminEmail}
+                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      {t["settings.admin.email.save"]}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 rounded-lg border border-purple-100 bg-purple-50">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h4 className="text-lg font-medium text-purple-700">{t["settings.admin.email.email_title"]}</h4>
+                    <p className="text-sm text-purple-600 mt-1">{t["settings.admin.email.email_description"]}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isEditingAdminEmail ? (
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 text-purple-600 mr-2" />
+                          <Input
+                            type="email"
+                            value={tempAdminEmail}
+                            onChange={(e) => setTempAdminEmail(e.target.value)}
+                            className="w-64"
+                            placeholder="admin@example.com"
+                          />
+                        </div>
+                        {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 text-purple-600 mr-2" />
+                        <span className="text-lg font-medium text-purple-700">{adminEmail}</span>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
 
-                    <div className="space-y-6">
-                      <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
-                        <div className="flex justify-between items-center mb-6">
-                          <h3 className="text-lg font-medium">{t["settings.pricing.header"]}</h3>
-                          {!isEditingPricing ? (
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsEditingPricing(true)}
-                              className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              {t["settings.pricing.edit"]}
-                            </Button>
-                          ) : (
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setIsEditingPricing(false)
-                                  setTempPricing(pricing)
-                                }}
-                                className="border-red-200 hover:bg-red-50 hover:text-red-600"
-                              >
-                                <X className="mr-2 h-4 w-4" />
-                                {t["settings.pricing.cancel_edit"]}
-                              </Button>
-                              <Button
-                                onClick={handleSavePricing}
-                                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                {t["settings.pricing.save_changes"]}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                          {Object.entries(tempPricing || pricing).map(([key, value]) => {
-                            const colorScheme = colorSchemes[key] || {
-                              bg: "bg-slate-50",
-                              border: "border-slate-100",
-                              text: "text-slate-700",
-                              textLight: "text-slate-600",
-                            }
-
-                            // Format the key for display (convert camelCase to Title Case with spaces)
-                            const formattedKey = key
-                              .replace(/([A-Z])/g, " $1") // Add space before capital letters
-                              .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
-                              .replace(/Price$/, " Price") // Add space before "Price" if it's at the end
-
-                            return (
-                              <div
-                                key={key}
-                                className={`p-4 rounded-lg border ${colorScheme.border} ${colorScheme.bg}`}
-                              >
-                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                  <div>
-                                    <h4 className={`text-lg font-medium ${colorScheme.text}`}>
-                                      {t[`settings.pricing.${key}.title`] || formattedKey}
-                                    </h4>
-                                    <p className={`text-sm ${colorScheme.textLight} mt-1`}>
-                                      {t[`settings.pricing.${key}.description`] ||
-                                        `Set the price for ${formattedKey.toLowerCase()} services`}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-2xl font-bold ${colorScheme.text}`}>
-                                      $
-                                      {isEditingPricing ? (
-                                        <Input
-                                          type="number"
-                                          value={tempPricing[key]}
-                                          onChange={(e) =>
-                                            setTempPricing({
-                                              ...tempPricing,
-                                              [key]: Number.parseFloat(e.target.value) || 0,
-                                            })
-                                          }
-                                          className="w-24 h-8 inline-block text-center"
-                                        />
-                                      ) : (
-                                        pricing[key]
-                                      )}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        {!isEditingPricing && (
-                          <div className="mt-6 p-4 rounded-lg border border-blue-100 bg-blue-50">
-                            <div className="flex items-center">
-                              <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                              <p className="text-sm text-blue-700">{t["settings.pricing.info"]}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Admin Settings Section */}
-                    <div className="mt-8 space-y-6">
-                      <Card className="border-blue-100 hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
-                            <User className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <CardTitle>{t["settings.admin.title"]}</CardTitle>
-                          <CardDescription>{t["settings.admin.description"]}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="bg-white rounded-lg border border-blue-100 p-6 shadow-sm">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-medium">{t["settings.admin.email_header"]}</h3>
-                              {!isEditingAdminEmail ? (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setIsEditingAdminEmail(true)}
-                                  className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  {t["settings.admin.email.edit"]}
-                                </Button>
-                              ) : (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setIsEditingAdminEmail(false)
-                                      setTempAdminEmail(adminEmail)
-                                      setEmailError(null)
-                                    }}
-                                    className="border-red-200 hover:bg-red-50 hover:text-red-600"
-                                  >
-                                    <X className="mr-2 h-4 w-4" />
-                                    {t["settings.admin.email.cancel"]}
-                                  </Button>
-                                  <Button
-                                    onClick={handleSaveAdminEmail}
-                                    className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-                                  >
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    {t["settings.admin.email.save"]}
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="p-4 rounded-lg border border-purple-100 bg-purple-50">
-                              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                <div>
-                                  <h4 className="text-lg font-medium text-purple-700">
-                                    {t["settings.admin.email.email_title"]}
-                                  </h4>
-                                  <p className="text-sm text-purple-600 mt-1">
-                                    {t["settings.admin.email.email_description"]}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {isEditingAdminEmail ? (
-                                    <div className="flex flex-col">
-                                      <div className="flex items-center">
-                                        <Mail className="h-4 w-4 text-purple-600 mr-2" />
-                                        <Input
-                                          type="email"
-                                          value={tempAdminEmail}
-                                          onChange={(e) => setTempAdminEmail(e.target.value)}
-                                          className="w-64"
-                                          placeholder="admin@example.com"
-                                        />
-                                      </div>
-                                      {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center">
-                                      <Mail className="h-4 w-4 text-purple-600 mr-2" />
-                                      <span className="text-lg font-medium text-purple-700">{adminEmail}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {!isEditingAdminEmail && (
-                              <div className="mt-6 p-4 rounded-lg border border-purple-100 bg-purple-50">
-                                <div className="flex items-center">
-                                  <Info className="h-5 w-5 text-purple-600 mr-3 flex-shrink-0" />
-                                  <p className="text-sm text-purple-700">{t["settings.admin.email.info"]}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              {!isEditingAdminEmail && (
+                <div className="mt-6 p-4 rounded-lg border border-purple-100 bg-purple-50">
+                  <div className="flex items-center">
+                    <Info className="h-5 w-5 text-purple-600 mr-3 flex-shrink-0" />
+                    <p className="text-sm text-purple-700">{t["settings.admin.email.info"]}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </CardContent>
+  </Card>
+</TabsContent>
             </Tabs>
 
             {/* Edit Appointment Dialog */}

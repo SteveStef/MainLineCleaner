@@ -681,5 +681,7 @@ export const en = {
   "tooltip.square_feet": "Enter the area’s size in square feet. This will impact the total price.",
   "label.amount.charged": "Amount Charged",
   "otherService": "Other",
+  "label.best_value": "Best Value",
+  "label.application.fee": "Application Fee",
 }
 

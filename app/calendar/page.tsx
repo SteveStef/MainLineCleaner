@@ -491,7 +491,8 @@ export default function BookingPage() {
   }
 
   const getServiceById = (id: string) => {
-    return serviceTypes.find((service) => service.id === id)
+    let a = serviceTypes.find((service) => service.id === id)
+    return a;
   }
 
   const getFilteredServices = () => {
@@ -555,7 +556,7 @@ export default function BookingPage() {
       const options = {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify({}),
+        body: JSON.stringify(Math.round(userInfo.squareFeet)),
       }
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/paypal/createOrder?serviceType=${selectedService}`,
@@ -617,18 +618,27 @@ export default function BookingPage() {
   }
 
   function getSalesTax(service: any) {
-    const serv = getServiceById(service)
-    return 0.06 * Number.parseFloat(serv.price)
+    const serv = getServiceById(service) // this is a string
+    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE);
+    if(!applicationFee) applicationFee = 0;
+
+    return (0.06 * ((Number.parseFloat(serv?.price) * userInfo.squareFeet) + applicationFee)).toFixed(2);
   }
 
   function getTotalAmount(service: string) {
-    const serv = getServiceById(service)
-    return (Number.parseFloat(serv.price) + getSalesTax(service)).toFixed(2)
+    if(!userInfo.squareFeet) return 0;
+
+    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE);
+    if(!applicationFee) applicationFee = 0;
+
+    const serv = getServiceById(service); // this is a string
+    return (((Number.parseFloat(serv?.price) * userInfo.squareFeet) + applicationFee) * 1.06).toFixed(2);
   }
 
-  function calculateSavings(service: string) {
-    const basePrice = Number.parseFloat(getServiceById(service)?.price || "0")
-    return (basePrice * 0.1).toFixed(2);
+  function getBasePrice(service: string) {
+    if(!userInfo.squareFeet) return 0;
+    const serv = getServiceById(service); // this is a string 
+    return (Number.parseFloat(serv?.price) * userInfo.squareFeet).toFixed(2);
   }
 
   const renderBookingSummary = () => {
@@ -683,7 +693,7 @@ export default function BookingPage() {
                     <div className="flex justify-between items-center">
                       <p className="font-medium">{t[getServiceById(selectedService)?.name]}</p>
                       <span className="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                        ${getServiceById(selectedService)?.price}
+                        ${getBasePrice(selectedService)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -733,7 +743,15 @@ export default function BookingPage() {
                     <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
                     {t["label.base_price"]}
                   </span>
-                  <span className="font-medium">${getServiceById(selectedService)?.price}</span>
+                  <span className="font-medium">${getBasePrice(selectedService)}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
+                    {t["label.application.fee"] || "Application Fee"}
+                  </span>
+                  <span className="font-medium">${process.env.NEXT_PUBLIC_APPLICATION_FEE}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -741,7 +759,7 @@ export default function BookingPage() {
                     <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
                     {t["label.sales_tax"]} (6%)
                   </span>
-                  <span className="font-medium">${getSalesTax(selectedService).toFixed(2)}</span>
+                  <span className="font-medium">${getSalesTax(selectedService)}</span>
                 </div>
 
                 <div className="h-px bg-blue-100 my-2"></div>
@@ -757,7 +775,7 @@ export default function BookingPage() {
 
               <div className="mt-3 flex items-center justify-center gap-2 bg-blue-50 p-2 rounded-md">
                 <Sparkles className="h-4 w-4 text-blue-600" />
-                <span className="text-xs text-blue-700 font-medium">{t["label.best_value"] || "penguins"}</span>
+                <span className="text-xs text-blue-700 font-medium">{t["label.best_value"]}</span>
               </div>
             </div>
           )}
@@ -1277,44 +1295,44 @@ export default function BookingPage() {
                             {getFilteredServices().length > 0 ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {getFilteredServices().map((service: any) => (
-    <div
-      key={service.id}
-      className={cn(
-        "relative flex flex-col rounded-lg border transition-all",
-        selectedService === service.id
-          ? "border-blue-500 bg-blue-50 shadow-sm"
-          : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
-      )}
-      onClick={() => setSelectedService(service.id)}
-    >
-      {/* Top row with service name and price */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
-          <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
-            {t[service.name]}
-          </Label>
-        </div>
-        <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
-          ${service.price}
-        </div>
-      </div>
+                                      <div
+                                      key={service.id}
+                                      className={cn(
+                                          "relative flex flex-col rounded-lg border transition-all",
+                                          selectedService === service.id
+                                          ? "border-blue-500 bg-blue-50 shadow-sm"
+                                          : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
+                                          )}
+                                      onClick={() => setSelectedService(service.id)}
+                                      >
+                                      {/* Top row with service name and price */}
+                                      <div className="flex items-center justify-between p-4">
+                                      <div className="flex items-center gap-3">
+                                      <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
+                                      <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
+                                      {t[service.name]}
+                                      </Label>
+                                      </div>
+                                      <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+                                      ${getBasePrice(service.id)}
+                                      </div>
+                                        </div>
 
-      {/* Bottom row with Learn More button */}
-      <div className="border-t p-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={(e) => {
-            e.preventDefault()
-            window.open(`/services/${service.id.toLowerCase()}`, "_blank")
-          }}
-        >
-          {t["button.learn_more"] || "Learn More"} →
-        </Button>
-      </div>
-    </div>
+                                        {/* Bottom row with Learn More button */}
+                                      <div className="border-t p-3">
+                                        <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={(e) => {
+                                          e.preventDefault()
+                                            window.open(`/services/${service.id.toLowerCase()}`, "_blank")
+                                        }}
+                                      >
+                                      {t["button.learn_more"] || "Learn More"} →
+                                      </Button>
+                                        </div>
+                                        </div>
                                 ))}
                               </div>
                             ) : (
