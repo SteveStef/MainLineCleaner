@@ -359,7 +359,7 @@ export default function AppointmentManagerPage() {
   const calculateRefundAmount = (): string => {
     if (!appointmentData) return "$0.00"
 
-    const priceValue = Number.parseFloat(appointmentData.chargedAmount.replace(/[^0-9.]/g, ""))
+    const priceValue = Number.parseFloat(appointmentData.chargedAmount)
     return `$${(priceValue * 0.75).toFixed(2)}`
   }
 
@@ -543,7 +543,7 @@ export default function AppointmentManagerPage() {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">{t["appointment.price.label"]}</span>
                           <span className="font-medium">
-                            ${appointmentData && appointmentData.chargedAmount.split(" ")[0]}
+                            ${appointmentData && appointmentData.chargedAmount}
                           </span>
                         </div>
                       </div>
@@ -854,7 +854,7 @@ export default function AppointmentManagerPage() {
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">{t["refund.totalPaid"]}</span>
                                     <span className="font-medium">
-                                      ${appointmentData && appointmentData.chargedAmount.split(" ")[0]}
+                                      ${appointmentData && appointmentData.chargedAmount}
                                     </span>
                                   </div>
                                   {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
@@ -1017,7 +1017,7 @@ export default function AppointmentManagerPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">{t["payment.amount"]}</span>
-                            <span className="font-medium">${appointmentData?.chargedAmount?.split(" ")[0]}</span>
+                            <span className="font-medium">${appointmentData?.chargedAmount}</span>
                           </div>
 
                           {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (

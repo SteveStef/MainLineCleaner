@@ -683,5 +683,14 @@ export const en = {
   "otherService": "Other",
   "label.best_value": "Best Value",
   "label.application.fee": "Application Fee",
+  "per.square.foot": "per square foot",
+  "settings.all.square": "All prices shown are rates per square foot of cleaning area.",
+  "settings.cancel.appointment.error": "Canceling appointment failed, make sure you have enough funds in your bank account",
+
+  "dialog.refund.title": "Refund Amount",
+  "dialog.refund.description": "Enter the amount you want to refund to the client.",
+  "dialog.refund.label.amount": "Amount",
+  "dialog.refund.button.cancel": "Cancel",
+  "dialog.refund.button.confirm": "Cancel and Refund",
 }
 

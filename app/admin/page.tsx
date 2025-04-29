@@ -148,8 +148,8 @@ const defaultPricing = {
   firePrice: 0,
   waterPrice: 0,
   deceasedPrice: 0,
-  hazmat: 0,
-  explosiveResidue: 0,
+  hazmatPrice: 0,
+  explosiveResiduePrice: 0,
   moldPrice: 0,
   constructionPrice: 0,
   commercialPrice: 0,
@@ -172,6 +172,10 @@ export default function AdminDashboard() {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
+
+  const [isCancelling, setIsCancelling] = useState<boolean>(false);
+  const [refundAmount, setRefundAmount] = useState<string>("0");
+  const [error, setError] = useState<string>("");
 
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -333,16 +337,17 @@ export default function AdminDashboard() {
         const response = await fetch(url)
         if (response.ok) {
           const details: any = await response.json()
+          console.log(details)
           const vals = {
             regularClean: Number.parseFloat(details.regularPrice),
             deepClean: Number.parseFloat(details.deepCleanPrice),
             moveInOut: Number.parseFloat(details.moveInOutPrice),
             environmentPrice: Number.parseFloat(details.environmentPrice),
-            hazmat: Number.parseFloat(details.hazmat),
+            hazmatPrice: Number.parseFloat(details.hazmatPrice),
             firePrice: Number.parseFloat(details.firePrice),
             waterPrice: Number.parseFloat(details.waterPrice),
             deceasedPrice: Number.parseFloat(details.deceasedPrice),
-            explosiveResidue: Number.parseFloat(details.explosiveResidue),
+            explosiveResiduePrice: Number.parseFloat(details.explosiveResiduePrice),
             moldPrice: Number.parseFloat(details.moldPrice),
             constructionPrice: Number.parseFloat(details.constructionPrice),
             commercialPrice: Number.parseFloat(details.commercialPrice),
@@ -436,7 +441,6 @@ export default function AdminDashboard() {
       }, 3000)
     }
   }
-  console.log(tempPricing)
 
   const handleSavePricing = async () => {
     setPricing(tempPricing)
@@ -455,8 +459,8 @@ export default function AdminDashboard() {
           firePrice: tempPricing.firePrice.toFixed(2),
           waterPrice: tempPricing.waterPrice.toFixed(2),
           deceasedPrice: tempPricing.deceasedPrice.toFixed(2),
-          hazmat: tempPricing.hazmat.toFixed(2),
-          explosiveResidue: tempPricing.explosiveResidue.toFixed(2),
+          hazmatPrice: tempPricing.hazmatPrice.toFixed(2),
+          explosiveResiduePrice: tempPricing.explosiveResiduePrice.toFixed(2),
           moldPrice: tempPricing.moldPrice.toFixed(2),
           constructionPrice: tempPricing.constructionPrice.toFixed(2),
           commercialPrice: tempPricing.commercialPrice.toFixed(2),
@@ -770,8 +774,9 @@ export default function AdminDashboard() {
   // Sort dates chronologically
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime())
 
-  async function cancelAppointment(appointment: Appointment) {
+  async function cancelAppointment(appointment: Appointment, refundAmount: string) {
     setLoading(true)
+
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`
       const token = Cookies.get("token")
@@ -781,7 +786,7 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify(appointment),
+        body: JSON.stringify({appointment, refundAmount}),
       }
       const response = await fetch(url, options)
       setIsEditDialogOpen(false)
@@ -793,19 +798,21 @@ export default function AdminDashboard() {
           setSaveSuccess(false)
         }, 3000)
       } else {
-        setErrorMessage("Canceling appointment failed, are you sure this appointment was not already canceled?")
+        setErrorMessage(t["settings.cancel.appointment.error"])
         setTimeout(() => {
           setErrorMessage(null)
         }, 10000)
       }
     } catch (err) {
       console.log(err)
-      setErrorMessage("Canceling appointment failed, are you sure this appointment was not already canceled?")
+        setErrorMessage(t["settings.cancel.appointment.error"])
       setTimeout(() => {
         setErrorMessage(null)
       }, 5000)
     }
-    setLoading(false)
+    setLoading(false);
+    setIsCancelling(false);
+    setSelectedAppointment(null);
   }
 
   return (
@@ -1022,7 +1029,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Financial Metrics Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 mt-6">
                   <Card className="border-green-100 hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
                       <div className="inline-flex items-center justify-center p-2 bg-green-100 rounded-full mb-2">
@@ -1067,7 +1074,7 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-purple-100 hover:shadow-md transition-shadow">
+                  <Card className="border-purple-100 hover:shadow-md transition-shadow hidden">
                     <CardHeader className="pb-2">
                       <div className="inline-flex items-center justify-center p-2 bg-purple-100 rounded-full mb-2">
                         <Landmark className="h-5 w-5 text-purple-600" />
@@ -2130,7 +2137,7 @@ export default function AdminDashboard() {
                             pricing[key]
                           )}
                         </span>
-                        <span className={`text-xs ${colorScheme.textLight}`}>per square foot</span>
+                        <span className={`text-xs ${colorScheme.textLight}`}>{t["per.square.foot"]}</span>
                       </div>
                     </div>
                   </div>
@@ -2144,7 +2151,7 @@ export default function AdminDashboard() {
               <div className="flex items-center">
                 <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
                 <p className="text-sm text-blue-700">
-                  {t["settings.pricing.info"]} All prices shown are rates per square foot of cleaning area.
+                  {t["settings.pricing.info"]} {t["settings.all.square"]}
                 </p>
               </div>
             </div>
@@ -2346,7 +2353,10 @@ selectedAppointment &&
           {selectedAppointment && selectedAppointment.status.toLowerCase() !== "canceled" && (
             <Button
               variant="destructive"
-              onClick={() => cancelAppointment(selectedAppointment)}
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setIsCancelling(true);
+              }}
               disabled={loading}
               className="w-full sm:w-auto"
             >
@@ -2359,6 +2369,70 @@ selectedAppointment &&
             className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto"
           >
             {t["dialog.appointment.button.close"]}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+   <Dialog open={isCancelling && selectedAppointment} onOpenChange={setIsCancelling}>
+      <DialogContent className="sm:max-w-[425px]">
+      <DialogHeader>
+          <DialogTitle>{t["dialog.refund.title"]}</DialogTitle>
+          <DialogDescription>
+            {t["dialog.refund.description"]}
+            {parseFloat(selectedAppointment?.chargedAmount) > 0 && ` Maximum refund amount: $${selectedAppointment.chargedAmount}.`}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+              {error && <p className="text-sm text-red-500 ">{error}</p>}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="refundAmount" className="text-right">
+              {t["dialog.refund.label.amount"]}
+            </Label>
+            <div className="col-span-3 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+              <Input
+                id="refundAmount"
+                type="number"
+                value={refundAmount}
+                onChange={(e) => {
+                  const value = Number.parseFloat(e.target.value)
+                  const maxAmount = parseFloat(selectedAppointment?.chargedAmount) || 0
+
+                  if (isNaN(value)) {
+                    setRefundAmount(e.target.value)
+                    setError("");
+                  } else if (value > maxAmount) {
+                    setError(`Amount cannot exceed $${maxAmount}`)
+                    setRefundAmount(maxAmount.toString())
+                  } else if (value < 0) {
+                    setError("Amount cannot be negative")
+                    setRefundAmount("0")
+                  } else {
+                    setError("")
+                    setRefundAmount(e.target.value)
+                  }
+                }}
+                className="pl-7"
+                min="0"
+                max={selectedAppointment?.chargedAmount}
+                step="0.01"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsCancelling(false)}>
+            {t["dialog.refund.button.cancel"]}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => cancelAppointment(selectedAppointment, refundAmount)}
+            disabled={
+              loading || error !== "" || isNaN(Number.parseFloat(refundAmount)) || Number.parseFloat(refundAmount) <= 0
+            }
+          >
+            {t["dialog.refund.button.confirm"]}
           </Button>
         </DialogFooter>
       </DialogContent>

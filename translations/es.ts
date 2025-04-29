@@ -689,6 +689,15 @@ export const es = {
   "otherService": "Otro",
   "label.best_value": "Mejor valor",
   "label.application.fee": "Tarifa de solicitud",
+  "per.square.foot": "por pie cuadrado",
+  "settings.all.square": "Todos los precios mostrados son tarifas por pie cuadrado de área de limpieza.",
+  "settings.cancel.appointment.error":"Cancelación de cita fallida, asegúrese de tener fondos suficientes en su cuenta bancaria",
+
+  "dialog.refund.title": "Monto de reembolso",
+  "dialog.refund.description": "Ingrese el monto que desea reembolsar al cliente.",
+  "dialog.refund.label.amount": "Monto",
+  "dialog.refund.button.cancel": "Cancelar",
+  "dialog.refund.button.confirm": "Cancelar y reembolsar",
 
 }
 

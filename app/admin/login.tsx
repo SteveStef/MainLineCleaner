@@ -205,7 +205,7 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
     switch (currentStep) {
       case "credentials":
         return (
-          <form className="space-y-4" onSubmit={handleCredentialsSubmit}>
+          <form className="space-y-4" method="post" onSubmit={handleCredentialsSubmit}>
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium leading-none flex items-center gap-1">
                 <User className="h-4 w-4 text-blue-500" />
