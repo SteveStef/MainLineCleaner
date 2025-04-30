@@ -106,7 +106,7 @@ const serviceTypesDefaults: ServiceType[] = [
     features: ["waterExtraction", "moldPrevention"],
   },
   {
-    id: "MOVE",
+    id: "MOVE_IN_OUT",
     name: "moveService",
     description: "moveServiceDesc",
     price: "",
@@ -122,7 +122,7 @@ const serviceTypesDefaults: ServiceType[] = [
     features: ["discreetService", "thoroughSanitization"],
   },
   {
-    id: "EXPLOSIVE",
+    id: "EXPLOSIVE_RESIDUE",
     name: "explosiveResidueService",
     description: "explosiveResidueServiceDesc",
     price: "",
@@ -549,6 +549,7 @@ export default function BookingPage() {
     }
   }
 
+  console.log(selectedService)
   const createPayPalOrder = async () => {
     setIsProcessingPayment(true)
     setApiErrors((prev) => ({ ...prev, payment: undefined }))
