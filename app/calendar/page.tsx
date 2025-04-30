@@ -264,12 +264,12 @@ export default function BookingPage() {
         tmp[0].price = details.regularPrice
         tmp[1].price = details.environmentPrice
         tmp[2].price = details.deepCleanPrice
-        tmp[3].price = details.hazmat
+        tmp[3].price = details.hazmatPrice
         tmp[4].price = details.firePrice
         tmp[5].price = details.waterPrice
         tmp[6].price = details.moveInOutPrice
         tmp[7].price = details.deceasedPrice
-        tmp[8].price = details.explosiveResidue
+        tmp[8].price = details.explosiveResiduePrice
         tmp[9].price = details.moldPrice
         tmp[10].price = details.constructionPrice
         tmp[11].price = details.commercialPrice
