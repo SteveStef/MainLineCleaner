@@ -110,7 +110,7 @@ function MainLineCleanersContent() {
     lastName: "",
     email: "",
     phone: "",
-    service: "",
+    service: "REGULAR",
     message: "",
     consent: false
   })
@@ -250,11 +250,6 @@ function MainLineCleanersContent() {
     return emailRegex.test(email)
   }
 
-  const validatePhone = (phone: string) => {
-    const phoneRegex = /^\+?1?\s*(?:$$\d{3}$$|\d{3})[-.\s]?\d{3}[-.\s]?\d{4}$/
-    return phoneRegex.test(phone)
-  }
-
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -291,9 +286,6 @@ function MainLineCleanersContent() {
     if (!requestQuoteForm.phone.trim()) {
       newErrors.phone = t.phoneRequired
       hasErrors = true
-    } else if (!validatePhone(requestQuoteForm.phone)) {
-      newErrors.phone = t.invalidPhone
-      hasErrors = true
     }
 
     if (!requestQuoteForm.service) {
@@ -306,14 +298,15 @@ function MainLineCleanersContent() {
       setIsSubmitting(true)
 
       try {
-        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`
+        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`;
+        const body = {...requestQuoteForm, message: await tes(requestQuoteForm.message)};
         const options = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestQuoteForm),
+          body: JSON.stringify(body),
         }
 
-        const response: any = await fetch(url, options)
+        const response: any = await fetch(url, options);
 
         if (response.ok) {
           setSubmitSuccess(true)
@@ -322,7 +315,7 @@ function MainLineCleanersContent() {
             lastName: "",
             email: "",
             phone: "",
-            service: "",
+            service: "REGULAR",
             message: "",
             consent: false
           })

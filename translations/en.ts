@@ -6,7 +6,7 @@ export const en = {
   testimonials: "Testimonials",
   bookNow: "Book Now",
   getQuote: "Get a Quote",
-  companyName: "Main Line Cleaners",
+  companyName: "Dos Chicas",
 
   // Hero section
   heroTitle: "Professional Cleaning Services for the Main Line",
@@ -70,7 +70,7 @@ export const en = {
   requestQuote: "Request a Quote",
   quoteSuccess: "Quote Request Sent!",
   quoteSuccessMessage:
-    "Thank you for your interest in MainLine Cleaners. We've received your request and will get back to you within 24 hours.",
+    "Thank you for your interest in Dos Chicas Cleaning. We've received your request and will get back to you within 24 hours.",
   submitAnother: "Submit Another Request",
   firstName: "First name",
   lastName: "Last name",
@@ -243,7 +243,7 @@ export const en = {
   "why_choose.flexible_scheduling.description": "Book appointments that fit your schedule with our convenient online system.",
   "why_choose.satisfaction_guaranteed.heading": "Satisfaction Guaranteed",
   "why_choose.satisfaction_guaranteed.description": "We're not happy until you're happy with the results of our cleaning service.",
-  "footer.company_name": "Main Line Cleaners",
+  "footer.company_name": "Dos Chicas",
   "footer.company_description": "Professional cleaning services for homes and businesses.",
   "footer.company": "Company",
   "footer.company_about": "About",

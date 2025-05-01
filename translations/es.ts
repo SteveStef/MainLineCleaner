@@ -6,10 +6,10 @@ export const es = {
   testimonials: "Testimonios",
   bookNow: "Reservar Ahora",
   getQuote: "Obtener Presupuesto",
-  companyName: "Main Line Cleaners",
+  companyName: "Dos Chicas",
 
   // Hero section
-  heroTitle: "Servicios de Limpieza Profesional para Main Line",
+  heroTitle: "Servicios de Limpieza Profesional para Dos Chicas",
   heroDescription:
     "Proporcionamos servicios de limpieza residencial y comercial de alta calidad en toda el área de Main Line. Nuestro equipo profesional asegura que su espacio esté impecable y desinfectado.",
   ecoFriendly: "Ecológico",
@@ -249,7 +249,7 @@ export const es = {
   "why_choose.flexible_scheduling.description": "Reserva citas que se ajusten a tu horario con nuestro sistema en línea conveniente.",
   "why_choose.satisfaction_guaranteed.heading": "Satisfacción Garantizada",
   "why_choose.satisfaction_guaranteed.description": "No estaremos satisfechos hasta que tú lo estés con los resultados de nuestro servicio de limpieza.",
-  "footer.company_name": "Main Line Cleaners",
+  "footer.company_name": "Dos Chicas",
   "footer.company_description": "Servicios profesionales de limpieza para hogares y negocios.",
   "footer.company": "Empresa",
   "footer.company_about": "Acerca de",
