@@ -701,6 +701,7 @@ export const es = {
 
   "filter.select.date.range": "Seleccionar rango de fechas",
   "filter.service": "Seleccionar servicio",
+  "week_view.no_appointments": "No hay citas programadas para esta semana",
 }
 
 

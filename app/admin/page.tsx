@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -28,8 +27,6 @@ import {
   Globe,
   CheckCircle,
   Clock,
-  Filter,
-  Search,
   X,
   Sun,
   Moon,
@@ -1380,7 +1377,7 @@ const filteredAppointments = allAppointments
                         if (weekAppointments.length === 0) {
                           return (
                             <div className="text-center py-8 text-muted-foreground border rounded-lg">
-                              {t["week_view.no_appointments"] || "No appointments scheduled for this week"}
+                              {t["week_view.no_appointments"]}
                             </div>
                           )
                         }
@@ -1454,9 +1451,10 @@ const filteredAppointments = allAppointments
                                             <Button
                                               variant="outline"
                                               size="sm"
-                                              onClick={() => {
-                                                setSelectedAppointment(appointment)
-                                                setIsEditDialogOpen(true)
+                                              onClick={async() => {
+                                                if (language === "es") appointment.notesES = await tes(appointment.notes);
+                                                setSelectedAppointment(appointment);
+                                                setIsEditDialogOpen(true);
                                               }}
                                               className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                                             >

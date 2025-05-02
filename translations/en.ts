@@ -695,5 +695,6 @@ export const en = {
 
   "filter.select.date.range": "Select Date Range",
   "filter.service": "Select Service",
+  "week_view.no_appointments" : "No appointments scheduled for this week",
 }
 
