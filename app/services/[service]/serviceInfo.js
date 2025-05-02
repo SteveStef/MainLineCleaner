@@ -6,8 +6,11 @@ import enviroment from "../../../images/services/enviroment.jpg";
 import hazmat from "../../../images/services/haz.jpg";
 import water from "../../../images/services/water.jpg";
 import move from "../../../images/services/move.jpg";
-import clean from "../../../images/clean.jpg";
-import eco from "../../../images/clean.jpg";
+import deceased from "../../../images/services/deceased.jpg"
+import explosive from "../../../images/services/explosive.jpg";
+import commercial from "../../../images/services/commercial.jpg";
+import mold from "../../../images/services/mold.jpg";
+import construction from "../../../images/services/construction.jpg";
 
 const serviceInfo = {
   REGULAR: {
@@ -1038,7 +1041,7 @@ const serviceInfo = {
 
   DECEASED: {
     cleaning: {
-      image: fire,
+      image: deceased,
       title: "Deceased Estate Cleaning Services",
       shortDesc:
         "Compassionate, discreet cleaning services for properties following the passing of a loved one.",
@@ -1184,7 +1187,7 @@ const serviceInfo = {
 
   EXPLOSIVE: {
     cleaning: {
-      image: fire,
+      image: explosive,
       title: "Explosive Residue Cleaning Services",
       shortDesc:
         "Specialized cleaning and decontamination services for areas affected by explosive residues and related hazardous materials.",
@@ -1329,7 +1332,7 @@ const serviceInfo = {
 
   MOLD: {
     cleaning: {
-      image: fire,
+      image: mold,
       title: "Mold Remediation Services",
       shortDesc:
         "Professional mold removal and remediation services to eliminate mold growth and prevent future infestations.",
@@ -1474,7 +1477,7 @@ const serviceInfo = {
 
   CONSTRUCTION: {
     cleaning: {
-      image: fire,
+      image: construction,
       title: "Post-Construction Cleaning Services",
       shortDesc:
         "Comprehensive cleaning services for newly constructed or renovated properties, removing construction debris and preparing spaces for occupancy.",
@@ -1619,7 +1622,7 @@ const serviceInfo = {
 
   COMMERCIAL: {
     cleaning: {
-      image: fire,
+      image: commercial,
       title: "Commercial Cleaning Services",
       shortDesc:
         "Professional cleaning solutions for businesses of all sizes, ensuring a clean, healthy, and productive work environment.",
@@ -1793,7 +1796,7 @@ const serviceInfo = {
 const serviceInfoES = {
   REGULAR: {
     cleaning: {
-      image: clean,
+      image: regular,
       title: "Servicios de Limpieza Regular",
       shortDesc:
         "Servicios de limpieza estándar para hogares y empresas, ofreciendo mantenimiento y limpieza constantes.",
@@ -1937,7 +1940,7 @@ const serviceInfoES = {
   },
   ENVIRONMENT: {
     cleaning: {
-      image: eco,
+      image: enviroment,
       title: "Servicios de Limpieza Ecológica",
       shortDesc:
         "Soluciones de limpieza ecológicas que protegen su espacio y el planeta, usando prácticas y productos sostenibles.",
@@ -1983,7 +1986,7 @@ const serviceInfoES = {
   },
   DEEP: {
     cleaning: {
-      image: eco,
+      image: deep,
       title: "Servicios de Limpieza Profunda",
       shortDesc:
         "Limpieza intensiva que va más allá de la superficie para eliminar suciedad y alérgenos acumulados.",
@@ -2029,7 +2032,7 @@ const serviceInfoES = {
   },
   HAZMAT: {
     cleaning: {
-      image: eco,
+      image: hazmat,
       title: "Servicios de Limpieza de Materiales Peligrosos",
       shortDesc:
         "Limpieza y descontaminación experta en entornos con sustancias peligrosas.",
@@ -2075,7 +2078,7 @@ const serviceInfoES = {
   },
   FIRE: {
     cleaning: {
-      image: eco,
+      image: fire,
       title: "Servicios de Limpieza por Daños de Incendio",
       shortDesc:
         "Restauración y limpieza especializada tras incendios y daños por humo.",
@@ -2118,7 +2121,7 @@ const serviceInfoES = {
   },
   WATER: {
     cleaning: {
-      image: eco,
+      image: water,
       title: "Servicios de Limpieza por Daños de Agua",
       shortDesc:
         "Extracción de agua, secado y restauración tras inundaciones o filtraciones.",
@@ -2164,7 +2167,7 @@ const serviceInfoES = {
   },
   MOVE: {
     cleaning: {
-      image: eco,
+      image: move,
       title: "Servicios de Limpieza de Mudanza",
       shortDesc:
         "Limpieza exhaustiva para mudanzas, dejando el espacio impecable para nuevos ocupantes.",
@@ -2210,7 +2213,7 @@ const serviceInfoES = {
   },
   DECEASED: {
     cleaning: {
-      image: eco,
+      image: deceased,
       title: "Servicios de Limpieza de Propiedades tras Fallecimiento",
       shortDesc:
         "Limpieza compasiva y discreta tras el fallecimiento de un ser querido.",
@@ -2256,7 +2259,7 @@ const serviceInfoES = {
   },
   EXPLOSIVE: {
     cleaning: {
-      image: eco,
+      image: explosive,
       title: "Servicios de Limpieza de Residuos Explosivos",
       shortDesc:
         "Descontaminación experta de partículas explosivas y materiales peligrosos.",
@@ -2302,7 +2305,7 @@ const serviceInfoES = {
   },
   MOLD: {
     cleaning: {
-      image: eco,
+      image: mold,
       title: "Servicios de Remediación de Moho",
       shortDesc:
         "Eliminación y prevención de moho con técnicas certificadas.",
@@ -2348,7 +2351,7 @@ const serviceInfoES = {
   },
   CONSTRUCTION: {
     cleaning: {
-      image: eco,
+      image: construction,
       title: "Servicios de Limpieza Post-Construcción",
       shortDesc:
         "Limpieza completa tras obras, eliminando escombros, polvo y residuos de construcción.",
@@ -2446,7 +2449,7 @@ const serviceInfoES = {
 
   COMMERCIAL: {
     cleaning: {
-      image: eco,
+      image: commercial,
       title: "Servicios de Limpieza Comercial",
       shortDesc:
         "Soluciones profesionales para mantener espacios de trabajo limpios, sanos y productivos.",
