@@ -50,7 +50,7 @@ import { translations } from "@/translations"
 import type { Language } from "@/translations"
 import { tes, formatDateToSpanish } from "@/lib/utils"
 import RevenueChart from "@/components/chart";
-
+import AppointmentsTable from "./appointmentFilter"
 
 const colorSchemes = {
   regularClean: {
@@ -337,7 +337,6 @@ export default function AdminDashboard() {
         const response = await fetch(url)
         if (response.ok) {
           const details: any = await response.json()
-          console.log(details)
           const vals = {
             regularClean: Number.parseFloat(details.regularPrice),
             deepClean: Number.parseFloat(details.deepCleanPrice),
@@ -446,7 +445,6 @@ export default function AdminDashboard() {
     setPricing(tempPricing)
     setIsEditingPricing(false)
     try {
-      console.log(tempPricing.commercialPrice.toFixed(2));
       const token = Cookies.get("token")
       const options = {
         method: "PUT",
@@ -574,13 +572,23 @@ export default function AdminDashboard() {
   }
 
   // Filter appointments based on search query
-  const filteredAppointments = allAppointments.filter(
-    (appointment) =>
-      appointment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.status.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+const filteredAppointments = allAppointments
+  .filter((appointment) => {
+    const q = searchQuery.toLowerCase()
+    const nameMatch    = appointment.clientName.toLowerCase().includes(q)
+    const emailMatch   = appointment.email.toLowerCase().includes(q)
+    const serviceMatch = appointment.service.toLowerCase().includes(q)
+    const statusMatch  = appointment.status.toLowerCase().includes(q)
+
+    // format appointmentDate to "MM/DD/YYYY"
+    const dateStr = new Date(appointment.appointmentDate)
+      .toLocaleDateString('en-US')  // e.g. "5/1/2025"
+      .toLowerCase()
+
+    const dateMatch = dateStr.includes(q)
+
+    return nameMatch || emailMatch || serviceMatch || statusMatch || dateMatch
+  })
 
   // Filter appointments where the appointmentDate is in the future compared to nowUTC
   const upcomingAppointments = allAppointments.filter((appointment) => {
@@ -1285,122 +1293,17 @@ export default function AdminDashboard() {
 
               {/* All Appointments Tab */}
               <TabsContent value="appointments">
-                <Card className="border-blue-100 hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-2">
-                      <CalendarIcon className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <CardTitle>{t["tabs.all_appointments"]}</CardTitle>
-                    <CardDescription>{t["all.table.header.actions"]}</CardDescription>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder={t["search.appointments"]}
-                          className="pl-8"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Filter className="mr-2 h-4 w-4" />
-                            {t["filter"]}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => setSearchQuery("confirmed")}>
-                            {t["filter.confirmed"]}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setSearchQuery("completed")}>
-                            {t["filter.completed"]}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setSearchQuery("canceled")}>
-                            {t["filter.canceled"]}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setSearchQuery("")}>{t["filter.clear"]}</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t["all.table.header.booking_id"]}</TableHead>
-                            <TableHead>{t["all.table.header.client"]}</TableHead>
-                            <TableHead>{t["all.table.header.date_time"]}</TableHead>
-                            <TableHead>{t["all.table.header.service"]}</TableHead>
-                            <TableHead>{t["all.table.header.contact"]}</TableHead>
-                            <TableHead>{t["all.table.header.address"]}</TableHead>
-                            <TableHead>{t["all.table.header.status"]}</TableHead>
-                            <TableHead className="text-right">{t["all.table.header.actions"]}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredAppointments.length > 0 ? (
-                            filteredAppointments.map((appointment) => (
-                              <TableRow key={appointment.id}>
-                                <TableCell className="font-medium">{appointment.bookingId}</TableCell>
-                                <TableCell className="font-medium">{appointment.clientName}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span>
-                                      {language === "en"
-                                        ? format(new Date(appointment.appointmentDate), "MMM d, yyyy")
-                                        : formatDateToSpanish(
-                                            format(new Date(appointment.appointmentDate), "MMM d, yyyy"),
-                                            false,
-                                          )}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{t[appointment.service]}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm">{appointment.email}</span>
-                                    <span className="text-sm text-muted-foreground">{appointment.phone}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={appointment.address}>
-                                  {appointment.address}
-                                </TableCell>
-                                <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                                <TableCell className="text-right">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                      onClick={async () => {
-                                        if (language === "es") appointment.notes = await tes(appointment.notes);
-                                        setSelectedAppointment(appointment);
-                                        setIsEditDialogOpen(true);
-                                      }}
-                                    className="border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                                  >
-                                    {t["button.view_details"]}
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={9} className="h-24 text-center">
-                                {t["all.no_appointments"]}
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
+                <AppointmentsTable
+                appointments={allAppointments}
+                language={language}
+                t={t}
+                formatDateToSpanish={formatDateToSpanish}
+                getStatusBadge={getStatusBadge}
+                tes={tes}
+                setSelectedAppointment={setSelectedAppointment}
+                setIsEditDialogOpen={setIsEditDialogOpen}
+                />
+
               </TabsContent>
 
               {/* Week View Tab */}
@@ -2125,6 +2028,7 @@ export default function AdminDashboard() {
                             <Input
                               type="number"
                               value={tempPricing[key]}
+                              min={0}
                               onChange={(e) =>
                                 setTempPricing({
                                   ...tempPricing,

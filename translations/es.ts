@@ -699,6 +699,8 @@ export const es = {
   "dialog.refund.button.cancel": "Cancelar",
   "dialog.refund.button.confirm": "Cancelar y reembolsar",
 
+  "filter.select.date.range": "Seleccionar rango de fechas",
+  "filter.service": "Seleccionar servicio",
 }
 
 

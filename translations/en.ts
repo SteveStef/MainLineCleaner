@@ -692,5 +692,8 @@ export const en = {
   "dialog.refund.label.amount": "Amount",
   "dialog.refund.button.cancel": "Cancel",
   "dialog.refund.button.confirm": "Cancel and Refund",
+
+  "filter.select.date.range": "Select Date Range",
+  "filter.service": "Select Service",
 }
 
