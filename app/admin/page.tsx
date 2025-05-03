@@ -169,14 +169,7 @@ export default function AdminDashboard() {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
-
-  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState<boolean>(false);
-  const [emailSubject, setEmailSubject] = useState<string>("");
-  const [emailBody, setEmailBody] = useState<string>("");
-  const [selectedContacts, setSelectedContacts] = useState<{[id: string]: boolean}>({});
-  const [selectAll, setSelectAll] = useState<boolean>(false);
-  const [sendingEmail, setSendingEmail] = useState<boolean>(false);
-  const [emailSuccess, setEmailSuccess] = useState<boolean | null>(null);
+  const [clients, setClients] = useState<Appointment[]>([]);
 
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [refundAmount, setRefundAmount] = useState<string>("0");
@@ -194,10 +187,7 @@ export default function AdminDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [revenueData, setRevenueData] = useState([]);
-
   const [yearlyRevenue, setYearlyRevenue] = useState([]);
-
-  // State for financial metrics
   const [financialMetrics, setFinancialMetrics] = useState({
     profit: 0,
     grossRevenue: 0,
@@ -205,9 +195,7 @@ export default function AdminDashboard() {
     paypalFees: 0,
   })
 
-  // Add a new state for tracking the selected week view date
   const [weekViewDate, setWeekViewDate] = useState<Date>(new Date())
-
   const { language, setLanguage } = useContext(LanguageContext)
   const t = translations[language as Language]
 
@@ -220,10 +208,174 @@ export default function AdminDashboard() {
 
   const [isEditingPricing, setIsEditingPricing] = useState(false)
 
-  const [adminEmail, setAdminEmail] = useState("admin@cleaningservice.com")
-  const [tempAdminEmail, setTempAdminEmail] = useState("admin@cleaningservice.com")
+  const [adminEmail, setAdminEmail] = useState("")
+  const [tempAdminEmail, setTempAdminEmail] = useState("")
   const [isEditingAdminEmail, setIsEditingAdminEmail] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<number>>(new Set())
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
+  const [emailSubject, setEmailSubject] = useState("")
+  const [emailBody, setEmailBody] = useState("")
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+
+  // For the new client dialog
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false)
+  const [newClient, setNewClient] = useState({
+    clientName: "",
+    email: "",
+    phone: "",
+    address: "",
+    zipcode: ""
+  })
+  const [isAddingClient, setIsAddingClient] = useState(false)
+  const [clientAddSuccess, setClientAddSuccess] = useState(false)
+  const [clientFormErrors, setClientFormErrors] = useState<Record<string, string>>({})
+// Function to add a new client
+  const addNewClient = async () => {
+    const errors: Record<string, string> = {}
+
+    if (!newClient.clientName.trim()) {
+      errors.clientName = t.requiredField
+    }
+
+    if (!newClient.email.trim()) {
+      errors.email = t.requiredField
+    } else if (!/^\S+@\S+\.\S+$/.test(newClient.email)) {
+      errors.email = t.invalidEmail
+    }
+
+    if (!newClient.phone.trim()) {
+      errors.phone = t.requiredField
+    }
+
+    if (!newClient.address.trim()) {
+      errors.address = t.requiredField
+    }
+    if (!newClient.zipcode.trim()) {
+      errors.zipcode = t.requiredField
+    }
+    if (Object.keys(errors).length > 0) {
+      setClientFormErrors(errors)
+      return
+    }
+    setIsAddingClient(true)
+    setClientFormErrors({})
+
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
+      const token = Cookies.get("token")
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newClient)
+      })
+
+      if (response.ok) {
+        setClientAddSuccess(true)
+        getClients()
+        setTimeout(() => {
+          setNewClient({
+            clientName: "",
+            email: "",
+            phone: "",
+            address: "",
+            zipcode: ""
+          })
+          setIsNewClientDialogOpen(false)
+          setClientAddSuccess(false)
+        }, 2000)
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || t.clientAddError)
+      }
+    } catch (err) {
+      console.error(err)
+      setError(t.connectionError)
+    } finally {
+      setIsAddingClient(false)
+    }
+  }
+
+  const handleNewClientInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setNewClient(prev => ({ ...prev, [name]: value }))
+    if (clientFormErrors[name]) {
+      setClientFormErrors(prev => ({ ...prev, [name]: "" }))
+    }
+  }
+
+  const toggleClientSelection = (clientId: number) => {
+    const newSelection = new Set(selectedClientIds)
+    if (newSelection.has(clientId)) {
+      newSelection.delete(clientId)
+    } else {
+      newSelection.add(clientId)
+    }
+    setSelectedClientIds(newSelection)
+  }
+
+// Select or deselect all clients
+  const toggleSelectAllClients = () => {
+    if (selectedClientIds.size === clients.length) {
+      setSelectedClientIds(new Set())
+    } else {
+      const allIds = new Set(clients.map(client => client.id))
+      setSelectedClientIds(allIds)
+    }
+  }
+
+  // Send emails to selected clients
+  const sendEmailToClients = async () => {
+    if (selectedClientIds.size === 0) return
+
+    setIsSendingEmail(true)
+
+    try {
+      const selectedClients = clients.filter(client => selectedClientIds.has(client.id))
+      const emailAddresses = selectedClients.map(client => client.email)
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/send-email`
+      const token = Cookies.get("token")
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          recipients: emailAddresses,
+          subject: emailSubject,
+          body: emailBody
+        })
+      })
+
+      if (response.ok) {
+        setEmailSent(true)
+        // Reset form after success
+        setTimeout(() => {
+          setEmailSubject("")
+          setEmailBody("")
+          setIsEmailDialogOpen(false)
+          setEmailSent(false)
+        }, 2000)
+      } else {
+        setError("Failed to send emails")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("An error occurred while sending emails")
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
 
   // Add a new state to track the current month displayed in the calendar
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(new Date())
@@ -303,10 +455,30 @@ export default function AdminDashboard() {
     }
   }
 
+  async function getClients() {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
+      const token = Cookies.get("token")
+      const options = {
+        method: "GET",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      }
+      const response = await fetch(url, options)
+      if (response.ok) {
+        const appointments = await response.json()
+        setClients(appointments);
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+  console.log(clients)
+
   useEffect(() => {
     if (auth) {
-      getAppointments()
-      getRevenueDetails()
+      getAppointments();
+      getRevenueDetails();
+      getClients();
     }
   }, [auth])
 
@@ -913,71 +1085,261 @@ export default function AdminDashboard() {
                   </TabsList>
                    <TabsContent value="clients">
                      <Card>
-                       <CardHeader>
-                         <CardTitle className="text-2xl">{t["admin.contacts.title"]}</CardTitle>
-                         <CardDescription>{t["admin.contacts.description"]}</CardDescription>
-                         <div className="relative w-full max-w-sm">
-                           <Input
-                               type="text"
-                               placeholder={t["admin.contacts.searchPlaceholder"]}
-                               value={searchQuery}
-                               onChange={(e) => setSearchQuery(e.target.value)}
-                               className="pl-10"
-                           />
-                           <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                       <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                         <div>
+                           <CardTitle>{t["admin.contacts.title"]}</CardTitle>
+                           <CardDescription>{t["admin.contacts.description"]}</CardDescription>
+                         </div>
+
+                         <div className="flex flex-col sm:flex-row gap-2">
+                         <Button
+                             disabled={selectedClientIds.size === 0}
+                             onClick={() => setIsEmailDialogOpen(true)}
+                             className="flex items-center gap-2"
+                         >
+                           <Mail className="h-4 w-4" />
+                           {t.sendEmail}
+                         </Button>
+
+                         <Button
+                             onClick={() => setIsNewClientDialogOpen(true)}
+                             variant="outline"
+                             className="flex items-center gap-2"
+                         >
+                           <User className="h-4 w-4" />
+                           {t.addClient}
+                         </Button>
                          </div>
                        </CardHeader>
                        <CardContent>
-                         <ScrollArea className="h-[60vh]">
-                           <Table>
+                         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+                           <Input
+                               placeholder={t["admin.contacts.search"]}
+                               value={searchQuery}
+                               onChange={(e) => setSearchQuery(e.target.value)}
+                               className="max-w-sm"
+                           />
+                           <div className="flex items-center gap-2">
+                             <Checkbox
+                                 id="selectAll"
+                                 checked={clients.length > 0 && selectedClientIds.size === clients.length}
+                                 onCheckedChange={toggleSelectAllClients}
+                             />
+                             <Label htmlFor="selectAll">{t.selectAll}</Label>
+                           </div>
+                         </div>
+                         <div className="overflow-x-auto">
+                           <Table className="w-full">
                              <TableHeader>
                                <TableRow>
-                                 <TableHead>{t["admin.contacts.nameColumn"]}</TableHead>
-                                 <TableHead>{t["admin.contacts.emailColumn"]}</TableHead>
-                                 <TableHead>{t["admin.contacts.phoneColumn"]}</TableHead>
-                                 <TableHead>{t["admin.contacts.addressColumn"]}</TableHead>
-                                 <TableHead>{t["admin.contacts.squareFeetColumn"]}</TableHead>
+                                 <TableHead className="w-10"></TableHead>
+                                 <TableHead className="whitespace-nowrap">{t["admin.tab.clients"]}</TableHead>
+                                 <TableHead className="hidden sm:table-cell">{t.email}</TableHead>
+                                 <TableHead className="hidden md:table-cell">{t.phone}</TableHead>
+                                 <TableHead className="hidden lg:table-cell">{t.address}</TableHead>
+                                 <TableHead className="hidden lg:table-cell">{t["label.zipcode"]}</TableHead>
                                </TableRow>
                              </TableHeader>
                              <TableBody>
-                               {allAppointments
-                                   .filter((appointment) => {
-                                     if (!searchQuery) return true;
-                                     const query = searchQuery.toLowerCase();
-                                     return (
-                                         appointment.clientName.toLowerCase().includes(query) ||
-                                         appointment.email.toLowerCase().includes(query) ||
-                                         appointment.phone.includes(query) ||
-                                         appointment.address.toLowerCase().includes(query)
-                                     );
-                                   })
-                                   .sort((a, b) => a.clientName.localeCompare(b.clientName))
-                                   .map((appointment) => (
-                                       <TableRow key={appointment.id}>
-                                         <TableCell className="font-medium">{appointment.clientName}</TableCell>
-                                         <TableCell>
-                                           <div className="flex items-center">
-                                             <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                                             <a href={`mailto:${appointment.email}`} className="text-blue-600 hover:underline">
-                                               {appointment.email}
-                                             </a>
+                               {clients
+                                   .filter(client =>
+                                       client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                       client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                       client.phone.includes(searchQuery) ||
+                                       client.address.includes(searchQuery) ||
+                                       client.zipcode.includes(searchQuery)
+                                   )
+                                   .map((client, index) => (
+                                       <TableRow key={index}>
+                                         <TableCell className="px-2">
+                                           <Checkbox
+                                               checked={selectedClientIds.has(client.id)}
+                                               onCheckedChange={() => toggleClientSelection(client.id)}
+                                           />
+                                         </TableCell>
+                                         <TableCell className="font-medium">
+                                           {client.clientName}
+                                           <div className="sm:hidden text-sm text-muted-foreground mt-1">
+                                             {client.email}
+                                           </div>
+                                           <div className="md:hidden text-sm text-muted-foreground mt-0.5">
+                                             {client.phone}
                                            </div>
                                          </TableCell>
-                                         <TableCell>{appointment.phone}</TableCell>
-                                         <TableCell>
-                                           <div className="flex items-center">
-                                             <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
-                                             {appointment.address}, {appointment.zipcode}
-                                           </div>
-                                         </TableCell>
-                                         <TableCell>{appointment.squareFeet} {t["admin.contacts.squareFeetUnit"]}</TableCell>
+                                         <TableCell className="hidden sm:table-cell">{client.email}</TableCell>
+                                         <TableCell className="hidden md:table-cell">{client.phone}</TableCell>
+                                         <TableCell className="hidden lg:table-cell">{client.address}</TableCell>
+                                         <TableCell className="hidden lg:table-cell">{client.zipcode}</TableCell>
                                        </TableRow>
                                    ))}
                              </TableBody>
                            </Table>
-                         </ScrollArea>
+                         </div>
                        </CardContent>
                      </Card>
+
+                     {/* Email Dialog */}
+                     <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+                       <DialogContent className="sm:max-w-md">
+                         <DialogHeader>
+                           <DialogTitle>{t.sendEmail}</DialogTitle>
+                           <DialogDescription>
+                             {t.sendingEmailTo} {selectedClientIds.size} {selectedClientIds.size === 1 ? t.client : t.clients}
+                           </DialogDescription>
+                         </DialogHeader>
+                         <div className="space-y-4 py-2">
+                           <div className="space-y-2">
+                             <Label htmlFor="subject">{t.subject}</Label>
+                             <Input
+                                 id="subject"
+                                 value={emailSubject}
+                                 onChange={(e) => setEmailSubject(e.target.value)}
+                                 placeholder={t.emailSubjectPlaceholder}
+                             />
+                           </div>
+                           <div className="space-y-2">
+                             <Label htmlFor="message">{t.message}</Label>
+                             <textarea
+                                 id="message"
+                                 value={emailBody}
+                                 onChange={(e) => setEmailBody(e.target.value)}
+                                 placeholder={t.emailMessagePlaceholder}
+                                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[120px]"
+                             />
+                           </div>
+                         </div>
+                         <DialogFooter>
+                           <Button type="button" variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
+                             {t.cancel}
+                           </Button>
+                           <Button
+                               type="submit"
+                               onClick={sendEmailToClients}
+                               disabled={!emailSubject || !emailBody || isSendingEmail}
+                               className="flex items-center gap-2"
+                           >
+                             {isSendingEmail ? t.sending : emailSent ? t.sent : t.send}
+                             {isSendingEmail && <span className="animate-spin">⏳</span>}
+                             {emailSent && <CheckCircle className="h-4 w-4" />}
+                           </Button>
+                         </DialogFooter>
+                       </DialogContent>
+                     </Dialog>
+
+                     <Dialog open={isNewClientDialogOpen} onOpenChange={setIsNewClientDialogOpen}>
+                       <DialogContent className="sm:max-w-md">
+                         <DialogHeader>
+                           <DialogTitle>{t.addNewClient}</DialogTitle>
+                           <DialogDescription>
+                             {t.addNewClientDesc}
+                           </DialogDescription>
+                         </DialogHeader>
+
+                         <div className="space-y-4 py-2">
+                           <div className="space-y-2">
+                             <Label htmlFor="clientName" className="flex items-center gap-1">
+                               {t.name} <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                                 id="clientName"
+                                 name="clientName"
+                                 value={newClient.clientName}
+                                 onChange={handleNewClientInputChange}
+                                 placeholder={t.namePlaceholder}
+                                 className={clientFormErrors.clientName ? "border-red-500" : ""}
+                             />
+                             {clientFormErrors.clientName && (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.clientName}</p>
+                             )}
+                           </div>
+
+                           <div className="space-y-2">
+                             <Label htmlFor="email" className="flex items-center gap-1">
+                               {t.email} <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                                 id="email"
+                                 name="email"
+                                 type="email"
+                                 value={newClient.email}
+                                 onChange={handleNewClientInputChange}
+                                 placeholder={t.emailPlaceholder}
+                                 className={clientFormErrors.email ? "border-red-500" : ""}
+                             />
+                             {clientFormErrors.email && (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.email}</p>
+                             )}
+                           </div>
+
+                           <div className="space-y-2">
+                             <Label htmlFor="phone" className="flex items-center gap-1">
+                               {t.phone} <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                                 id="phone"
+                                 name="phone"
+                                 value={newClient.phone}
+                                 onChange={handleNewClientInputChange}
+                                 placeholder={t.phonePlaceholder}
+                                 className={clientFormErrors.phone ? "border-red-500" : ""}
+                             />
+                             {clientFormErrors.phone && (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.phone}</p>
+                             )}
+                           </div>
+
+                           <div className="space-y-2">
+                             <Label htmlFor="address" className="flex items-center gap-1">
+                               {t.address} <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                                 id="address"
+                                 name="address"
+                                 value={newClient.address}
+                                 onChange={handleNewClientInputChange}
+                                 placeholder={t.addressPlaceholder}
+                                 className={clientFormErrors.address ? "border-red-500" : ""}
+                             />
+                             {clientFormErrors.address && (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.address}</p>
+                             )}
+                           </div>
+
+                           <div className="space-y-2">
+                             <Label htmlFor="zipcode" className="flex items-center gap-1">
+                               {t.zipcode} <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                                 id="zipcode"
+                                 name="zipcode"
+                                 value={newClient.zipcode}
+                                 onChange={handleNewClientInputChange}
+                                 placeholder={t.zipcodePlaceholder}
+                                 className={clientFormErrors.zipcode ? "border-red-500" : ""}
+                             />
+                             {clientFormErrors.zipcode && (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.zipcode}</p>
+                             )}
+                           </div>
+                         </div>
+
+                         <DialogFooter>
+                           <Button type="button" variant="outline" onClick={() => setIsNewClientDialogOpen(false)}>
+                             {t.cancel}
+                           </Button>
+                           <Button
+                               type="submit"
+                               onClick={addNewClient}
+                               disabled={isAddingClient}
+                               className="flex items-center gap-2"
+                           >
+                             {isAddingClient ? t.adding : clientAddSuccess ? t.added : t.add}
+                             {isAddingClient && <span className="animate-spin">⏳</span>}
+                             {clientAddSuccess && <CheckCircle className="h-4 w-4" />}
+                           </Button>
+                         </DialogFooter>
+                       </DialogContent>
+                     </Dialog>
                    </TabsContent>
                   <TabsContent value="Graph">
                     <RevenueChart

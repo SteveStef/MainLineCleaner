@@ -61,9 +61,9 @@ function useAppointmentFilter(appointments: Appointment[]) {
     }))
   }
 
-  // Filter function
   const filterAppointments = () => {
-    return appointments.filter((appointment) => {
+    // First, filter the appointments
+    const filtered = appointments.filter((appointment) => {
       // Search term filter (checks multiple fields)
       if (filterOptions.searchTerm) {
         const searchTerm = filterOptions.searchTerm.toLowerCase()
@@ -88,10 +88,10 @@ function useAppointmentFilter(appointments: Appointment[]) {
         if (filterOptions.dateRange.from && filterOptions.dateRange.to) {
           // Both from and to dates are set
           if (
-            !isWithinInterval(appointmentDate, {
-              start: filterOptions.dateRange.from,
-              end: filterOptions.dateRange.to,
-            })
+              !isWithinInterval(appointmentDate, {
+                start: filterOptions.dateRange.from,
+                end: filterOptions.dateRange.to,
+              })
           ) {
             return false
           }
@@ -120,6 +120,16 @@ function useAppointmentFilter(appointments: Appointment[]) {
 
       // If all filters pass, include this appointment
       return true
+    })
+
+    // Sort by date with earliest first - using explicit timestamp comparison for clarity
+    return filtered.sort((a, b) => {
+      // Convert strings to Date objects and then to timestamps
+      const timestampA = new Date(a.appointmentDate).getTime()
+      const timestampB = new Date(b.appointmentDate).getTime()
+
+      // Sort by ascending order (earliest first)
+      return timestampB - timestampA
     })
   }
 
@@ -286,12 +296,11 @@ export default function AppointmentsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t["all.table.header.booking_id"]}</TableHead>
+                <TableHead>{t["today.table.header.booking_id"]}</TableHead>
                 <TableHead>{t["all.table.header.client"]}</TableHead>
                 <TableHead>{t["all.table.header.date_time"]}</TableHead>
                 <TableHead>{t["all.table.header.service"]}</TableHead>
                 <TableHead>{t["all.table.header.contact"]}</TableHead>
-                <TableHead>{t["all.table.header.address"]}</TableHead>
                 <TableHead>{t["all.table.header.status"]}</TableHead>
                 <TableHead className="text-right">{t["all.table.header.actions"]}</TableHead>
               </TableRow>
@@ -307,7 +316,7 @@ export default function AppointmentsTable({
                         <span>
                           {language === "en"
                             ? format(new Date(appointment.appointmentDate), "MMM d, yyyy")
-                            : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), false)}
+                            : formatDateToSpanish(format(new Date(appointment.appointmentDate), "MMM d, yyyy"), true)}
                         </span>
                         <span className="text-sm text-muted-foreground">{t[appointment.time]}</span>
                       </div>
@@ -318,9 +327,6 @@ export default function AppointmentsTable({
                         <span className="text-sm">{appointment.email}</span>
                         <span className="text-sm text-muted-foreground">{appointment.phone}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={appointment.address}>
-                      {appointment.address}
                     </TableCell>
                     <TableCell>{getStatusBadge(appointment.status)}</TableCell>
                     <TableCell className="text-right">
