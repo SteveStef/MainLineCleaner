@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
@@ -163,6 +161,7 @@ interface FormErrors {
   address?: string
   zipcode?: string
   squareFeet?: string
+  state?: string
 }
 
 function generateRequestId() {
@@ -201,9 +200,10 @@ export default function BookingPage() {
     phone: "",
     address: "",
     zipcode: "",
+    state: "",
     notes: "",
     smsConsent: false,
-    squareFeet: 0
+    squareFeet: 0,
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -223,6 +223,9 @@ export default function BookingPage() {
   }>({})
 
   const [searchQuery, setSearchQuery] = useState<string>("")
+
+  const [paymentType, setPaymentType] = useState<"ONE_TIME" | "RECURRING">("ONE_TIME")
+  const [subscriptionFrequency, setSubscriptionFrequency] = useState<"WEEKLY" | "MONTHLY">("MONTHLY")
 
   // Create localized time slot names using bracket-notation.
   const localizedTimeSlotNames: { [key: string]: string } = {
@@ -299,18 +302,26 @@ export default function BookingPage() {
     return availableDays.some((availableDate) => isSameDay(date, availableDate))
   }
 
-//  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
- //k   const { name, value } = e.target
-   // setUserInfo((prev) => ({ ...prev, [name]: value }))
- // }
-
   const handleInputChange = (e: any) => {
     const { name, value, type, checked } = e.target
+    // if parseInt(userInfo.squareFeet) < 500 then make an error for that squareFeet in the errors object
     setUserInfo((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }))
-    setErrors((prev) => ({ ...prev, [name]: undefined })) // Clear error on change
+    // 2) run validation and update errors
+    setErrors((prev) => {
+      const newErrors = { ...prev, [name]: undefined }
+
+      if (name === "squareFeet") {
+        const sf = Number.parseInt(value, 10)
+        if (isNaN(sf) || sf < 500) {
+          newErrors.squareFeet = "Square footage must be at least 500"
+        }
+      }
+
+      return newErrors
+    })
   }
 
   // Validate user info using t for error messages.
@@ -319,6 +330,7 @@ export default function BookingPage() {
     if (!userInfo.firstName.trim()) newErrors.firstName = t["error.first_name_required"]
     if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"]
     if (!userInfo.zipcode.trim()) newErrors.zipcode = t["error.zipcode_required"]
+    if (!userInfo.state.trim()) newErrors.state = t["error.state_required"]
     if (!userInfo.email.trim()) {
       newErrors.email = t["error.email_required"]
     } else if (!/\S+@\S+\.\S+/.test(userInfo.email)) {
@@ -334,7 +346,7 @@ export default function BookingPage() {
   }
 
   const handleNextStep = () => {
-    if (currentStep === 3) {
+    if (currentStep === 1) {
       const { isValid, errors: newErrors } = validateUserInfo()
       setErrors(newErrors)
       if (!isValid) return
@@ -346,9 +358,6 @@ export default function BookingPage() {
   }
 
   const handlePreviousStep = () => {
-    if (currentStep === 2) {
-      setSelectedTimeSlot(undefined)
-    }
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1)
     }
@@ -368,12 +377,15 @@ export default function BookingPage() {
         phone: userInfo.phone,
         address: userInfo.address,
         zipcode: userInfo.zipcode,
+        state: userInfo.state,
         time: selectedTimeSlot, // MORNING or NIGHT or AFTERNOON
         service: selectedService, // REGULAR // these are enums must conform
         notes: userInfo.notes,
         appointmentDate: selectedDate,
         smsConsent: userInfo.smsConsent,
-        squareFeet: userInfo.squareFeet
+        squareFeet: userInfo.squareFeet,
+        paymentType: paymentType,
+        subscriptionFrequency: paymentType === "RECURRING" ? subscriptionFrequency : null,
       }
 
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
@@ -472,28 +484,28 @@ export default function BookingPage() {
   const isStepComplete = () => {
     switch (currentStep) {
       case 1:
-        return !!selectedDate
-      case 2:
-        return !!selectedTimeSlot
-      case 3:
         return (
           !!userInfo.firstName.trim() &&
           !!userInfo.lastName.trim() &&
           !!userInfo.email.trim() &&
           !!userInfo.phone.trim() &&
-          !!userInfo.address.trim()
+          !!userInfo.address.trim() &&
+          !!userInfo.state.trim()
         )
-      case 4:
+      case 2:
         return !!selectedService
+      case 3:
+        return !!selectedDate && !!selectedTimeSlot
+      case 4:
+        return !!paymentType
       default:
         return true
     }
   }
 
-  const getServiceById = (id: string) => {
-    let a = serviceTypes.find((service) => service.id === id)
-    return a;
-  }
+  const getServiceById = (id: string): ServiceType | undefined => {
+    return serviceTypes.find((service:any) => service.id === id);
+  };
 
   const getFilteredServices = () => {
     if (!searchQuery.trim()) return serviceTypes
@@ -512,29 +524,29 @@ export default function BookingPage() {
       case 1:
         return (
           <>
-            <Calendar className="h-5 w-5 text-blue-600" />
-            {t["step_title.date"]}
+            <User className="h-5 w-5 text-blue-600" />
+            {t["step_title.user_information"]}
           </>
         )
       case 2:
         return (
           <>
-            <Clock className="h-5 w-5 text-blue-600" />
-            {t["step_title.time_slot"]}
+            <Sparkles className="h-5 w-5 text-blue-600" />
+            {t["step_title.service_type"]}
           </>
         )
       case 3:
         return (
           <>
-            <User className="h-5 w-5 text-blue-600" />
-            {t["step_title.user_information"]}
+            <Calendar className="h-5 w-5 text-blue-600" />
+            {t["step_title.date_time"]}
           </>
         )
       case 4:
         return (
           <>
-            <Sparkles className="h-5 w-5 text-blue-600" />
-            {t["step_title.service_type"]}
+            <Clock className="h-5 w-5 text-blue-600" />
+            {t["step_title.subscription"]}
           </>
         )
       case 5:
@@ -620,26 +632,26 @@ export default function BookingPage() {
 
   function getSalesTax(service: any) {
     const serv = getServiceById(service) // this is a string
-    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE);
-    if(!applicationFee) applicationFee = 0;
+    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE)
+    if (!applicationFee) applicationFee = 0
 
-    return (0.06 * ((Number.parseFloat(serv?.price) * userInfo.squareFeet) + applicationFee)).toFixed(2);
+    return (0.06 * (Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee)).toFixed(2)
   }
 
   function getTotalAmount(service: string) {
-    if(!userInfo.squareFeet) return 0;
+    if (!userInfo.squareFeet) return 0
 
-    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE);
-    if(!applicationFee) applicationFee = 0;
+    let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE)
+    if (!applicationFee) applicationFee = 0
 
-    const serv = getServiceById(service); // this is a string
-    return (((Number.parseFloat(serv?.price) * userInfo.squareFeet) + applicationFee) * 1.06).toFixed(2);
+    const serv = getServiceById(service) // this is a string
+    return ((Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee) * 1.06).toFixed(2)
   }
 
   function getBasePrice(service: string) {
-    if(!userInfo.squareFeet) return 0;
-    const serv = getServiceById(service); // this is a string 
-    return (Number.parseFloat(serv?.price) * userInfo.squareFeet).toFixed(2);
+    if (!userInfo.squareFeet) return 0
+    const serv = getServiceById(service) // this is a string
+    return (Number.parseFloat(serv?.price) * userInfo.squareFeet).toFixed(2)
   }
 
   const renderBookingSummary = () => {
@@ -656,30 +668,21 @@ export default function BookingPage() {
               <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
               <p className="text-muted-foreground">{t["loading.booking_details"]}</p>
             </div>
-          ) : selectedDate ? (
+          ) : (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t["label.date"]}</p>
-                  <p className="font-medium">
-                    {language === "es"
-                      ? formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy"))
-                      : format(selectedDate, "EEEE, MMMM d yyyy")}
-                  </p>
-                </div>
-              </div>
-
-              {selectedTimeSlot && (
+              {userInfo.firstName && userInfo.lastName && (
                 <div className="flex items-center gap-3">
                   <div className="bg-blue-100 p-2 rounded-full">
-                    <Clock className="h-5 w-5 text-blue-600" />
+                    <User className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t["label.time"]}</p>
-                    <p className="font-medium">{t["" + selectedTimeSlot]}</p>
+                    <p className="text-sm text-muted-foreground">{t["label.customer"]}</p>
+                    <p className="font-medium">
+                      {userInfo.firstName} {userInfo.lastName}
+                    </p>
+                    {userInfo.address && (
+                      <p className="text-sm text-muted-foreground mt-1 truncate max-w-[200px]">{userInfo.address}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -707,31 +710,66 @@ export default function BookingPage() {
                 </div>
               )}
 
-              {userInfo.firstName && userInfo.lastName && (
+              {selectedDate && (
                 <div className="flex items-center gap-3">
                   <div className="bg-blue-100 p-2 rounded-full">
-                    <User className="h-5 w-5 text-blue-600" />
+                    <Calendar className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t["label.customer"]}</p>
+                    <p className="text-sm text-muted-foreground">{t["label.date"]}</p>
                     <p className="font-medium">
-                      {userInfo.firstName} {userInfo.lastName}
+                      {language === "es"
+                        ? formatDateToSpanish(format(selectedDate, "EEEE, MMMM d yyyy"))
+                        : format(selectedDate, "EEEE, MMMM d yyyy")}
                     </p>
-                    {userInfo.address && (
-                      <p className="text-sm text-muted-foreground mt-1 truncate max-w-[200px]">{userInfo.address}</p>
-                    )}
                   </div>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Info className="h-10 w-10 text-blue-300 mb-2" />
-              <p className="text-muted-foreground">{t["booking_summary.default_text"]}</p>
+
+              {selectedTimeSlot && (
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t["label.time"]}</p>
+                    <p className="font-medium">{t["" + selectedTimeSlot]}</p>
+                  </div>
+                </div>
+              )}
+
+              {paymentType === "RECURRING" && (
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t["label.subscription"]}</p>
+                    <p className="font-medium">
+                      {subscriptionFrequency === "WEEKLY"
+                        ? t["frequency.weekly"] || "Weekly"
+                        : t["frequency.monthly"] || "Monthly"}
+                    </p>
+                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full inline-flex items-center mt-1">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      {subscriptionFrequency === "WEEKLY"
+                        ? t["frequency.save_20"] || "Save 20%"
+                        : t["frequency.save_10"] || "Save 10%"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!userInfo.firstName && !userInfo.lastName && !selectedService && !selectedDate && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Info className="h-10 w-10 text-blue-300 mb-2" />
+                  <p className="text-muted-foreground">{t["booking_summary.default_text"]}</p>
+                </div>
+              )}
             </div>
           )}
 
-          {selectedService && selectedDate && selectedTimeSlot && (
+          {selectedService && userInfo.squareFeet > 0 && (
             <div className="mt-6 pt-4 border-t border-blue-200">
               <h4 className="font-medium text-blue-800 mb-3 flex items-center">
                 <CreditCard className="h-4 w-4 mr-2" />
@@ -791,7 +829,7 @@ export default function BookingPage() {
         )}
 
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <h3 className="font-medium flex items-center gap-2 mb-2">
+          <h3 className="font-medium flex items-center gap-2">
             <Info className="h-5 w-5 text-yellow-600" />
             {t["booking_info.heading"]}
           </h3>
@@ -866,13 +904,13 @@ export default function BookingPage() {
                   )}
                 >
                   {step === 1
-                    ? t["step.date"]
+                    ? t["step.details"]
                     : step === 2
-                      ? t["step.time"]
+                      ? t["step.service"]
                       : step === 3
-                        ? t["step.details"]
+                        ? t["step.date_time"]
                         : step === 4
-                          ? t["step.service"]
+                          ? t["step.subscription"]
                           : t["step.payment"]}
                 </span>
               </div>
@@ -929,330 +967,210 @@ export default function BookingPage() {
 
                 <CardContent className="p-3">
                   {currentStep === 1 && (
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">{t["step1.instructions"]}</p>
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">{t["step3.instructions"]}</p>
 
-                      {renderErrorAlert(apiErrors.availability, t["alert.availability_error_title"])}
-
-                      {isLoadingAvailability ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                          <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
-                          <p className="text-muted-foreground">{t["step1.loading"]}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName" className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            {t["label.first_name"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="firstName"
+                            name="firstName"
+                            value={userInfo.firstName}
+                            onChange={handleInputChange}
+                            className={errors.firstName ? "border-red-500" : ""}
+                            maxLength={20}
+                          />
+                          {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
                         </div>
-                      ) : (
-                        <div className="p-1 max-w-xl mx-auto">
-                          <div className="flex items-center justify-between mb-4">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => setCurrentMonth((prev) => addDays(prev, -30))}
-                              className="rounded-full hover:bg-blue-100 hover:text-blue-600"
+
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName" className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            {t["label.last_name"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="lastName"
+                            name="lastName"
+                            value={userInfo.lastName}
+                            onChange={handleInputChange}
+                            className={errors.lastName ? "border-red-500" : ""}
+                            maxLength={20}
+                          />
+                          {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="flex items-center gap-1">
+                            <Mail className="h-4 w-4" />
+                            {t["label.email"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={userInfo.email}
+                            onChange={handleInputChange}
+                            className={errors.email ? "border-red-500" : ""}
+                            maxLength={40}
+                          />
+                          {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="flex items-center gap-1">
+                            <Phone className="h-4 w-4" />
+                            {t["label.phone"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            value={userInfo.phone}
+                            onChange={handleInputChange}
+                            className={errors.phone ? "border-red-500" : ""}
+                            maxLength={20}
+                          />
+                          {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
+                        </div>
+
+                        {/* Square Feet with Tooltip */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1">
+                            <Label htmlFor="squareFeet" className="flex items-center gap-1">
+                              <Square className="h-4 w-4" />
+                              {t["label.square_feet"] || "Square Feet"} <span className="text-red-500">*</span>
+                            </Label>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help text-muted-foreground">
+                                    <Info className="h-4 w-4" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t["tooltip.square_feet"]}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <Input
+                            id="squareFeet"
+                            name="squareFeet"
+                            type="number"
+                            value={userInfo.squareFeet || ""}
+                            onChange={handleInputChange}
+                            className={errors.squareFeet ? "border-red-500" : ""}
+                            min={"500"}
+                          />
+                          {errors.squareFeet && <p className="text-red-500 text-xs">{errors.squareFeet}</p>}
+                        </div>
+
+                        {/* zipcode */}
+                        <div className="space-y-2">
+                          <Label htmlFor="zipcode" className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {t["label.zipcode"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="zipcode"
+                            name="zipcode"
+                            value={userInfo.zipcode}
+                            onChange={handleInputChange}
+                            className={errors.zipcode ? "border-red-500" : ""}
+                            maxLength={5}
+                          />
+                          {errors.zipcode && <p className="text-red-500 text-xs">{errors.zipcode}</p>}
+                        </div>
+
+                        {/* state */}
+                        <div className="space-y-2">
+                          <Label htmlFor="state" className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {t["label.state"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <select
+                            id="state"
+                            name="state"
+                            value={userInfo.state}
+                            onChange={handleInputChange}
+                            className={cn(
+                              "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                              errors.state ? "border-red-500" : "",
+                            )}
+                          >
+                            <option value="">{t["select.state"]}</option>
+                            <option value="PA">Pennsylvania</option>
+                            <option value="DE">Delaware</option>
+                            <option value="NJ">New Jersey</option>
+                          </select>
+                          {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="address" className="flex items-center gap-1">
+                            <Home className="h-4 w-4" />
+                            {t["label.address"]} <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="address"
+                            name="address"
+                            value={userInfo.address}
+                            onChange={handleInputChange}
+                            className={errors.address ? "border-red-500" : ""}
+                            maxLength={75}
+                          />
+                          {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
+                        </div>
+
+                        {/* SMS Consent Checkbox */}
+                        <div className="space-y-2 md:col-span-2 hidden">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="smsConsent"
+                              name="smsConsent"
+                              checked={userInfo.smsConsent || false}
+                              onCheckedChange={(checked) => {
+                                handleInputChange({
+                                  target: {
+                                    name: "smsConsent",
+                                    value: checked,
+                                  },
+                                })
+                              }}
+                            />
+                            <Label
+                              htmlFor="smsConsent"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                              <ChevronLeft className="h-5 w-5" />
-                              <span className="sr-only">{t["button.prev_month"]}</span>
-                            </Button>
-                            <div className="text-2xl font-medium">{format(currentMonth, "MMMM yyyy")}</div>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => setCurrentMonth((prev) => addDays(prev, 30))}
-                              className="rounded-full hover:bg-blue-100 hover:text-blue-600"
-                            >
-                              <ChevronRight className="h-5 w-5" />
-                              <span className="sr-only">{t["button.next_month"]}</span>
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-3">
-                            {[
-                              t["weekday.sun"],
-                              t["weekday.mon"],
-                              t["weekday.tue"],
-                              t["weekday.wed"],
-                              t["weekday.thu"],
-                              t["weekday.fri"],
-                              t["weekday.sat"],
-                            ].map((day, idx) => (
-                              <div key={idx} className="text-blue-700 py-2 text-base">
-                                {day}
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="grid grid-cols-7 gap-2">
-                            {Array.from({ length: 42 }).map((_, index) => {
-                              const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-                              const offset = firstDayOfMonth.getDay()
-                              const date = new Date(
-                                currentMonth.getFullYear(),
-                                currentMonth.getMonth(),
-                                index - offset + 1,
-                              )
-                              const dayNumber = date.getDate()
-                              const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
-
-                              if (!isCurrentMonth) {
-                                return <div key={`empty-${index}`} className="h-12 w-full"></div>
-                              }
-
-                              const isAvailable = isDateAvailable(date)
-                              const isSelected = selectedDate && isSameDay(date, selectedDate)
-
-                              return (
-                                <button
-                                  key={date.toString()}
-                                  type="button"
-                                  onClick={() => isAvailable && handleDateSelect(date)}
-                                  className={cn(
-                                    "flex h-12 w-full items-center justify-center rounded-md transition-all text-lg",
-                                    isToday(date) && "font-bold",
-                                    isAvailable
-                                      ? "bg-green-100 hover:bg-green-200 text-green-800 hover:scale-105 shadow-sm"
-                                      : "bg-gray-100 text-gray-400 cursor-not-allowed",
-                                    isSelected && "ring-2 ring-blue-500 bg-blue-100 text-blue-800",
-                                  )}
-                                  disabled={!isAvailable}
-                                >
-                                  {dayNumber}
-                                </button>
-                              )
-                            })}
-                          </div>
-
-                          <div className="mt-4 flex items-center justify-center gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <div className="h-4 w-4 rounded-full bg-green-500"></div>
-                              <span>{t["label.available"]}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="h-4 w-4 rounded-full bg-gray-300"></div>
-                              <span>{t["label.unavailable"]}</span>
-                            </div>
+                              {t["consent.for.sms"]}
+                            </Label>
                           </div>
                         </div>
-                      )}
+
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="notes" className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            {t["label.special_instructions"]}
+                          </Label>
+                          <Textarea
+                            id="notes"
+                            name="notes"
+                            placeholder={t["placeholder.special_instructions"]}
+                            value={userInfo.notes}
+                            onChange={handleInputChange}
+                            className="min-h-[100px]"
+                            maxLength={600}
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
 
                   {currentStep === 2 && (
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground">
-                        {t["step2.instructions"].replace(
-                          "{date}",
-                          selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
-                        )}
-                      </p>
-
-                      <RadioGroup
-                        value={selectedTimeSlot}
-                        onValueChange={setSelectedTimeSlot}
-                        className="grid gap-3 max-w-md mx-auto"
-                      >
-                        {timeSlots.map((slot, idx) => (
-                          <div
-                            key={idx}
-                            className={cn(
-                              "flex items-center space-x-2 p-4 rounded-md border transition-all",
-                              selectedTimeSlot === slot.value
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:border-blue-300",
-                            )}
-                          >
-                            <RadioGroupItem value={slot.value} id={slot.value} className="text-blue-600" />
-                            <Label
-                              htmlFor={slot.value}
-                              className="flex items-center gap-2 text-base cursor-pointer w-full"
-                            >
-                              <Clock className="h-5 w-5 text-blue-500" />
-                              {slot.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  )}
-
-{currentStep === 3 && (
-        <div className="space-y-4">
-          <p className="text-muted-foreground">{t["step3.instructions"]}</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <div className="space-y-2">
-              <Label htmlFor="firstName" className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {t["label.first_name"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={userInfo.firstName}
-                onChange={handleInputChange}
-                className={errors.firstName ? "border-red-500" : ""}
-                maxLength={20}
-              />
-              {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lastName" className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {t["label.last_name"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={userInfo.lastName}
-                onChange={handleInputChange}
-                className={errors.lastName ? "border-red-500" : ""}
-                maxLength={20}
-              />
-              {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-1">
-                <Mail className="h-4 w-4" />
-                {t["label.email"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={userInfo.email}
-                onChange={handleInputChange}
-                className={errors.email ? "border-red-500" : ""}
-                maxLength={40}
-              />
-              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-1">
-                <Phone className="h-4 w-4" />
-                {t["label.phone"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={userInfo.phone}
-                onChange={handleInputChange}
-                className={errors.phone ? "border-red-500" : ""}
-                maxLength={20}
-              />
-              {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
-            </div>
-
-            {/* Square Feet with Tooltip */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="squareFeet" className="flex items-center gap-1">
-                  <Square className="h-4 w-4" />
-                  {t["label.square_feet"] || "Square Feet"} <span className="text-red-500">*</span>
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="cursor-help text-muted-foreground">
-                        <Info className="h-4 w-4" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t["tooltip.square_feet"]}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                id="squareFeet"
-                name="squareFeet"
-                type="number"
-                value={userInfo.squareFeet || ""}
-                onChange={handleInputChange}
-                className={errors.squareFeet ? "border-red-500" : ""}
-                min={1}
-              />
-              {errors.squareFeet && <p className="text-red-500 text-xs">{errors.squareFeet}</p>}
-            </div>
-
-            {/* zipcode */}
-            <div className="space-y-2">
-              <Label htmlFor="zipcode" className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {t["label.zipcode"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="zipcode"
-                name="zipcode"
-                value={userInfo.zipcode}
-                onChange={handleInputChange}
-                className={errors.zipcode? "border-red-500" : ""}
-                maxLength={5}
-              />
-              {errors.zipcode && <p className="text-red-500 text-xs">{errors.zipcode}</p>}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="address" className="flex items-center gap-1">
-                <Home className="h-4 w-4" />
-                {t["label.address"]} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                value={userInfo.address}
-                onChange={handleInputChange}
-                className={errors.address ? "border-red-500" : ""}
-                maxLength={75}
-              />
-              {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
-            </div>
-
-            {/* SMS Consent Checkbox */}
-            <div className="space-y-2 md:col-span-2 hidden">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="smsConsent"
-                  name="smsConsent"
-                  checked={userInfo.smsConsent || false}
-                  onCheckedChange={(checked) => {
-                    handleInputChange({
-                      target: {
-                        name: "smsConsent",
-                        value: checked,
-                      },
-                    })
-                  }}
-                />
-                <Label
-                  htmlFor="smsConsent"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {t["consent.for.sms"]}
-                </Label>
-              </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes" className="flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" />
-                {t["label.special_instructions"]}
-              </Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                placeholder={t["placeholder.special_instructions"]}
-                value={userInfo.notes}
-                onChange={handleInputChange}
-                className="min-h-[100px]"
-                maxLength={600}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-                  {currentStep === 4 && (
                     <div className="space-y-4">
                       <p className="text-muted-foreground">{t["step4.instructions"]}</p>
 
@@ -1296,44 +1214,44 @@ export default function BookingPage() {
                             {getFilteredServices().length > 0 ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {getFilteredServices().map((service: any) => (
-                                      <div
-                                      key={service.id}
-                                      className={cn(
-                                          "relative flex flex-col rounded-lg border transition-all",
-                                          selectedService === service.id
-                                          ? "border-blue-500 bg-blue-50 shadow-sm"
-                                          : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
-                                          )}
-                                      onClick={() => setSelectedService(service.id)}
-                                      >
-                                      {/* Top row with service name and price */}
-                                      <div className="flex items-center justify-between p-4">
+                                  <div
+                                    key={service.id}
+                                    className={cn(
+                                      "relative flex flex-col rounded-lg border transition-all",
+                                      selectedService === service.id
+                                        ? "border-blue-500 bg-blue-50 shadow-sm"
+                                        : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
+                                    )}
+                                    onClick={() => setSelectedService(service.id)}
+                                  >
+                                    {/* Top row with service name and price */}
+                                    <div className="flex items-center justify-between p-4">
                                       <div className="flex items-center gap-3">
-                                      <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
-                                      <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
-                                      {t[service.name]}
-                                      </Label>
+                                        <RadioGroupItem value={service.id} id={service.id} className="text-blue-600" />
+                                        <Label htmlFor={service.id} className="text-lg font-semibold cursor-pointer">
+                                          {t[service.name]}
+                                        </Label>
                                       </div>
                                       <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
-                                      ${getBasePrice(service.id)}
+                                        ${getBasePrice(service.id)}
                                       </div>
-                                        </div>
+                                    </div>
 
-                                        {/* Bottom row with Learn More button */}
-                                      <div className="border-t p-3">
-                                        <Button
+                                    {/* Bottom row with Learn More button */}
+                                    <div className="border-t p-3">
+                                      <Button
                                         variant="outline"
                                         size="sm"
                                         className="w-full"
                                         onClick={(e) => {
                                           e.preventDefault()
-                                            window.open(`/services/${service.id.toLowerCase()}`, "_blank")
+                                          window.open(`/services/${service.id.toLowerCase()}`, "_blank")
                                         }}
                                       >
-                                      {t["button.learn_more"] || "Learn More"} →
+                                        {t["button.learn_more"] || "Learn More"} →
                                       </Button>
-                                        </div>
-                                        </div>
+                                    </div>
+                                  </div>
                                 ))}
                               </div>
                             ) : (
@@ -1381,6 +1299,296 @@ export default function BookingPage() {
                           )}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {currentStep === 3 && (
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">{t["step1.instructions"]}</p>
+
+                        {renderErrorAlert(apiErrors.availability, t["alert.availability_error_title"])}
+
+                        {isLoadingAvailability ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+                            <p className="text-muted-foreground">{t["step1.loading"]}</p>
+                          </div>
+                        ) : (
+                          <div className="p-1 max-w-xl mx-auto">
+                            <div className="flex items-center justify-between mb-4">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentMonth((prev) => addDays(prev, -30))}
+                                className="rounded-full hover:bg-blue-100 hover:text-blue-600"
+                              >
+                                <ChevronLeft className="h-5 w-5" />
+                                <span className="sr-only">{t["button.prev_month"]}</span>
+                              </Button>
+                              <div className="text-2xl font-medium">{format(currentMonth, "MMMM yyyy")}</div>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCurrentMonth((prev) => addDays(prev, 30))}
+                                className="rounded-full hover:bg-blue-100 hover:text-blue-600"
+                              >
+                                <ChevronRight className="h-5 w-5" />
+                                <span className="sr-only">{t["button.next_month"]}</span>
+                              </Button>
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-3">
+                              {[
+                                t["weekday.sun"],
+                                t["weekday.mon"],
+                                t["weekday.tue"],
+                                t["weekday.wed"],
+                                t["weekday.thu"],
+                                t["weekday.fri"],
+                                t["weekday.sat"],
+                              ].map((day, idx) => (
+                                <div key={idx} className="text-blue-700 py-2 text-base">
+                                  {day}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-2">
+                              {Array.from({ length: 42 }).map((_, index) => {
+                                const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+                                const offset = firstDayOfMonth.getDay()
+                                const date = new Date(
+                                  currentMonth.getFullYear(),
+                                  currentMonth.getMonth(),
+                                  index - offset + 1,
+                                )
+                                const dayNumber = date.getDate()
+                                const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
+
+                                if (!isCurrentMonth) {
+                                  return <div key={`empty-${index}`} className="h-12 w-full"></div>
+                                }
+
+                                const isAvailable = isDateAvailable(date)
+                                const isSelected = selectedDate && isSameDay(date, selectedDate)
+
+                                return (
+                                  <button
+                                    key={date.toString()}
+                                    type="button"
+                                    onClick={() => isAvailable && handleDateSelect(date)}
+                                    className={cn(
+                                      "flex h-12 w-full items-center justify-center rounded-md transition-all text-lg",
+                                      isToday(date) && "font-bold",
+                                      isAvailable
+                                        ? "bg-green-100 hover:bg-green-200 text-green-800 hover:scale-105 shadow-sm"
+                                        : "bg-gray-100 text-gray-400 cursor-not-allowed",
+                                      isSelected && "ring-2 ring-blue-500 bg-blue-100 text-blue-800",
+                                    )}
+                                    disabled={!isAvailable}
+                                  >
+                                    {dayNumber}
+                                  </button>
+                                )
+                              })}
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+                              <div className="flex items-center gap-1">
+                                <div className="h-4 w-4 rounded-full bg-green-500"></div>
+                                <span>{t["label.available"]}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="h-4 w-4 rounded-full bg-gray-300"></div>
+                                <span>{t["label.unavailable"]}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedDate && (
+                        <div className="space-y-4 mt-8 border-t pt-8">
+                          <h3 className="font-medium text-lg flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-blue-600" />
+                            {t["step2.instructions"].replace(
+                              "{date}",
+                              selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
+                            )}
+                          </h3>
+
+                          <RadioGroup
+                            value={selectedTimeSlot}
+                            onValueChange={setSelectedTimeSlot}
+                            className="grid gap-3 max-w-md mx-auto"
+                          >
+                            {timeSlots.map((slot, idx) => (
+                              <div
+                                key={idx}
+                                className={cn(
+                                  "flex items-center space-x-2 p-4 rounded-md border transition-all",
+                                  selectedTimeSlot === slot.value
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "border-gray-200 hover:border-blue-300",
+                                )}
+                              >
+                                <RadioGroupItem value={slot.value} id={slot.value} className="text-blue-600" />
+                                <Label
+                                  htmlFor={slot.value}
+                                  className="flex items-center gap-2 text-base cursor-pointer w-full"
+                                >
+                                  <Clock className="h-5 w-5 text-blue-500" />
+                                  {slot.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {currentStep === 4 && (
+                    <div className="space-y-6">
+                      <p className="text-muted-foreground">
+                        {t["step_subscription.instructions"]}
+                      </p>
+
+                      <div className="max-w-2xl mx-auto space-y-6">
+                        <RadioGroup
+                          value={paymentType}
+                          onValueChange={(value) => setPaymentType(value as "ONE_TIME" | "RECURRING")}
+                          className="grid gap-4"
+                        >
+                          <div
+                            className={cn(
+                              "relative flex items-center space-x-3 p-4 rounded-lg border transition-all",
+                              paymentType === "ONE_TIME"
+                                ? "border-blue-500 bg-blue-50 shadow-sm"
+                                : "border-gray-200 hover:border-blue-300",
+                            )}
+                          >
+                            <RadioGroupItem value="ONE_TIME" id="one-time" className="text-blue-600" />
+                            <Label htmlFor="one-time" className="flex flex-col cursor-pointer">
+                              <span className="font-medium text-lg">{t["payment.one_time"] || "One-time Payment"}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {t["payment.one_time_desc"] || "Pay once for a single cleaning service"}
+                              </span>
+                            </Label>
+                          </div>
+
+                          <div
+                            className={cn(
+                              "relative flex items-center space-x-3 p-4 rounded-lg border transition-all",
+                              paymentType === "RECURRING"
+                                ? "border-blue-500 bg-blue-50 shadow-sm"
+                                : "border-gray-200 hover:border-blue-300",
+                            )}
+                          >
+                            <RadioGroupItem value="RECURRING" id="recurring" className="text-blue-600" />
+                            <Label htmlFor="recurring" className="flex flex-col cursor-pointer">
+                              <span className="font-medium text-lg">
+                                {t["payment.recurring"] || "Recurring Subscription"}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                {t["payment.recurring_desc"] || "Schedule regular cleanings and save"}
+                              </span>
+                            </Label>
+                          </div>
+                        </RadioGroup>
+
+                        {paymentType === "RECURRING" && (
+                          <div className="mt-6 p-4 border rounded-lg bg-blue-50 border-blue-100">
+                            <h3 className="font-medium mb-4">
+                              {t["payment.subscription_frequency"] || "Subscription Frequency"}
+                            </h3>
+
+                            <RadioGroup
+                              value={subscriptionFrequency}
+                              onValueChange={(value) => setSubscriptionFrequency(value as "WEEKLY" | "MONTHLY")}
+                              className="grid gap-3"
+                            >
+                              <div
+                                className={cn(
+                                  "relative flex items-center space-x-3 p-3 rounded-lg border transition-all bg-white",
+                                  subscriptionFrequency === "WEEKLY"
+                                    ? "border-blue-500 shadow-sm"
+                                    : "border-gray-200 hover:border-blue-300",
+                                )}
+                              >
+                                <RadioGroupItem value="WEEKLY" id="weekly" className="text-blue-600" />
+                                <Label
+                                  htmlFor="weekly"
+                                  className="flex justify-between items-center w-full cursor-pointer"
+                                >
+                                  <span className="font-medium">{t["frequency.weekly"] || "Weekly"}</span>
+                                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                                    {t["frequency.save_20"] || "Save 20%"}
+                                  </span>
+                                </Label>
+                              </div>
+
+                              <div
+                                className={cn(
+                                  "relative flex items-center space-x-3 p-3 rounded-lg border transition-all bg-white",
+                                  subscriptionFrequency === "MONTHLY"
+                                    ? "border-blue-500 shadow-sm"
+                                    : "border-gray-200 hover:border-blue-300",
+                                )}
+                              >
+                                <RadioGroupItem value="MONTHLY" id="monthly" className="text-blue-600" />
+                                <Label
+                                  htmlFor="monthly"
+                                  className="flex justify-between items-center w-full cursor-pointer"
+                                >
+                                  <span className="font-medium">{t["frequency.monthly"] || "Monthly"}</span>
+                                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                                    {t["frequency.save_10"] || "Save 10%"}
+                                  </span>
+                                </Label>
+                              </div>
+                            </RadioGroup>
+
+                            <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                              <div className="flex items-start gap-2">
+                                <Info className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <p className="text-sm">
+                                  {t["subscription.info"] ||
+                                    "You can cancel or modify your subscription at any time from your account dashboard."}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-100 mt-6">
+                          <h3 className="font-medium flex items-center gap-2 text-green-800">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            {t["payment.benefits_heading"] || "Benefits"}
+                          </h3>
+                          <ul className="mt-2 space-y-2">
+                            <li className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">
+                                {t["payment.benefit1"] || "Convenient scheduling that fits your lifestyle"}
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">
+                                {t["payment.benefit2"] || "Priority booking for your preferred dates and times"}
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">
+                                {t["payment.benefit3"] || "Discounted rates for recurring services"}
+                              </span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1466,7 +1674,7 @@ export default function BookingPage() {
                       }
                       className="sm:w-auto w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     >
-                      {(isLoadingPrices || isLoadingAvailability) && currentStep < 5 ? (
+                      {(isLoadingPrices || isLoadingAvailability) && currentStep < 4 ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           {t["loading.service_options"]}
