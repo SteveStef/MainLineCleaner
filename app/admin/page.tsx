@@ -223,7 +223,7 @@ export default function AdminDashboard() {
   // For the new client dialog
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false)
   const [newClient, setNewClient] = useState({
-    clientName: "",
+    name: "",
     email: "",
     phone: "",
     address: "",
@@ -236,8 +236,8 @@ export default function AdminDashboard() {
   const addNewClient = async () => {
     const errors: Record<string, string> = {}
 
-    if (!newClient.clientName.trim()) {
-      errors.clientName = t.requiredField
+    if (!newClient.name.trim()) {
+      errors.name = t.requiredField
     }
 
     if (!newClient.email.trim()) {
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
     setClientFormErrors({})
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/client`
       const token = Cookies.get("token")
 
       const response = await fetch(url, {
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
         getClients()
         setTimeout(() => {
           setNewClient({
-            clientName: "",
+            name: "",
             email: "",
             phone: "",
             address: "",
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
           })
           setIsNewClientDialogOpen(false)
           setClientAddSuccess(false)
-        }, 2000)
+        }, 1000)
       } else {
         const errorData = await response.json();
         setError(errorData.message || t.clientAddError)
@@ -1143,7 +1143,7 @@ export default function AdminDashboard() {
                              <TableBody>
                                {clients
                                    .filter(client =>
-                                       client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                        client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                        client.phone.includes(searchQuery) ||
                                        client.address.includes(searchQuery) ||
@@ -1158,7 +1158,7 @@ export default function AdminDashboard() {
                                            />
                                          </TableCell>
                                          <TableCell className="font-medium">
-                                           {client.clientName}
+                                           {client.name}
                                            <div className="sm:hidden text-sm text-muted-foreground mt-1">
                                              {client.email}
                                            </div>
@@ -1237,19 +1237,19 @@ export default function AdminDashboard() {
 
                          <div className="space-y-4 py-2">
                            <div className="space-y-2">
-                             <Label htmlFor="clientName" className="flex items-center gap-1">
+                             <Label htmlFor="name" className="flex items-center gap-1">
                                {t.name} <span className="text-red-500">*</span>
                              </Label>
                              <Input
-                                 id="clientName"
-                                 name="clientName"
-                                 value={newClient.clientName}
+                                 id="name"
+                                 name="name"
+                                 value={newClient.name}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.namePlaceholder}
-                                 className={clientFormErrors.clientName ? "border-red-500" : ""}
+                                 className={clientFormErrors.name? "border-red-500" : ""}
                              />
-                             {clientFormErrors.clientName && (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.clientName}</p>
+                             {clientFormErrors.name&& (
+                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.name}</p>
                              )}
                            </div>
 
