@@ -54,6 +54,12 @@ export interface ServiceType {
   features: string[] // translation keys for each feature
 }
 
+const taxMap = {
+  "PA": 0.06,
+  "NJ": 0.06625,
+  "DE": 0
+}
+
 const serviceTypesDefaults: ServiceType[] = [
   {
     id: "REGULAR",
@@ -561,7 +567,6 @@ export default function BookingPage() {
     }
   }
 
-  console.log(selectedService)
   const createPayPalOrder = async () => {
     setIsProcessingPayment(true)
     setApiErrors((prev) => ({ ...prev, payment: undefined }))
@@ -572,7 +577,7 @@ export default function BookingPage() {
         body: JSON.stringify(Math.round(userInfo.squareFeet)),
       }
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/paypal/createOrder?serviceType=${selectedService}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/paypal/createOrder?serviceType=${selectedService}&state=${userInfo.state}`,
         options,
       )
       if (response.ok) {
@@ -635,7 +640,7 @@ export default function BookingPage() {
     let applicationFee = Number.parseFloat(process.env.NEXT_PUBLIC_APPLICATION_FEE)
     if (!applicationFee) applicationFee = 0
 
-    return (0.06 * (Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee)).toFixed(2)
+    return (taxMap[userInfo.state] * (Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee)).toFixed(2);
   }
 
   function getTotalAmount(service: string) {
@@ -645,7 +650,7 @@ export default function BookingPage() {
     if (!applicationFee) applicationFee = 0
 
     const serv = getServiceById(service) // this is a string
-    return ((Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee) * 1.06).toFixed(2)
+    return ((Number.parseFloat(serv?.price) * userInfo.squareFeet + applicationFee) * (1 + taxMap[userInfo.state]) ).toFixed(2)
   }
 
   function getBasePrice(service: string) {
@@ -796,7 +801,7 @@ export default function BookingPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
-                    {t["label.sales_tax"]} (6%)
+                    {t["label.sales_tax"]} ({taxMap[userInfo.state] * 100}%)
                   </span>
                   <span className="font-medium">${getSalesTax(selectedService)}</span>
                 </div>

@@ -493,6 +493,7 @@ export default function AdminDashboard() {
       const response = await fetch(url, options)
       if (response.ok) {
         const details = await response.json()
+        console.log(details);
         setYearlyRevenue(details.yearlyRevenue);
         setRevenueData(details.monthlyRevenue);
         setFinancialMetrics({
@@ -506,6 +507,7 @@ export default function AdminDashboard() {
       console.log(err)
     }
   }
+
 
   useEffect(() => {
     async function adminDetails() {
