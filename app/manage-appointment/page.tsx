@@ -356,11 +356,14 @@ export default function AppointmentManagerPage() {
   }
 
   // Calculate refund amount (75% of price)
-  const calculateRefundAmount = (): string => {
+  const calculateRefundAmount = (amount:string): string => {
     if (!appointmentData) return "$0.00"
 
+    const percent = parseFloat(amount) / 100.0; // this will make the 95 to 0.95
+    if(!percent) return "$0.00";
+
     const priceValue = Number.parseFloat(appointmentData.chargedAmount)
-    return `$${(priceValue * 0.75).toFixed(2)}`
+    return `$${(priceValue * percent).toFixed(2)}`
   }
 
   const handleSelectAction = (action: ActionType) => {
@@ -859,13 +862,13 @@ export default function AppointmentManagerPage() {
                                   </div>
                                   {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
                                     <div className="flex justify-between">
-                                      <span className="text-muted-foreground">{t["refund.amount.partial"]}</span>
-                                      <span className="font-medium">{calculateRefundAmount()}</span>
+                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}%)</span>
+                                      <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
                                     </div>
                                   ) : (
                                     <div className="flex justify-between">
-                                      <span className="text-muted-foreground">{t["refund.amount.label"]}</span>
-                                      <span className="font-medium">$0.00</span>
+                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}%)</span>
+                                      <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
                                     </div>
                                   )}
                                 </div>
@@ -1021,15 +1024,15 @@ export default function AppointmentManagerPage() {
                           </div>
 
                           {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">{t["refund.amount.partial"]}</span>
-                              <span className="font-medium">{calculateRefundAmount()}</span>
-                            </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}%)</span>
+                                <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
+                              </div>
                           ) : (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">{t["refund.amount.label"]}</span>
-                              <span className="font-medium">$0.00</span>
-                            </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}%)</span>
+                                <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
+                              </div>
                           )}
                         </div>
                       </div>

@@ -9,38 +9,13 @@ import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Link from "next/link"
-import {
-  CalendarIcon,
-  Globe,
-  CheckCircle,
-  Clock,
-  X,
-  Sun,
-  Moon,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-  ArrowLeft,
-  Settings,
-  Edit,
-  Mail,
-  User,
-  Landmark,
-} from "lucide-react"
+import { CalendarIcon, Globe, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark } from "lucide-react"
 import Login from "./login"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
@@ -134,6 +109,7 @@ interface Appointment {
   zipcode: string
   chargedAmount: string
   squareFeet: number
+  state: string
   notesES?: string
 }
 
@@ -493,7 +469,6 @@ export default function AdminDashboard() {
       const response = await fetch(url, options)
       if (response.ok) {
         const details = await response.json()
-        console.log(details);
         setYearlyRevenue(details.yearlyRevenue);
         setRevenueData(details.monthlyRevenue);
         setFinancialMetrics({
@@ -2644,7 +2619,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.zipcode}</p>
+                            <p className="font-medium">{selectedAppointment && selectedAppointment.zipcode}, {selectedAppointment.state}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["label.square_feet"]}</p>
