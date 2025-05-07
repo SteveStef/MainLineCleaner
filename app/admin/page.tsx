@@ -2619,7 +2619,9 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.zipcode}, {selectedAppointment.state}</p>
+                            {
+                              selectedAppointment && <p className="font-medium">{selectedAppointment.zipcode}, {selectedAppointment.state}</p>
+                            }
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["label.square_feet"]}</p>
@@ -2643,7 +2645,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["dialog.appointment.label.time"]}</p>
-                            <p className="font-medium">{selectedAppointment &&t[selectedAppointment.time]}</p>
+                            <p className="font-medium">{selectedAppointment && t[selectedAppointment.time]}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">{t["label.bookingId"]}</p>
