@@ -1,9 +1,7 @@
 // next.config.js
-
-import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 /** @type {import('next').NextConfig} */
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 const nextConfig = {
-  output: 'export',         // static HTML export
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -1,5 +1,4 @@
 "use client"
-
 export const runtime = "edge";
 import type React from "react"
 
@@ -19,7 +18,6 @@ import Footer from "../Footer"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
-
 export default function ReviewPage() {
   const [rating, setRating] = useState<number>(0)
   const [hoveredRating, setHoveredRating] = useState<number>(0)

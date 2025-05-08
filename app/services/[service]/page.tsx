@@ -2,7 +2,6 @@
 import ServiceClient from "./ServiceClient"
 import { serviceInfo, serviceInfoES } from "./serviceInfo"  // or wherever you define your slugs
 
-export const runtime = "edge";
 /**
  * Tell Next.js which [service] pages to build.
  * Here we derive slugs from your serviceInfo keys.
