@@ -1,6 +1,7 @@
 
 "use client";
 
+export const runtime = "edge";
 import { useContext } from "react"
 import Link from "next/link"
 import {

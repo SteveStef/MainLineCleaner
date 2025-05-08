@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CalendarIcon, Search, X, Filter } from "lucide-react"
 
+export const runtime = "edge";
 // Define the appointment type based on your data structure
 interface Appointment {
   id: string

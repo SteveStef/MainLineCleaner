@@ -1,5 +1,6 @@
 "use client"
 
+export const runtime = "edge";
 import { useState, useEffect, useContext } from "react"
 import Cookies from "js-cookie"
 import { format } from "date-fns"

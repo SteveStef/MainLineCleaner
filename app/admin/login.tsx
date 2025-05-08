@@ -1,4 +1,6 @@
 "use client"
+
+export const runtime = "edge";
 import { useState, useContext } from "react"
 import type React from "react"
 import Cookies from "js-cookie"
