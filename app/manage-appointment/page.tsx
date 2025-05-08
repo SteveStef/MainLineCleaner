@@ -1,6 +1,5 @@
 "use client"
 
-export const runtime = "edge";
 import { CardFooter } from "@/components/ui/card"
 
 import type React from "react"

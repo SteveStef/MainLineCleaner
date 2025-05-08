@@ -1,6 +1,5 @@
 "use client"
 
-export const runtime = "edge";
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { isWithinInterval } from "date-fns"
