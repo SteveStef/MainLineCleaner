@@ -760,5 +760,11 @@ export const en = {
   "clientAddError": "Failed to add client",
   "name": "Name",
 
+  "confirmDeletion": "Confirm Deletion",
+  "deleteConfirmationMessage": "Are you sure you want to delete {count}",
+  "thisActionCannotBeUndone": "This action cannot be undone",
+  "deleting": "Deleting...",
+  "delete": "Delete",
+
 }
 

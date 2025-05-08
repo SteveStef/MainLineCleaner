@@ -763,6 +763,13 @@ export const es = {
   "add": "Agregar",
   "clientAddError": "Error al agregar cliente",
   "name": "Nombre",
+
+  "confirmDeletion": "Confirmar eliminación",
+  "deleteConfirmationMessage": "¿Está seguro de que desea eliminar {count}?",
+  "thisActionCannotBeUndone": "Esta acción no se puede deshacer",
+  "deleting": "Eliminando...",
+  "delete": "Eliminar",
+
 }
 
 

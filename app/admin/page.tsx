@@ -15,8 +15,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Link from "next/link"
-import { CalendarIcon, Globe, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark } from "lucide-react"
+import { Trash2, CalendarIcon, Globe, AlertCircle, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark, Loader2 } from "lucide-react"
 import Login from "./login"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
@@ -147,6 +157,9 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [clients, setClients] = useState<Appointment[]>([]);
 
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false)
+  const [isDeletingClients, setIsDeletingClients] = useState(false)
+
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [refundAmount, setRefundAmount] = useState<string>("0");
   const [error, setError] = useState<string>("");
@@ -267,14 +280,42 @@ export default function AdminDashboard() {
           setClientAddSuccess(false)
         }, 1000)
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || t.clientAddError)
+        if(response.status === 400) {
+          setError("Client with that email already exists");
+        } else {
+          setError("Something went wrong. Please try again.");
+        }
       }
     } catch (err) {
       console.error(err)
       setError(t.connectionError)
     } finally {
       setIsAddingClient(false)
+    }
+  }
+  const handleDeleteClient = async() => {
+    try {
+      const selectedClients = clients.filter(client => selectedClientIds.has(client.id));
+      const clientIds = selectedClients.map(client => client.id);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
+      const token = Cookies.get("token");
+      const options = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(clientIds)
+      }
+      const response = await fetch(url, options);
+      if (response.ok) {
+        getClients();
+        setSelectedClientIds(new Set());
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -1086,6 +1127,15 @@ export default function AdminDashboard() {
                            <User className="h-4 w-4" />
                            {t.addClient}
                          </Button>
+                                   {/* Add delete button here */}
+                           <Button
+                               disabled={selectedClientIds.size === 0}
+                               onClick={() => setIsDeleteConfirmationOpen(true)}
+                               variant="destructive"
+                               className="flex items-center gap-2"
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
                          </div>
                        </CardHeader>
                        <CardContent>
@@ -1154,7 +1204,29 @@ export default function AdminDashboard() {
                          </div>
                        </CardContent>
                      </Card>
-
+                     {/* Delete Confirmation Dialog */}
+                     <AlertDialog open={isDeleteConfirmationOpen} onOpenChange={setIsDeleteConfirmationOpen}>
+                       <AlertDialogContent>
+                         <AlertDialogHeader>
+                           <AlertDialogTitle>{t.confirmDeletion}</AlertDialogTitle>
+                           <AlertDialogDescription>
+                             {t.deleteConfirmationMessage?.replace("{count}", selectedClientIds.size.toString())}
+                             {selectedClientIds.size === 1 ? " " + t.client : " " + t.clients}. {t.thisActionCannotBeUndone}
+                           </AlertDialogDescription>
+                         </AlertDialogHeader>
+                         <AlertDialogFooter>
+                           <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                           <AlertDialogAction
+                               onClick={handleDeleteClient}
+                               disabled={isDeletingClients}
+                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2"
+                           >
+                             {isDeletingClients ? t.deleting : t.delete}
+                             {isDeletingClients && <Loader2 className="h-4 w-4 animate-spin" />}
+                           </AlertDialogAction>
+                         </AlertDialogFooter>
+                       </AlertDialogContent>
+                     </AlertDialog>
                      {/* Email Dialog */}
                      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
                        <DialogContent className="sm:max-w-md">
@@ -1212,6 +1284,21 @@ export default function AdminDashboard() {
                            </DialogDescription>
                          </DialogHeader>
 
+                         {/* Display form-level error at the top for better visibility */}
+                         {error && (
+                             <div
+                                 className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start gap-2 mb-4"
+                                 role="alert"
+                                 aria-live="assertive"
+                             >
+                               <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                               <div>
+                                 <p className="font-medium">{t.errorOccurred || 'An error occurred'}</p>
+                                 <p className="text-sm">{error}</p>
+                               </div>
+                             </div>
+                         )}
+
                          <div className="space-y-4 py-2">
                            <div className="space-y-2">
                              <Label htmlFor="name" className="flex items-center gap-1">
@@ -1223,10 +1310,15 @@ export default function AdminDashboard() {
                                  value={newClient.name}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.namePlaceholder}
-                                 className={clientFormErrors.name? "border-red-500" : ""}
+                                 className={clientFormErrors.name ? "border-red-500 ring-red-200 focus-visible:ring-red-200" : ""}
+                                 aria-invalid={!!clientFormErrors.name}
+                                 aria-describedby={clientFormErrors.name ? "name-error" : undefined}
                              />
-                             {clientFormErrors.name&& (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.name}</p>
+                             {clientFormErrors.name && (
+                                 <p id="name-error" className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                   <AlertCircle className="h-3 w-3" />
+                                   {clientFormErrors.name}
+                                 </p>
                              )}
                            </div>
 
@@ -1241,10 +1333,15 @@ export default function AdminDashboard() {
                                  value={newClient.email}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.emailPlaceholder}
-                                 className={clientFormErrors.email ? "border-red-500" : ""}
+                                 className={clientFormErrors.email ? "border-red-500 ring-red-200 focus-visible:ring-red-200" : ""}
+                                 aria-invalid={!!clientFormErrors.email}
+                                 aria-describedby={clientFormErrors.email ? "email-error" : undefined}
                              />
                              {clientFormErrors.email && (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.email}</p>
+                                 <p id="email-error" className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                   <AlertCircle className="h-3 w-3" />
+                                   {clientFormErrors.email}
+                                 </p>
                              )}
                            </div>
 
@@ -1258,10 +1355,15 @@ export default function AdminDashboard() {
                                  value={newClient.phone}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.phonePlaceholder}
-                                 className={clientFormErrors.phone ? "border-red-500" : ""}
+                                 className={clientFormErrors.phone ? "border-red-500 ring-red-200 focus-visible:ring-red-200" : ""}
+                                 aria-invalid={!!clientFormErrors.phone}
+                                 aria-describedby={clientFormErrors.phone ? "phone-error" : undefined}
                              />
                              {clientFormErrors.phone && (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.phone}</p>
+                                 <p id="phone-error" className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                   <AlertCircle className="h-3 w-3" />
+                                   {clientFormErrors.phone}
+                                 </p>
                              )}
                            </div>
 
@@ -1275,10 +1377,15 @@ export default function AdminDashboard() {
                                  value={newClient.address}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.addressPlaceholder}
-                                 className={clientFormErrors.address ? "border-red-500" : ""}
+                                 className={clientFormErrors.address ? "border-red-500 ring-red-200 focus-visible:ring-red-200" : ""}
+                                 aria-invalid={!!clientFormErrors.address}
+                                 aria-describedby={clientFormErrors.address ? "address-error" : undefined}
                              />
                              {clientFormErrors.address && (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.address}</p>
+                                 <p id="address-error" className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                   <AlertCircle className="h-3 w-3" />
+                                   {clientFormErrors.address}
+                                 </p>
                              )}
                            </div>
 
@@ -1292,15 +1399,20 @@ export default function AdminDashboard() {
                                  value={newClient.zipcode}
                                  onChange={handleNewClientInputChange}
                                  placeholder={t.zipcodePlaceholder}
-                                 className={clientFormErrors.zipcode ? "border-red-500" : ""}
+                                 className={clientFormErrors.zipcode ? "border-red-500 ring-red-200 focus-visible:ring-red-200" : ""}
+                                 aria-invalid={!!clientFormErrors.zipcode}
+                                 aria-describedby={clientFormErrors.zipcode ? "zipcode-error" : undefined}
                              />
                              {clientFormErrors.zipcode && (
-                                 <p className="text-red-500 text-xs mt-1">{clientFormErrors.zipcode}</p>
+                                 <p id="zipcode-error" className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                   <AlertCircle className="h-3 w-3" />
+                                   {clientFormErrors.zipcode}
+                                 </p>
                              )}
                            </div>
                          </div>
 
-                         <DialogFooter>
+                         <DialogFooter className="mt-6">
                            <Button type="button" variant="outline" onClick={() => setIsNewClientDialogOpen(false)}>
                              {t.cancel}
                            </Button>
@@ -1311,7 +1423,7 @@ export default function AdminDashboard() {
                                className="flex items-center gap-2"
                            >
                              {isAddingClient ? t.adding : clientAddSuccess ? t.added : t.add}
-                             {isAddingClient && <span className="animate-spin">⏳</span>}
+                             {isAddingClient && <Loader2 className="h-4 w-4 animate-spin" />}
                              {clientAddSuccess && <CheckCircle className="h-4 w-4" />}
                            </Button>
                          </DialogFooter>
