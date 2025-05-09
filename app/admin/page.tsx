@@ -16,6 +16,22 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Link from "next/link"
 import { Trash2, CalendarIcon, Globe, AlertCircle, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark, Loader2 } from "lucide-react"
+import {
+  Phone,
+  MapPin,
+  Home,
+  FileText,
+  Tag,
+  Ruler,
+  Building,
+  CreditCard,
+  Receipt,
+  Percent,
+  PiggyBank,
+  CheckCircle2,
+  XCircle,
+  DollarSign
+} from "lucide-react"
 import Login from "./login"
 import {
   AlertDialog,
@@ -120,6 +136,11 @@ interface Appointment {
   chargedAmount: string
   squareFeet: number
   state: string
+  profit: string
+  applicationFee: string
+  grossAmount: string
+  paypalFee: string
+  salesTax: string
   notesES?: string
 }
 
@@ -182,7 +203,37 @@ export default function AdminDashboard() {
     grossRevenue: 0,
     salesTax: 0,
     paypalFees: 0,
+    applicationFee: 0,
   })
+
+  const renderStatusBadge = (status: string) => {
+    const statusLower = status.toLowerCase()
+
+    if (statusLower === "completed") {
+      return (
+          <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 flex items-center gap-1">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {t[status] || status}
+          </Badge>
+      )
+    } else if (statusLower === "canceled") {
+      return (
+          <Badge className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200 flex items-center gap-1">
+            <XCircle className="h-3.5 w-3.5" />
+            {t[status] || status}
+          </Badge>
+      )
+    } else {
+      return (
+          <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200 flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {t[status] || status}
+          </Badge>
+      )
+    }
+  }
+
+  console.log(allAppointments);
 
   const [weekViewDate, setWeekViewDate] = useState<Date>(new Date())
   const { language, setLanguage } = useContext(LanguageContext)
@@ -517,6 +568,7 @@ export default function AdminDashboard() {
           grossRevenue: details.gross || 0,
           salesTax: details.salesTax || 0,
           paypalFees: details.paypalFee || 0,
+          applicationFee: details.applicationFee || 0,
         })
       }
     } catch (err) {
@@ -1464,34 +1516,44 @@ export default function AdminDashboard() {
                             <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
                               {t["table.paypal_fee"] || 'PayPal Fee'}
                             </th>
+
+                            <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
+                              {t["table.applicationFee"]}
+                            </th>
                           </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
-                          {yearlyRevenue.map(({ year, revenue, profit, salesTax, paypalFee }) => (
+                          {yearlyRevenue.map(({ year, revenue, profit, salesTax, paypalFee, applicationFee}) => (
                               <tr key={year}>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
                                   {year}
                                 </td>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                  {revenue.toLocaleString(undefined, {
+                                  {revenue?.toLocaleString(undefined, {
                                     style: 'currency',
                                     currency: 'USD',
                                   })}
                                 </td>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                  {profit.toLocaleString(undefined, {
+                                  {profit?.toLocaleString(undefined, {
                                     style: 'currency',
                                     currency: 'USD',
                                   })}
                                 </td>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                  {salesTax.toLocaleString(undefined, {
+                                  {salesTax?.toLocaleString(undefined, {
                                     style: 'currency',
                                     currency: 'USD',
                                   })}
                                 </td>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                  {paypalFee.toLocaleString(undefined, {
+                                  {paypalFee?.toLocaleString(undefined, {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                  })}
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                                  {applicationFee?.toLocaleString(undefined, {
                                     style: 'currency',
                                     currency: 'USD',
                                   })}
@@ -2690,121 +2752,229 @@ export default function AdminDashboard() {
                   </TabsContent>
                 </Tabs>
 
-                {/* Edit Appointment Dialog */}
+                {/* Appointment Details Dialog */}
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                  <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                      <DialogTitle>{t["dialog.appointment.title"]}</DialogTitle>
-                      <DialogDescription>{t["dialog.appointment.description"]}</DialogDescription>
+                  <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white">
+                    <DialogHeader className="pb-2">
+                      <DialogTitle className="text-xl font-semibold text-blue-700 flex items-center gap-2">
+                        {t["dialog.appointment.title"]}
+                      </DialogTitle>
+                      <DialogDescription className="text-gray-500">{t["dialog.appointment.description"]}</DialogDescription>
                     </DialogHeader>
 
-                    <div className="py-4 space-y-6">
-                      {/* Client Information */}
-                      <Card className="p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.client_name"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.clientName}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.service"]}</p>
-                            <p className="font-medium">{selectedAppointment && t[selectedAppointment.service]}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.email"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.email}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.phone"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.phone}</p>
-                          </div>
+                    <div className="py-4 space-y-4">
+                      {/* Booking ID and Status */}
+                      <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+                        <Badge variant="outline" className="text-sm px-3 py-1 border-blue-200 flex items-center gap-1">
+                          <Tag className="h-3.5 w-3.5" />
+                          {selectedAppointment?.bookingId}
+                        </Badge>
+                        {selectedAppointment && renderStatusBadge(selectedAppointment?.status)}
+                      </div>
 
+                      {/* Client Information */}
+                      <Card className="p-4 border border-gray-100 shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
+                          {t["dialog.appointment.label.client_information"]}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <User className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.client_name"]}</p>
+                              <p className="font-medium">{selectedAppointment?.clientName}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Building className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.service"]}</p>
+                              <p className="font-medium">{selectedAppointment && t[selectedAppointment.service]}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Mail className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.email"]}</p>
+                              <p className="font-medium break-words">{selectedAppointment?.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Phone className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.phone"]}</p>
+                              <p className="font-medium">{selectedAppointment?.phone}</p>
+                            </div>
+                          </div>
                         </div>
                       </Card>
 
                       {/* Location Information */}
-                      <Card className="p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.address"]}</p>
-                            <p className="font-medium">{selectedAppointment && selectedAppointment.address}</p>
+                      <Card className="p-4 border border-gray-100 shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
+                          {t["dialog.appointment.label.location_information"]}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="sm:col-span-2 flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Home className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.address"]}</p>
+                              <p className="font-medium break-words">{selectedAppointment?.address}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
-                            {
-                              selectedAppointment && <p className="font-medium">{selectedAppointment.zipcode}, {selectedAppointment.state}</p>
-                            }
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <MapPin className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
+                              {selectedAppointment && (
+                                  <p className="font-medium">
+                                    {selectedAppointment.zipcode}, {selectedAppointment.state}
+                                  </p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["label.square_feet"]}</p>
-                            <p className="font-medium">{selectedAppointment?.squareFeet?.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["label.amount.charged"]}</p>
-                            <p className="font-medium">${selectedAppointment?.chargedAmount}</p>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Ruler className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.square_feet"]}</p>
+                              <p className="font-medium">{selectedAppointment?.squareFeet?.toLocaleString()} sq ft</p>
+                            </div>
                           </div>
                         </div>
                       </Card>
 
                       {/* Appointment Details */}
-                      <Card className="p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.date"]}</p>
-                            <p className="font-medium">
-                              {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "yyyy-MM-dd")}
-                            </p>
+                      <Card className="p-4 border border-gray-100 shadow-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex items-start gap-2">
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.date"]}</p>
+                              <p className="font-medium">
+                                {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "MMM dd, yyyy")}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.time"]}</p>
-                            <p className="font-medium">{selectedAppointment && t[selectedAppointment.time]}</p>
+                          <div className="flex items-start gap-2">
+                            <div>
+                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.time"]}</p>
+                              <p className="font-medium">{selectedAppointment && t[selectedAppointment.time]}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["label.bookingId"]}</p>
-                            <p className="font-medium">{selectedAppointment &&selectedAppointment.bookingId}</p>
+                        </div>
+                      </Card>
+
+                      {/* Financial Information */}
+                      <Card className="p-4 border border-gray-100 shadow-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <CreditCard className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.amount.charged"] || "Charged Amount"}</p>
+                              <p className="font-medium text-green-600">${selectedAppointment?.chargedAmount?.toFixed(2)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{t["dialog.appointment.label.status"]}</p>
-                            <div className="font-medium">
-                              {
-                                  selectedAppointment &&
-                                  <span>
-                  {getStatusBadge(selectedAppointment?.status)}
-                  </span>
-                              }
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Receipt className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.amount.gross"]}</p>
+                              <p className="font-medium">${selectedAppointment?.grossAmount?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Percent className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.fee.application"]}</p>
+                              <p className="font-medium text-amber-600">${selectedAppointment?.applicationFee?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <Percent className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.fee.paypal"]}</p>
+                              <p className="font-medium text-amber-600">${selectedAppointment?.paypalFee?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <PiggyBank className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.profit"]}</p>
+                              <p className="font-medium text-green-600">${selectedAppointment?.profit?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <DollarSign className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.salesTax"]}</p>
+                              <p className="font-medium text-amber-600">${selectedAppointment?.salesTax?.toFixed(2)}</p>
                             </div>
                           </div>
                         </div>
                       </Card>
 
                       {/* Notes */}
-                      <Card className="p-4">
-                        <h3 className="text-sm font-medium text-gray-500 mb-3">
+                      <Card className="p-4 border border-gray-100 shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
+                          <FileText className="h-4 w-4 text-blue-500" />
                           {t["dialog.appointment.label.notes"]}
                         </h3>
-                        <p className="font-medium whitespace-pre-wrap">{selectedAppointment && (language === "en" ? selectedAppointment.notes : selectedAppointment.notesES)}</p>
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5 text-gray-400">
+                            <AlertCircle className="h-3.5 w-3.5" />
+                          </div>
+                          <p className="font-medium whitespace-pre-wrap break-words">
+                            {selectedAppointment && (language === "en" ? selectedAppointment.notes : selectedAppointment.notesES)}
+                          </p>
+                        </div>
                       </Card>
                     </div>
 
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:gap-0">
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:gap-0 mt-4">
                       {selectedAppointment && selectedAppointment.status.toLowerCase() !== "canceled" && (
                           <Button
                               variant="destructive"
                               onClick={() => {
-                                setIsEditDialogOpen(false);
-                                setIsCancelling(true);
+                                setIsEditDialogOpen(false)
+                                setIsCancelling(true)
                               }}
                               disabled={loading}
-                              className="w-full sm:w-auto"
+                              className="w-full sm:w-auto flex items-center gap-1"
                           >
+                            <XCircle className="h-4 w-4" />
                             {t["dialog.appointment.button.cancel"]}
                           </Button>
                       )}
                       <Button
                           variant="outline"
                           onClick={() => setIsEditDialogOpen(false)}
-                          className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto"
+                          className="border-blue-200 hover:bg-blue-50 hover:text-blue-600 w-full sm:w-auto flex items-center gap-1"
                       >
+                        <CheckCircle2 className="h-4 w-4" />
                         {t["dialog.appointment.button.close"]}
                       </Button>
                     </DialogFooter>

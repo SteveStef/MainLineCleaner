@@ -680,6 +680,13 @@ export const en = {
   "label.square_feet": "Square feet",
   "tooltip.square_feet": "Enter the area’s size in square feet. This will impact the total price.",
   "label.amount.charged": "Amount Charged",
+  "label.amount.gross": "Gross Amount",
+  "label.fee.application": "Application Fee",
+  "label.fee.paypal": "PayPal Fee",
+  "label.profit": "Profits",
+  "label.salesTax": "Sales Tax",
+  "table.applicationFee": "Application Fee",
+
   "otherService": "Other",
   "label.best_value": "Best Value",
   "label.application.fee": "Application Fee",

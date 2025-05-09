@@ -686,6 +686,13 @@ export const es = {
   "label.square_feet": "Pies cuadrados",
   "tooltip.square_feet": "Ingrese el tamaño del área en pies cuadrados. Esto afectará el precio total.",
   "label.amount.charged": "Importe cobrado",
+  "label.amount.gross": "Importe bruto",
+  "label.fee.application": "Tarifa de solicitud",
+  "label.fee.paypal": "Tarifa de PayPal",
+  "label.profit": "Beneficio",
+  "label.salesTax": "Impuesto de ventas",
+  "table.applicationFee": "Tarifa de solicitud",
+
   "otherService": "Otro",
   "label.best_value": "Mejor valor",
   "label.application.fee": "Tarifa de solicitud",
