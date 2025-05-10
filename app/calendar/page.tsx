@@ -3,33 +3,14 @@
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
-import { Checkbox } from "@/components/ui/checkbox"
 
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { useState, useEffect, useContext } from "react"
 import { format, addDays, isSameDay, isToday } from "date-fns"
 import {
-  Calendar,
-  Clock,
-  User,
-  Mail,
-  Phone,
-  Home,
-  MessageSquare,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  ClipboardList,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Award,
-  CreditCard,
-  Info,
-  Loader2,
-  MapPin,
-  Square,
+  Calendar, Clock, User, Mail, Phone, Home,
+  MessageSquare, CheckCircle, ChevronLeft, ChevronRight, Sparkles, ClipboardList,
+  ArrowRight, ArrowLeft, Check, Award, CreditCard, Info, Loader2, MapPin, Square,
 } from "lucide-react"
 
 import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip"
@@ -44,148 +25,15 @@ import Header from "../Header"
 import Footer from "../Footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-
-export interface ServiceType {
-  id: string
-  name: string // translation key for the title
-  description: string // translation key for the description
-  price: string // dollars
-  duration: string // e.g. "2–3 hours"
-  features: string[] // translation keys for each feature
-}
-
-const taxMap = {
-  "PA": 0.06,
-  "NJ": 0.06625,
-  "DE": 0
-}
-
-const serviceTypesDefaults: ServiceType[] = [
-  {
-    id: "REGULAR",
-    name: "regularService",
-    description: "regularServiceDesc",
-    price: "",
-    duration: "2–3 hours",
-    features: ["weeklyService", "allRoomsCleaned"],
-  },
-  {
-    id: "ENVIRONMENT",
-    name: "environmentService",
-    description: "environmentServiceDesc",
-    price: "",
-    duration: "3–4 hours",
-    features: ["ecoFriendlyProducts", "sustainableMethods"],
-  },
-  {
-    id: "DEEP",
-    name: "deepService",
-    description: "deepServiceDesc",
-    price: "",
-    duration: "4–5 hours",
-    features: ["recommendedQuarterly", "hardToReachAreas"],
-  },
-  {
-    id: "HAZMAT",
-    name: "hazmatService",
-    description: "hazmatServiceDesc",
-    price: "",
-    duration: "5–6 hours",
-    features: ["certifiedTechnicians", "safetyProtocols"],
-  },
-  {
-    id: "FIRE",
-    name: "fireService",
-    description: "fireServiceDesc",
-    price: "",
-    duration: "5–6 hours",
-    features: ["smokeRemoval", "odorElimination"],
-  },
-  {
-    id: "WATER",
-    name: "waterService",
-    description: "waterServiceDesc",
-    price: "",
-    duration: "5–6 hours",
-    features: ["waterExtraction", "moldPrevention"],
-  },
-  {
-    id: "MOVE_IN_OUT",
-    name: "moveService",
-    description: "moveServiceDesc",
-    price: "",
-    duration: "3–4 hours",
-    features: ["oneTimeDeep", "applianceCleaning"],
-  },
-  {
-    id: "DECEASED",
-    name: "deceasedService",
-    description: "deceasedServiceDesc",
-    price: "",
-    duration: "4–5 hours",
-    features: ["discreetService", "thoroughSanitization"],
-  },
-  {
-    id: "EXPLOSIVE_RESIDUE",
-    name: "explosiveResidueService",
-    description: "explosiveResidueServiceDesc",
-    price: "",
-    duration: "6–7 hours",
-    features: ["expertTechnicians", "completeDecontamination"],
-  },
-  {
-    id: "MOLD",
-    name: "moldService",
-    description: "moldServiceDesc",
-    price: "",
-    duration: "5–6 hours",
-    features: ["moldTesting", "completeRemoval"],
-  },
-  {
-    id: "CONSTRUCTION",
-    name: "constructionService",
-    description: "constructionServiceDesc",
-    price: "",
-    duration: "3–4 hours",
-    features: ["debrisRemoval", "dustElimination"],
-  },
-  {
-    id: "COMMERCIAL",
-    name: "commercialService",
-    description: "commercialServiceDesc",
-    price: "",
-    duration: "6–7 hours",
-    features: ["afterHoursService", "customizedPlans"],
-  },
-]
-
-interface FormErrors {
-  firstName?: string
-  lastName?: string
-  email?: string
-  phone?: string
-  address?: string
-  zipcode?: string
-  squareFeet?: string
-  state?: string
-}
-
-function generateRequestId() {
-  let result = ""
-  for (let i = 0; i < 12; i++) {
-    const randomByte = Math.floor(Math.random() * 256)
-    result += ("0" + randomByte.toString(16)).slice(-2)
-  }
-  return result
-}
+import { FormErrors, ServiceType, taxMap, serviceTypesDefaults, generateRequestId } from "@/components/bookingFlow/constants";
 
 export default function BookingPage() {
   const { language } = useContext(LanguageContext)
   const t = translations[language as Language]
-  const { toast } = useToast()
+  const { toast } = useToast();
 
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 5
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | undefined>(undefined)
@@ -198,19 +46,8 @@ export default function BookingPage() {
 
   const [serviceTypes, setServiceTypes] = useState<any>(serviceTypesDefaults)
 
-  const [bookingId, setBookingId] = useState<string>("")
-  const [userInfo, setUserInfo] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    zipcode: "",
-    state: "",
-    notes: "",
-    smsConsent: false,
-    squareFeet: 0,
-  })
+  const [bookingId, setBookingId] = useState<string>("");
+  const [userInfo, setUserInfo] = useState({firstName: "", lastName: "", email: "", phone: "", address: "", zipcode: "", state: "", notes: "", squareFeet: 0,});
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -229,9 +66,6 @@ export default function BookingPage() {
   }>({})
 
   const [searchQuery, setSearchQuery] = useState<string>("")
-
-  const [paymentType, setPaymentType] = useState<"ONE_TIME" | "RECURRING">("ONE_TIME")
-  const [subscriptionFrequency, setSubscriptionFrequency] = useState<"WEEKLY" | "MONTHLY">("MONTHLY")
 
   // Create localized time slot names using bracket-notation.
   const localizedTimeSlotNames: { [key: string]: string } = {
@@ -269,6 +103,7 @@ export default function BookingPage() {
       const response = await fetch(url)
       if (response.ok) {
         const details: any = await response.json()
+        console.log(details)
         const tmp = [...serviceTypes]
         tmp[0].price = details.regularPrice
         tmp[1].price = details.environmentPrice
@@ -282,7 +117,8 @@ export default function BookingPage() {
         tmp[9].price = details.moldPrice
         tmp[10].price = details.constructionPrice
         tmp[11].price = details.commercialPrice
-        setServiceTypes(tmp)
+        tmp[12].price = details.customPrice
+        setServiceTypes(tmp);
       } else {
         setApiErrors((prev) => ({ ...prev, prices: t["toast.error_loading_prices_description"] }))
         toast({
@@ -337,6 +173,7 @@ export default function BookingPage() {
     if (!userInfo.lastName.trim()) newErrors.lastName = t["error.last_name_required"]
     if (!userInfo.zipcode.trim()) newErrors.zipcode = t["error.zipcode_required"]
     if (!userInfo.state.trim()) newErrors.state = t["error.state_required"]
+
     if (!userInfo.email.trim()) {
       newErrors.email = t["error.email_required"]
     } else if (!/\S+@\S+\.\S+/.test(userInfo.email)) {
@@ -351,6 +188,10 @@ export default function BookingPage() {
     return { isValid: Object.keys(newErrors).length === 0, errors: newErrors }
   }
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [currentStep]);
+
   const handleNextStep = () => {
     if (currentStep === 1) {
       const { isValid, errors: newErrors } = validateUserInfo()
@@ -360,14 +201,12 @@ export default function BookingPage() {
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1)
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
   }
 
   const handlePreviousStep = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1)
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
   }
 
   const handleSubmit = async (orderId: string) => {
@@ -388,10 +227,7 @@ export default function BookingPage() {
         service: selectedService, // REGULAR // these are enums must conform
         notes: userInfo.notes,
         appointmentDate: selectedDate,
-        smsConsent: userInfo.smsConsent,
         squareFeet: userInfo.squareFeet,
-        paymentType: paymentType,
-        subscriptionFrequency: paymentType === "RECURRING" ? subscriptionFrequency : null,
       }
 
       const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
@@ -502,8 +338,6 @@ export default function BookingPage() {
         return !!selectedService
       case 3:
         return !!selectedDate && !!selectedTimeSlot
-      case 4:
-        return !!paymentType
       default:
         return true
     }
@@ -550,17 +384,10 @@ export default function BookingPage() {
         )
       case 4:
         return (
-          <>
-            <Clock className="h-5 w-5 text-blue-600" />
-            {t["step_title.subscription"]}
-          </>
-        )
-      case 5:
-        return (
-          <>
-            <CreditCard className="h-5 w-5 text-blue-600" />
-            {t["step_title.payment"]}
-          </>
+            <>
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              {t["step_title.payment"]}
+            </>
         )
       default:
         return t["booking.confirmed"]
@@ -743,27 +570,6 @@ export default function BookingPage() {
                 </div>
               )}
 
-              {paymentType === "RECURRING" && (
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t["label.subscription"]}</p>
-                    <p className="font-medium">
-                      {subscriptionFrequency === "WEEKLY"
-                        ? t["frequency.weekly"] || "Weekly"
-                        : t["frequency.monthly"] || "Monthly"}
-                    </p>
-                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full inline-flex items-center mt-1">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      {subscriptionFrequency === "WEEKLY"
-                        ? t["frequency.save_20"] || "Save 20%"
-                        : t["frequency.save_10"] || "Save 10%"}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {!userInfo.firstName && !userInfo.lastName && !selectedService && !selectedDate && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -847,10 +653,6 @@ export default function BookingPage() {
               <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
               <span>{t["booking_info.item2"]}</span>
             </li>
-            <li className="flex items-start gap-2">
-              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-              <span>{t["booking_info.item3"]}</span>
-            </li>
           </ul>
         </div>
 
@@ -884,7 +686,7 @@ export default function BookingPage() {
         {/* Step Indicator */}
         <div className="max-w-7xl mx-auto mb-8">
           <div className="flex items-center justify-between">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex flex-col items-center">
                 <div
                   className={cn(
@@ -914,9 +716,7 @@ export default function BookingPage() {
                       ? t["step.service"]
                       : step === 3
                         ? t["step.date_time"]
-                        : step === 4
-                          ? t["step.subscription"]
-                          : t["step.payment"]}
+                        : t["step.payment"]}
                 </span>
               </div>
             ))}
@@ -1131,31 +931,6 @@ export default function BookingPage() {
                           {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
                         </div>
 
-                        {/* SMS Consent Checkbox */}
-                        <div className="space-y-2 md:col-span-2 hidden">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="smsConsent"
-                              name="smsConsent"
-                              checked={userInfo.smsConsent || false}
-                              onCheckedChange={(checked) => {
-                                handleInputChange({
-                                  target: {
-                                    name: "smsConsent",
-                                    value: checked,
-                                  },
-                                })
-                              }}
-                            />
-                            <Label
-                              htmlFor="smsConsent"
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {t["consent.for.sms"]}
-                            </Label>
-                          </div>
-                        </div>
-
                         <div className="space-y-2 md:col-span-2">
                           <Label htmlFor="notes" className="flex items-center gap-1">
                             <MessageSquare className="h-4 w-4" />
@@ -1237,9 +1012,15 @@ export default function BookingPage() {
                                           {t[service.name]}
                                         </Label>
                                       </div>
-                                      <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
-                                        ${getBasePrice(service.id)}
-                                      </div>
+                                      {
+                                        service.id === "CUSTOM" ?
+                                            <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+                                              Deposit: ${getBasePrice(service.id)}
+                                            </div> :
+                                            <div className="font-bold text-lg text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+                                              ${getBasePrice(service.id)}
+                                            </div>
+                                      }
                                     </div>
 
                                     {/* Bottom row with Learn More button */}
@@ -1454,150 +1235,8 @@ export default function BookingPage() {
                     </div>
                   )}
 
+
                   {currentStep === 4 && (
-                    <div className="space-y-6">
-                      <p className="text-muted-foreground">
-                        {t["step_subscription.instructions"]}
-                      </p>
-
-                      <div className="max-w-2xl mx-auto space-y-6">
-                        <RadioGroup
-                          value={paymentType}
-                          onValueChange={(value) => setPaymentType(value as "ONE_TIME" | "RECURRING")}
-                          className="grid gap-4"
-                        >
-                          <div
-                            className={cn(
-                              "relative flex items-center space-x-3 p-4 rounded-lg border transition-all",
-                              paymentType === "ONE_TIME"
-                                ? "border-blue-500 bg-blue-50 shadow-sm"
-                                : "border-gray-200 hover:border-blue-300",
-                            )}
-                          >
-                            <RadioGroupItem value="ONE_TIME" id="one-time" className="text-blue-600" />
-                            <Label htmlFor="one-time" className="flex flex-col cursor-pointer">
-                              <span className="font-medium text-lg">{t["payment.one_time"] || "One-time Payment"}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {t["payment.one_time_desc"] || "Pay once for a single cleaning service"}
-                              </span>
-                            </Label>
-                          </div>
-
-                          <div
-                            className={cn(
-                              "relative flex items-center space-x-3 p-4 rounded-lg border transition-all",
-                              paymentType === "RECURRING"
-                                ? "border-blue-500 bg-blue-50 shadow-sm"
-                                : "border-gray-200 hover:border-blue-300",
-                            )}
-                          >
-                            <RadioGroupItem value="RECURRING" id="recurring" className="text-blue-600" />
-                            <Label htmlFor="recurring" className="flex flex-col cursor-pointer">
-                              <span className="font-medium text-lg">
-                                {t["payment.recurring"] || "Recurring Subscription"}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                {t["payment.recurring_desc"] || "Schedule regular cleanings and save"}
-                              </span>
-                            </Label>
-                          </div>
-                        </RadioGroup>
-
-                        {paymentType === "RECURRING" && (
-                          <div className="mt-6 p-4 border rounded-lg bg-blue-50 border-blue-100">
-                            <h3 className="font-medium mb-4">
-                              {t["payment.subscription_frequency"] || "Subscription Frequency"}
-                            </h3>
-
-                            <RadioGroup
-                              value={subscriptionFrequency}
-                              onValueChange={(value) => setSubscriptionFrequency(value as "WEEKLY" | "MONTHLY")}
-                              className="grid gap-3"
-                            >
-                              <div
-                                className={cn(
-                                  "relative flex items-center space-x-3 p-3 rounded-lg border transition-all bg-white",
-                                  subscriptionFrequency === "WEEKLY"
-                                    ? "border-blue-500 shadow-sm"
-                                    : "border-gray-200 hover:border-blue-300",
-                                )}
-                              >
-                                <RadioGroupItem value="WEEKLY" id="weekly" className="text-blue-600" />
-                                <Label
-                                  htmlFor="weekly"
-                                  className="flex justify-between items-center w-full cursor-pointer"
-                                >
-                                  <span className="font-medium">{t["frequency.weekly"] || "Weekly"}</span>
-                                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                                    {t["frequency.save_20"] || "Save 20%"}
-                                  </span>
-                                </Label>
-                              </div>
-
-                              <div
-                                className={cn(
-                                  "relative flex items-center space-x-3 p-3 rounded-lg border transition-all bg-white",
-                                  subscriptionFrequency === "MONTHLY"
-                                    ? "border-blue-500 shadow-sm"
-                                    : "border-gray-200 hover:border-blue-300",
-                                )}
-                              >
-                                <RadioGroupItem value="MONTHLY" id="monthly" className="text-blue-600" />
-                                <Label
-                                  htmlFor="monthly"
-                                  className="flex justify-between items-center w-full cursor-pointer"
-                                >
-                                  <span className="font-medium">{t["frequency.monthly"] || "Monthly"}</span>
-                                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                                    {t["frequency.save_10"] || "Save 10%"}
-                                  </span>
-                                </Label>
-                              </div>
-                            </RadioGroup>
-
-                            <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                              <div className="flex items-start gap-2">
-                                <Info className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                                <p className="text-sm">
-                                  {t["subscription.info"] ||
-                                    "You can cancel or modify your subscription at any time from your account dashboard."}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-100 mt-6">
-                          <h3 className="font-medium flex items-center gap-2 text-green-800">
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            {t["payment.benefits_heading"] || "Benefits"}
-                          </h3>
-                          <ul className="mt-2 space-y-2">
-                            <li className="flex items-start gap-2">
-                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">
-                                {t["payment.benefit1"] || "Convenient scheduling that fits your lifestyle"}
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">
-                                {t["payment.benefit2"] || "Priority booking for your preferred dates and times"}
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">
-                                {t["payment.benefit3"] || "Discounted rates for recurring services"}
-                              </span>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {currentStep === 5 && (
                     <div className="space-y-6">
                       <p className="text-muted-foreground">{t["step5.instructions"]}</p>
 
@@ -1675,7 +1314,8 @@ export default function BookingPage() {
                         isSubmitting ||
                         isProcessingPayment ||
                         isLoadingPrices ||
-                        isLoadingAvailability
+                        isLoadingAvailability ||
+                          !userInfo.squareFeet || userInfo.squareFeet < 500
                       }
                       className="sm:w-auto w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     >

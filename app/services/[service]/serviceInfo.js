@@ -1,4 +1,4 @@
-import { Clock, Shield, Award, Users, Droplets, Flame, Home, Wind, Skull, Bomb, Building, Briefcase } from 'lucide-react'
+import { StopCircle, Clock, Shield, Award, Users, Droplets, Flame, Home, Wind, Skull, Bomb, Building, Briefcase } from 'lucide-react'
 import fire from "../../../images/services/fire-damage.jpg";
 import regular from "../../../images/services/regular.jpg";
 import deep from "../../../images/services/deep.jpg";
@@ -11,6 +11,7 @@ import explosive from "../../../images/services/explosive.jpg";
 import commercial from "../../../images/services/commercial.jpg";
 import mold from "../../../images/services/mold.jpg";
 import construction from "../../../images/services/construction.jpg";
+import custom from "../../../images/services/construction.jpg";
 
 const serviceInfo = {
   REGULAR: {
@@ -159,6 +160,129 @@ const serviceInfo = {
     },
   },
 
+  CUSTOM: {
+    cleaning: {
+      image: custom,
+      title: "Custom Cleaning Services",
+      shortDesc:
+          "Deposit-based custom clean—enter your square footage for an upfront deposit, then we finalize pricing on-site.",
+      longDesc:
+          "With our Custom Cleaning service, you pay a calculated deposit up front based on the square footage you provide. " +
+          "Our team then visits your property to scope the work, determine the final cost, and collect the remaining balance. " +
+          "This ensures you only pay for exactly what you need—no surprises, full transparency, and a tailor-made cleaning plan " +
+          "designed around your space and requirements.",
+      features: [
+        {
+          title: "Square-Footage Deposit Calculation",
+          description:
+              "Automatically compute a deposit amount (rate × your square footage) to secure your booking.",
+        },
+        {
+          title: "On-Site Assessment",
+          description:
+              "Our certified team visits to evaluate the actual scope and any special requirements before finalizing pricing.",
+        },
+        {
+          title: "Transparent Final Invoice",
+          description:
+              "Receive a detailed breakdown of total cost minus your deposit; pay only the remaining balance.",
+        },
+        {
+          title: "Flexible Scheduling",
+          description:
+              "Book your deposit now and choose a convenient on-site assessment time for your custom clean.",
+        },
+        {
+          title: "Certified Technicians & Safety Protocols",
+          description:
+              "All cleans follow strict safety guidelines with fully trained, insured professionals.",
+        },
+      ],
+      process: [
+        "Customer submits square footage & pays deposit",
+        "Cleaning team conducts on-site assessment",
+        "Final quote issued (total cost − deposit)",
+        "Customer pays remaining balance",
+        "Custom clean performed & job completed",
+      ],
+      benefits: [
+        {
+          title: "Tailored Pricing",
+          description:
+              "Only pay for the exact square footage and scope you need—no overcharges.",
+          icon: StopCircle,
+        },
+        {
+          title: "Full Transparency",
+          description:
+              "Upfront deposit + clear final invoice means you always know what you’re paying for.",
+          icon: Shield,
+        },
+        {
+          title: "Peace of Mind",
+          description:
+              "Certified technicians ensure quality and safety on every custom job.",
+          icon: Award,
+        },
+        {
+          title: "Flexible Booking",
+          description:
+              "Secure your slot with a deposit and finalize details when our team arrives.",
+          icon: Users,
+        },
+      ],
+      faqs: [
+        {
+          question: "How is the deposit amount calculated?",
+          answer:
+              "Deposit = your square footage × our rate (e.g. 0.10 USD/sq ft). “Rate per sq ft” is displayed on the booking form.",
+        },
+        {
+          question: "What happens if the final cost is less than my deposit?",
+          answer:
+              "We’ll refund the difference or apply it as credit toward future services—your choice.",
+        },
+        {
+          question: "Can I change my square footage after booking?",
+          answer:
+              "Yes—just contact us before the on-site assessment and we’ll recalculate your deposit.",
+        },
+        {
+          question: "How do I pay the remaining balance?",
+          answer:
+              "You can pay online via the link we send after assessment or have us charge your saved payment method.",
+        },
+        {
+          question: "What if I need to reschedule the on-site assessment?",
+          answer:
+              "Notify us at least 24 hours in advance and we’ll find a new assessment slot at no extra cost.",
+        },
+      ],
+      testimonials: [
+        {
+          name: "Sarah Lee",
+          role: "Homeowner",
+          rating: 5,
+          comment:
+              "The Custom Clean deposit model made booking so easy—no hidden fees and they were super transparent about final pricing!",
+        },
+        {
+          name: "Alex Martinez",
+          role: "Office Manager",
+          rating: 5,
+          comment:
+              "Perfect for our large warehouse space. The deposit based on square footage was spot-on, and the team did a fantastic job.",
+        },
+        {
+          name: "Priya Patel",
+          role: "Small Business Owner",
+          rating: 4,
+          comment:
+              "Loved the flexibility—paid a small deposit, they scoped the work, and charged only what was needed. Highly recommend!",
+        },
+      ],
+    },
+  },
   ENVIRONMENT: {
     cleaning: {
       image: enviroment,
@@ -2573,6 +2697,129 @@ const serviceInfoES = {
           rating: 4,
           comment:
             "Cumplen con los protocolos sanitarios más estrictos en entornos de salud."
+        },
+      ],
+    },
+  },
+
+  CUSTOM: {
+    cleaning: {
+      image: custom,
+      title: "Servicios de Limpieza Personalizada",
+      shortDesc:
+          "Limpieza personalizada con depósito: ingresa los metros cuadrados para un depósito inicial y luego finalizamos el precio en el lugar.",
+      longDesc:
+          "Con nuestro servicio de Limpieza Personalizada, pagas un depósito calculado por adelantado según los metros cuadrados que proporciones. " +
+          "Nuestro equipo visita tu propiedad para evaluar el trabajo, determinar el costo final y cobrar el saldo restante. " +
+          "Esto garantiza que pagues solo por lo que necesitas: sin sorpresas, con total transparencia y un plan de limpieza hecho a medida según tu espacio y requisitos.",
+      features: [
+        {
+          title: "Cálculo de Depósito por Metros Cuadrados",
+          description:
+              "Calcula automáticamente el monto del depósito (tarifa × tus metros cuadrados) para asegurar tu reserva.",
+        },
+        {
+          title: "Evaluación In Situ",
+          description:
+              "Nuestro equipo certificado visita para evaluar el alcance real y cualquier requerimiento especial antes de finalizar el precio.",
+        },
+        {
+          title: "Factura Final Transparente",
+          description:
+              "Recibe un desglose detallado del costo total menos tu depósito; paga solo el saldo restante.",
+        },
+        {
+          title: "Programación Flexible",
+          description:
+              "Reserva tu depósito ahora y elige una hora conveniente para la evaluación in situ de tu limpieza personalizada.",
+        },
+        {
+          title: "Técnicos Certificados y Protocolos de Seguridad",
+          description:
+              "Todas las limpiezas siguen estrictas normas de seguridad con profesionales capacitados y asegurados.",
+        },
+      ],
+      process: [
+        "El cliente envía los metros cuadrados y paga el depósito",
+        "El equipo de limpieza realiza la evaluación in situ",
+        "Se emite la cotización final (costo total − depósito)",
+        "El cliente paga el saldo restante",
+        "Se realiza la limpieza personalizada y se completa el trabajo",
+      ],
+      benefits: [
+        {
+          title: "Precio Personalizado",
+          description:
+              "Paga solo por los metros cuadrados y el alcance que necesitas: sin sobrecargos.",
+          icon: StopCircle,
+        },
+        {
+          title: "Transparencia Total",
+          description:
+              "Depósito inicial + factura final clara significa que siempre sabes por qué pagas.",
+          icon: Shield,
+        },
+        {
+          title: "Tranquilidad",
+          description:
+              "Técnicos certificados garantizan calidad y seguridad en cada trabajo personalizado.",
+          icon: Award,
+        },
+        {
+          title: "Reserva Flexible",
+          description:
+              "Asegura tu turno con un depósito y finaliza los detalles cuando llegue nuestro equipo.",
+          icon: Users,
+        },
+      ],
+      faqs: [
+        {
+          question: "¿Cómo se calcula el monto del depósito?",
+          answer:
+              "Depósito = tus metros cuadrados × nuestra tarifa (por ejemplo, 0.10 USD/m²). La “tarifa por m²” se muestra en el formulario de reserva.",
+        },
+        {
+          question: "¿Qué sucede si el costo final es menor que mi depósito?",
+          answer:
+              "Devolvemos la diferencia o la aplicamos como crédito para servicios futuros: tu elección.",
+        },
+        {
+          question: "¿Puedo cambiar los metros cuadrados después de reservar?",
+          answer:
+              "Sí: contáctanos antes de la evaluación in situ y recalcularemos tu depósito.",
+        },
+        {
+          question: "¿Cómo pago el saldo restante?",
+          answer:
+              "Puedes pagar en línea mediante el enlace que enviamos tras la evaluación o podemos cargar el monto a tu método de pago guardado.",
+        },
+        {
+          question: "¿Y si necesito reprogramar la evaluación in situ?",
+          answer:
+              "Avísanos al menos 24 horas antes y encontraremos un nuevo horario para la evaluación sin costo adicional.",
+        },
+      ],
+      testimonials: [
+        {
+          name: "Sarah Lee",
+          role: "Propietario",
+          rating: 5,
+          comment:
+              "El modelo de depósito de la Limpieza Personalizada hizo la reserva muy fácil: sin cargos ocultos y fueron muy transparentes con el precio final.",
+        },
+        {
+          name: "Alex Martinez",
+          role: "Gerente de Oficina",
+          rating: 5,
+          comment:
+              "Perfecto para nuestro amplio almacén. El depósito basado en los metros cuadrados fue exacto y el equipo hizo un trabajo fantástico.",
+        },
+        {
+          name: "Priya Patel",
+          role: "Dueño de Pequeño Negocio",
+          rating: 4,
+          comment:
+              "Me encantó la flexibilidad: pagué un depósito pequeño, evaluaron el trabajo y cobraron solo lo necesario. ¡Muy recomendable!",
         },
       ],
     },

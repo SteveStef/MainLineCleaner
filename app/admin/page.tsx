@@ -15,8 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Link from "next/link"
-import { Trash2, CalendarIcon, Globe, AlertCircle, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark, Loader2 } from "lucide-react"
-import {
+import { Trash2, CalendarIcon, Globe, AlertCircle, CheckCircle, Clock, X, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Info, ArrowLeft, Settings, Edit, Mail, User, Landmark, Loader2,
   Phone,
   MapPin,
   Home,
@@ -157,6 +156,7 @@ const defaultPricing = {
   moldPrice: 0,
   constructionPrice: 0,
   commercialPrice: 0,
+  customPrice: 0
 }
 
 export interface TimeSlot {
@@ -597,6 +597,7 @@ export default function AdminDashboard() {
             moldPrice: Number.parseFloat(details.moldPrice),
             constructionPrice: Number.parseFloat(details.constructionPrice),
             commercialPrice: Number.parseFloat(details.commercialPrice),
+            customPrice: Number.parseFloat(details.customPrice),
           }
 
           setPricing(vals)
@@ -709,6 +710,7 @@ export default function AdminDashboard() {
           moldPrice: tempPricing.moldPrice.toFixed(2),
           constructionPrice: tempPricing.constructionPrice.toFixed(2),
           commercialPrice: tempPricing.commercialPrice.toFixed(2),
+          customPrice: tempPricing.customPrice.toFixed(2),
         }),
       }
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`
@@ -1516,7 +1518,6 @@ export default function AdminDashboard() {
                             <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
                               {t["table.paypal_fee"] || 'PayPal Fee'}
                             </th>
-
                             <th className="px-4 py-2 text-right text-xs font-medium uppercase text-gray-500">
                               {t["table.applicationFee"]}
                             </th>
@@ -2594,6 +2595,7 @@ export default function AdminDashboard() {
                                   text: "text-slate-700",
                                   textLight: "text-slate-600",
                                 }
+                                console.log(key);
 
                                 // Format the key for display (convert camelCase to Title Case with spaces)
                                 const formattedKey = key
@@ -2819,19 +2821,31 @@ export default function AdminDashboard() {
 
                       {/* Location Information */}
                       <Card className="p-4 border border-gray-100 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
-                          {t["dialog.appointment.label.location_information"]}
-                        </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="sm:col-span-2 flex items-start gap-2">
+
+                          <div className="flex items-start gap-2">
                             <div className="mt-0.5 text-gray-400">
                               <Home className="h-3.5 w-3.5" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-500">{t["dialog.appointment.label.address"]}</p>
-                              <p className="font-medium break-words">{selectedAppointment?.address}</p>
+                              <p className="text-sm text-gray-500">{t["label.address"]}</p>
+                              {selectedAppointment && (
+                                  <p className="font-medium">
+                                    {selectedAppointment.address}
+                                  </p>
+                              )}
                             </div>
                           </div>
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 text-gray-400">
+                              <MapPin className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">{t["label.state"]}</p>
+                              <p className="font-medium">{selectedAppointment?.state}</p>
+                            </div>
+                          </div>
+
                           <div className="flex items-start gap-2">
                             <div className="mt-0.5 text-gray-400">
                               <MapPin className="h-3.5 w-3.5" />
@@ -2840,7 +2854,7 @@ export default function AdminDashboard() {
                               <p className="text-sm text-gray-500">{t["label.zipcode"]}</p>
                               {selectedAppointment && (
                                   <p className="font-medium">
-                                    {selectedAppointment.zipcode}, {selectedAppointment.state}
+                                    {selectedAppointment.zipcode}
                                   </p>
                               )}
                             </div>

@@ -94,6 +94,8 @@ export default function ServicePage() {
     visible: { opacity: 1, y: 0 },
   }
 
+  if(!serviced) return <div>Loading...</div>;
+
   return (
       <motion.div
           initial={{ opacity: 0 }}
