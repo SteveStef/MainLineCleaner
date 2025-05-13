@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import Cookies from "js-cookie";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -149,4 +150,27 @@ export async function tes(text: string) {
   }
 }
 
-
+export async function baseRequest(method: "GET" | "POST" | "PUT" | "DELETE", path: string, body?: any) {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}${path}`;
+    const token = Cookies.get("tempauthtoken");
+    const options: any = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : "",
+      },
+    };
+    if(body && method !== "GET") {
+      if(typeof body === "object" || Array.isArray(body)) {
+        options["body"] = JSON.stringify(body);
+      } else {
+        options["body"] = body;
+      }
+    }
+    return await fetch(url, options);
+  } catch(err) {
+    console.log(err);
+    return null;
+  }
+}

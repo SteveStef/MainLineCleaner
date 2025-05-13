@@ -40,7 +40,7 @@ import Clean4 from "../images/livingroom.jpg"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
-import { tes } from "@/lib/utils"
+import { tes, baseRequest } from "@/lib/utils"
 
 // Animation variants
 const fadeIn = {
@@ -191,22 +191,16 @@ function MainLineCleanersContent() {
 
   useEffect(() => {
     async function getReviews() {
-      try {
-        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/reviews`
-        const options = { method: "GET" }
-        const response: any = await fetch(url, options)
-        if (response.ok) {
-          const data = await response.json()
-          for (let i = 0; i < data.length; i++) {
-            data[i]["content.es"] = await tes(data[i].content)
-          }
-          setTestimonials(data)
+      const response = await baseRequest("GET", "/reviews");
+      if (response?.ok) {
+        const data = await response.json();
+        for (let i = 0; i < data.length; i++) {
+          data[i]["content.es"] = await tes(data[i].content)
         }
-      } catch (err) {
-        console.log(err)
+        setTestimonials(data)
       }
     }
-    getReviews()
+    getReviews();
   }, [])
 
   // Functions to control the slideshow
@@ -297,36 +291,23 @@ function MainLineCleanersContent() {
     if (!hasErrors) {
       setIsSubmitting(true)
 
-      try {
-        const url: string = `${process.env.NEXT_PUBLIC_API_URL}/requestQuote`;
-        const body = {...requestQuoteForm, message: await tes(requestQuoteForm.message)};
-        const options = {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }
-
-        const response: any = await fetch(url, options);
-
-        if (response.ok) {
-          setSubmitSuccess(true)
-          setRequestQuoteForm({
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            service: "REGULAR",
-            message: "",
-            consent: false
-          })
-        } else {
-          console.error("Form submission failed")
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setIsSubmitting(false)
+      const body = {...requestQuoteForm, message: await tes(requestQuoteForm.message)};
+      const response = await baseRequest("POST", "/requestQuote", body);
+      if (response && response.ok) {
+        setSubmitSuccess(true)
+        setRequestQuoteForm({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          service: "REGULAR",
+          message: "",
+          consent: false
+        })
+      } else {
+        console.error("Form submission failed")
       }
+      setIsSubmitting(false);
     }
   }
 
@@ -1240,4 +1221,4 @@ function MainLineCleanersContent() {
   )
 }
 
-export default MainLineCleanersContent
+export default MainLineCleanersContent;

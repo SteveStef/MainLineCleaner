@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { cn, formatDateToSpanish } from "@/lib/utils"
+import {baseRequest, cn, formatDateToSpanish} from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Header from "../Header"
@@ -117,18 +117,12 @@ export default function AppointmentManagerPage() {
       const fetchAvailableDates = async () => {
         setIsLoadingAvailability(true)
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/availability`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-
-          if (!response.ok) {
+          const response = await baseRequest("GET", "/availability");
+          if (!response?.ok) {
             throw new Error("Failed to fetch availability")
           }
 
-          const json = await response.json()
+          const json = await response?.json()
           setAvailableTimeSlots(json)
           const tmp = []
           for (let i = 0; i < json.length; i++) {
@@ -207,26 +201,20 @@ export default function AppointmentManagerPage() {
     setErrors({})
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/find-appointment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bookingId: formData.bookingId,
-          email: formData.email,
-        }),
-      })
-
-      if (!response.ok) {
-        const status = response.status
+      const body = {
+        bookingId: formData.bookingId,
+        email: formData.email,
+      }
+      const response = await baseRequest("POST", "/find-appointment", body);
+      if (!response?.ok) {
+        const status = response?.status
         throw {
           message: status === 400 ? "Failed to find appointment" : "Something went wrong, try again later",
-          status: response.status,
+          status: response?.status,
         }
       }
 
-      const data = await response.json()
+      const data = await response?.json()
       setAppointmentData(data)
       setStep(2)
     } catch (error) {
@@ -280,49 +268,35 @@ export default function AppointmentManagerPage() {
 
     try {
       if (selectedAction === "cancel") {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customer-cancel-appointment`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bookingId: formData.bookingId,
-            email: formData.email,
-            reason: formData.reason,
-          }),
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
+        const body = {
+          bookingId: formData.bookingId,
+          email: formData.email,
+          reason: formData.reason,
+        };
+        const response = await baseRequest("POST", "/customer-cancel-appointment", body);
+        if (!response?.ok) {
+          const errorData = await response?.json()
           throw {
             message: errorData.message || "Failed to cancel appointment",
-            status: response.status,
+            status: response?.status,
           }
         }
       } else if (selectedAction === "reschedule" && selectedDate && selectedTimeSlot) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reschedule`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bookingId: formData.bookingId,
-            email: formData.email,
-            newAppointmentDate: selectedDate,
-            newTime: timeSlotPicked,
-          }),
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
+        const body = {
+          bookingId: formData.bookingId,
+          email: formData.email,
+          newAppointmentDate: selectedDate,
+          newTime: timeSlotPicked,
+        };
+        const response = await baseRequest("POST", "/reschedule", body);
+        if (!response?.ok) {
+          const errorData = await response?.json()
           throw {
             message: errorData.message || "Failed to reschedule appointment",
-            status: response.status,
+            status: response?.status,
           }
         }
       }
-
-      // Success - move to confirmation step
       setStep(3)
     } catch (error) {
       const apiError = error as ApiError

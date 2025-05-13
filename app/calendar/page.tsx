@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { cn, formatDateToSpanish } from "@/lib/utils"
+import { cn, formatDateToSpanish, baseRequest } from "@/lib/utils"
 import Header from "../Header"
 import Footer from "../Footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -98,11 +98,9 @@ export default function BookingPage() {
   async function getServicePrices() {
     setIsLoadingPrices(true)
     setApiErrors((prev) => ({ ...prev, prices: undefined }))
-    try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
-      const response = await fetch(url)
-      if (response.ok) {
-        const details: any = await response.json()
+      const res = await baseRequest("GET", "/service-details");
+      if (res?.ok) {
+        const details: any = await res.json()
         console.log(details)
         const tmp = [...serviceTypes]
         tmp[0].price = details.regularPrice
@@ -127,17 +125,7 @@ export default function BookingPage() {
           variant: "destructive",
         })
       }
-    } catch (err) {
-      console.error(err)
-      setApiErrors((prev) => ({ ...prev, prices: t["toast.connection_error_description"] }))
-      toast({
-        title: t["toast.connection_error_title"],
-        description: t["toast.connection_error_description"],
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoadingPrices(false)
-    }
+    setIsLoadingPrices(false)
   }
 
   const isDateAvailable = (date: Date) => {
@@ -214,7 +202,6 @@ export default function BookingPage() {
     setPaymentError("")
     setApiErrors((prev) => ({ ...prev, payment: undefined }))
 
-    try {
       const body = {
         orderId,
         clientName: userInfo.firstName + " " + userInfo.lastName,
@@ -230,43 +217,28 @@ export default function BookingPage() {
         squareFeet: userInfo.squareFeet,
       }
 
-      const url: string = `${process.env.NEXT_PUBLIC_API_URL}/paypal/captureOrder?requestId=${requestId}`
-      const options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
-
-      const response: any = await fetch(url, options)
-      if (response.ok) {
-        const data = await response.json()
-        setBookingId(data.bookingId)
-        setIsSubmitted(true)
-        setRequestId(generateRequestId())
-        toast({
-          title: t["booking.confirmed"],
-          // Manually interpolate email in the confirmation string.
-          description: t["booking.confirmation_email"].replace("{email}", userInfo.email),
-        })
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.message || t["toast.payment_failed_description"]
-        setPaymentError(errorMessage)
-        setApiErrors((prev) => ({ ...prev, payment: errorMessage }))
-        toast({
-          title: t["toast.payment_failed_title"],
-          description: errorMessage,
-          variant: "destructive",
-        })
-      }
-    } catch (err) {
-      console.error(err)
-      setPaymentError(t["toast.connection_error_description"])
-      setApiErrors((prev) => ({ ...prev, payment: t["toast.connection_error_description"] }))
+    const response = await baseRequest("POST", `/paypal/captureOrder?requestId=${requestId}`, body);
+    if (response?.ok) {
+      const data = await response.json()
+      setBookingId(data.bookingId)
+      setIsSubmitted(true)
+      setRequestId(generateRequestId())
       toast({
-        title: t["toast.connection_error_title"],
-        description: t["toast.connection_error_description"],
+        title: t["booking.confirmed"],
+        description: t["booking.confirmation_email"].replace("{email}", userInfo.email),
+      })
+    } else {
+      const errorData = await response?.json().catch(() => ({}))
+      const errorMessage = errorData.message || t["toast.payment_failed_description"]
+      setPaymentError(errorMessage)
+      setApiErrors((prev) => ({ ...prev, payment: errorMessage }))
+      toast({
+        title: t["toast.payment_failed_title"],
+        description: errorMessage,
         variant: "destructive",
       })
-    } finally {
-      setIsSubmitting(false)
     }
+    setIsSubmitting(false)
   }
 
   const isDateInPast = (date: Date): boolean => {
@@ -279,9 +251,8 @@ export default function BookingPage() {
     setIsLoadingAvailability(true)
     setApiErrors((prev) => ({ ...prev, availability: undefined }))
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
-      const response = await fetch(url)
-      if (response.ok) {
+      const response = await baseRequest("GET", "/availability");
+      if (response?.ok) {
         const json = await response.json()
         setAvailability(json)
         const tmp = []
@@ -398,20 +369,13 @@ export default function BookingPage() {
     setIsProcessingPayment(true)
     setApiErrors((prev) => ({ ...prev, payment: undefined }))
     try {
-      const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify(Math.round(userInfo.squareFeet)),
-      }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/paypal/createOrder?serviceType=${selectedService}&state=${userInfo.state}`,
-        options,
-      )
-      if (response.ok) {
+      const body = Math.round(userInfo.squareFeet);
+      const response = await baseRequest("POST", `/paypal/createOrder?serviceType=${selectedService}&state=${userInfo.state}`, body);
+      if (response?.ok) {
         const orderId = await response.text()
         return orderId
       } else {
-        const errorData = await response.json().catch(() => ({}))
+        const errorData = await response?.json().catch(() => ({}))
         const errorMessage = errorData.message || t["toast.payment_initialization_failed_description"]
         setApiErrors((prev) => ({ ...prev, payment: errorMessage }))
         toast({

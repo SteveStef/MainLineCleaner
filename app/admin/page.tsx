@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useContext } from "react"
-import Cookies from "js-cookie"
+import Cookies from "js-cookie";
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -45,7 +45,7 @@ import {
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
-import { tes, formatDateToSpanish } from "@/lib/utils"
+import {tes, formatDateToSpanish, baseRequest} from "@/lib/utils"
 import RevenueChart from "@/components/chart";
 import AppointmentsTable from "./appointmentFilter"
 
@@ -233,8 +233,6 @@ export default function AdminDashboard() {
     }
   }
 
-  console.log(allAppointments);
-
   const [weekViewDate, setWeekViewDate] = useState<Date>(new Date())
   const { language, setLanguage } = useContext(LanguageContext)
   const t = translations[language as Language]
@@ -401,14 +399,13 @@ export default function AdminDashboard() {
   // Send emails to selected clients
   const sendEmailToClients = async () => {
     if (selectedClientIds.size === 0) return
-
     setIsSendingEmail(true)
 
     try {
       const selectedClients = clients.filter(client => selectedClientIds.has(client.id))
       const emailAddresses = selectedClients.map(client => client.email)
 
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/send-email`
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients/email`
       const token = Cookies.get("token")
 
       const response = await fetch(url, {
@@ -418,21 +415,20 @@ export default function AdminDashboard() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          recipients: emailAddresses,
+          clientEmails: emailAddresses,
           subject: emailSubject,
-          body: emailBody
+          message: emailBody
         })
-      })
+      });
 
       if (response.ok) {
         setEmailSent(true)
-        // Reset form after success
         setTimeout(() => {
           setEmailSubject("")
           setEmailBody("")
           setIsEmailDialogOpen(false)
           setEmailSent(false)
-        }, 2000)
+        }, 1000)
       } else {
         setError("Failed to send emails")
       }
@@ -475,19 +471,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function authenticate() {
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/authenticate`
-        const token = Cookies.get("token")
-        if (!token) {
-          setAuth(false)
-        }
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-        if (response.ok) {
+        const response = await baseRequest("GET", "/authenticate");
+        if (response?.ok) {
           setAuth(true)
         } else {
           setAuth(false)
@@ -501,15 +486,9 @@ export default function AdminDashboard() {
 
   async function getAppointments() {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/appointments`
-      const token = Cookies.get("token")
-      const options = {
-        method: "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      }
-      const response = await fetch(url, options)
-      if (response.ok) {
-        const appointments = await response.json()
+      const response = await baseRequest("GET", "/appointments");
+      if (response?.ok) {
+        const appointments = await response?.json()
         for (let i = 0; i < appointments.length; i++) {
           const appointmentDate = new Date(appointments[i].appointmentDate)
           if (appointmentDate < new Date()) {
@@ -525,22 +504,15 @@ export default function AdminDashboard() {
 
   async function getClients() {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
-      const token = Cookies.get("token")
-      const options = {
-        method: "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      }
-      const response = await fetch(url, options)
-      if (response.ok) {
-        const appointments = await response.json()
+      const response = await baseRequest("GET", "/clients");
+      if (response?.ok) {
+        const appointments = await response?.json()
         setClients(appointments);
       }
     } catch (err) {
       console.log(err)
     }
   }
-  console.log(clients)
 
   useEffect(() => {
     if (auth) {
@@ -552,15 +524,9 @@ export default function AdminDashboard() {
 
   async function getRevenueDetails() {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/paypal-info`
-      const token = Cookies.get("token")
-      const options = {
-        method: "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      }
-      const response = await fetch(url, options)
-      if (response.ok) {
-        const details = await response.json()
+      const response = await baseRequest("GET", "/paypal-info");
+      if (response?.ok) {
+        const details = await response?.json()
         setYearlyRevenue(details.yearlyRevenue);
         setRevenueData(details.monthlyRevenue);
         setFinancialMetrics({
@@ -580,10 +546,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function adminDetails() {
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/service-details`
-        const response = await fetch(url)
-        if (response.ok) {
-          const details: any = await response.json()
+        const response = await baseRequest("GET", "/service-details");
+        if (response?.ok) {
+          const details: any = await response?.json()
           const vals = {
             regularClean: Number.parseFloat(details.regularPrice),
             deepClean: Number.parseFloat(details.deepCleanPrice),
@@ -643,30 +608,21 @@ export default function AdminDashboard() {
     }
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
       const cleanedTimeSlots = cleanUpTimeSlots()
       const availabilityObj = []
       for (const key in cleanedTimeSlots) {
         availabilityObj.push({ ...cleanedTimeSlots[key], date: key, available: true })
       }
-      const token = Cookies.get("token")
-      const options = {
-        method: "POST",
-
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify(availabilityObj),
-      }
-      const response = await fetch(url, options)
-
-      if (response.ok) {
+      const response = await baseRequest("POST", "/availability", availabilityObj);
+      if (response?.ok) {
         await getAvailability()
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
         }, 3000)
       } else {
-        const errorData = await response.json().catch(() => null)
-        const errorMsg = errorData?.message || `Server error: ${response.status} ${response.statusText}`
+        const errorData = await response?.json().catch(() => null)
+        const errorMsg = errorData?.message || `Server error: ${response?.status} ${response?.statusText}`
         setErrorMessage(errorMsg)
         setTimeout(() => {
           setErrorMessage(null)
@@ -693,28 +649,22 @@ export default function AdminDashboard() {
     setPricing(tempPricing)
     setIsEditingPricing(false)
     try {
-      const token = Cookies.get("token")
-      const options = {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({
-          regularPrice: tempPricing.regularClean.toFixed(2),
-          moveInOutPrice: tempPricing.moveInOut.toFixed(2),
-          deepCleanPrice: tempPricing.deepClean.toFixed(2),
-          environmentPrice: tempPricing.environmentPrice.toFixed(2),
-          firePrice: tempPricing.firePrice.toFixed(2),
-          waterPrice: tempPricing.waterPrice.toFixed(2),
-          deceasedPrice: tempPricing.deceasedPrice.toFixed(2),
-          hazmatPrice: tempPricing.hazmatPrice.toFixed(2),
-          explosiveResiduePrice: tempPricing.explosiveResiduePrice.toFixed(2),
-          moldPrice: tempPricing.moldPrice.toFixed(2),
-          constructionPrice: tempPricing.constructionPrice.toFixed(2),
-          commercialPrice: tempPricing.commercialPrice.toFixed(2),
-          customPrice: tempPricing.customPrice.toFixed(2),
-        }),
-      }
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-pricing`
-      const response = await fetch(url, options)
+      const body = {
+        regularPrice: tempPricing.regularClean.toFixed(2),
+        moveInOutPrice: tempPricing.moveInOut.toFixed(2),
+        deepCleanPrice: tempPricing.deepClean.toFixed(2),
+        environmentPrice: tempPricing.environmentPrice.toFixed(2),
+        firePrice: tempPricing.firePrice.toFixed(2),
+        waterPrice: tempPricing.waterPrice.toFixed(2),
+        deceasedPrice: tempPricing.deceasedPrice.toFixed(2),
+        hazmatPrice: tempPricing.hazmatPrice.toFixed(2),
+        explosiveResiduePrice: tempPricing.explosiveResiduePrice.toFixed(2),
+        moldPrice: tempPricing.moldPrice.toFixed(2),
+        constructionPrice: tempPricing.constructionPrice.toFixed(2),
+        commercialPrice: tempPricing.commercialPrice.toFixed(2),
+        customPrice: tempPricing.customPrice.toFixed(2),
+      };
+      const response = await baseRequest("PUT", "/update-admin-pricing", body);
       if (response.ok) {
         setSaveSuccess(true)
         setTimeout(() => {
@@ -741,15 +691,8 @@ export default function AdminDashboard() {
     setAdminEmail(tempAdminEmail)
 
     try {
-      const token = Cookies.get("token")
-      const options = {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: tempAdminEmail,
-      }
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/update-admin-email`
-      const response = await fetch(url, options)
-      if (response.ok) {
+      const response = await baseRequest("PUT", "/update-admin-email", tempAdminEmail);
+      if (response?.ok) {
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
@@ -792,10 +735,9 @@ export default function AdminDashboard() {
 
   async function getAvailability() {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/availability`
-      const response = await fetch(url)
-      if (response.ok) {
-        const json = await response.json()
+      const response = await baseRequest("GET", "/availability");
+      if (response?.ok) {
+        const json = await response?.json()
         updateDatesAndSlots(json)
       }
     } catch (err) {
@@ -1035,19 +977,9 @@ export default function AdminDashboard() {
     setLoading(true)
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/cancel-appointment`
-      const token = Cookies.get("token")
-      const options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({appointment, refundAmount}),
-      }
-      const response = await fetch(url, options)
+      const response = await baseRequest("POST", "/cancel-appointment", {appointment, refundAmount})
       setIsEditDialogOpen(false)
-      if (response.ok) {
+      if (response?.ok) {
         await getAppointments()
         await getRevenueDetails()
         setSaveSuccess(true)
@@ -2595,8 +2527,6 @@ export default function AdminDashboard() {
                                   text: "text-slate-700",
                                   textLight: "text-slate-600",
                                 }
-                                console.log(key);
-
                                 // Format the key for display (convert camelCase to Title Case with spaces)
                                 const formattedKey = key
                                     .replace(/([A-Z])/g, " $1") // Add space before capital letters

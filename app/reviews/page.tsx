@@ -17,6 +17,7 @@ import Footer from "../Footer"
 import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
+import { baseRequest } from "@/lib/utils";
 export default function ReviewPage() {
   const [rating, setRating] = useState<number>(0)
   const [hoveredRating, setHoveredRating] = useState<number>(0)
@@ -61,19 +62,8 @@ export default function ReviewPage() {
       service: formData.serviceType,
       content: formData.reviewText,
     };
-    const url: string = `${process.env.NEXT_PUBLIC_API_URL}/review`;
-    const options = {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(body)
-    };
-
-    try {
-      await fetch(url, options);
-      setSubmitted(true)
-    } catch(err) {
-      console.log(err);
-    }
+    await baseRequest("POST", "/review", body);
+    setSubmitted(true);
   }
 
   return (

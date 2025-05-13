@@ -14,6 +14,7 @@ import { LanguageContext } from "@/contexts/language-context"
 import { translations } from "@/translations"
 import type { Language } from "@/translations"
 import Header from "../Header";
+import {baseRequest} from "@/lib/utils";
 
 type Step = "credentials" | "verification"
 
@@ -93,27 +94,21 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
     setGeneralError("")
 
     try {
-      // Send credentials to the verification endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verify-credentials`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      })
+      const body = {
+        username: formData.username,
+        password: formData.password,
+      };
 
-      if (response.ok) {
+      const response = await baseRequest("POST", "/verify-credentials", body);
+      if (response?.ok) {
         // If credentials are valid, move to verification step
         setCurrentStep("verification")
         setUsername(formData.username)
         setPassword(formData.password)
-      } else if (response.status === 401) {
+      } else if (response?.status === 401) {
         // Handle unauthorized (invalid credentials)
         setGeneralError(t["invalidCredentials"])
-      } else if (response.status === 429) {
+      } else if (response?.status === 429) {
         // Handle rate limiting
         setGeneralError(t["tooManyAttempts"])
       } else {
@@ -157,9 +152,8 @@ export default function AuthFlow({ username, password, setAuth, setUsername, set
 
       if (response.ok) {
         const token = await response.text()
-        Cookies.set("token", token, {
-          expires: 7,
-          secure: process.env.NODE_ENV === "production",
+        Cookies.set("tempauthtoken", token, {
+          secure: true,
           sameSite: "strict",
           path: "/",
         })
