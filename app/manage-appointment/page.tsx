@@ -209,7 +209,7 @@ export default function AppointmentManagerPage() {
       if (!response?.ok) {
         const status = response?.status
         throw {
-          message: status === 400 ? "Failed to find appointment" : "Something went wrong, try again later",
+          message: status === 400 || status === 403 ? "Failed to find appointment" : "Something went wrong, try again later",
           status: response?.status,
         }
       }

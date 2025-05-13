@@ -101,7 +101,6 @@ export default function BookingPage() {
       const res = await baseRequest("GET", "/service-details");
       if (res?.ok) {
         const details: any = await res.json()
-        console.log(details)
         const tmp = [...serviceTypes]
         tmp[0].price = details.regularPrice
         tmp[1].price = details.environmentPrice
