@@ -7,6 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // utils/date.ts
 import { parse, parseISO, isValid } from 'date-fns'
+import Cookies from "js-cookie";
 
 export function formatDateToSpanish(
   dateInput: Date | string | number,
@@ -152,12 +153,16 @@ export async function tes(text: string) {
 export async function baseRequest(method: "GET" | "POST" | "PUT" | "DELETE", path: string, body?: any) {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}${path}`;
+    const token = Cookies.get("tempauthtoken");
+    if(!token) {
+      console.log("No token found");
+    }
     const options: any = {
       method,
       headers: {
         "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
       },
-      credentials: "include",
     };
     if(body && method !== "GET") {
       if(typeof body === "object" || Array.isArray(body)) {
