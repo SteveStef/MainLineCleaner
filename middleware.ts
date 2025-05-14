@@ -16,8 +16,8 @@ export async function middleware(req: NextRequest) {
     res.cookies.set({
         name:  'tempauthtoken',
         value: token,
-        httpOnly: false,
-        sameSite: 'strict',
+        httpOnly: true, // makes it so that my
+        sameSite: 'none',
         secure: true,
         //maxAge: 60
     });

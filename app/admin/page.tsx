@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useContext } from "react"
-import Cookies from "js-cookie";
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
