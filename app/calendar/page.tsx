@@ -11,6 +11,7 @@ import {
   Calendar, Clock, User, Mail, Phone, Home,
   MessageSquare, CheckCircle, ChevronLeft, ChevronRight, Sparkles, ClipboardList,
   ArrowRight, ArrowLeft, Check, Award, CreditCard, Info, Loader2, MapPin, Square,
+    DollarSign, ClipboardCheck,
 } from "lucide-react"
 
 import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip"
@@ -26,6 +27,7 @@ import Footer from "../Footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import { FormErrors, ServiceType, taxMap, serviceTypesDefaults, generateRequestId } from "@/components/bookingFlow/constants";
+import Disclaimer from "@/components/disclaimer";
 
 export default function BookingPage() {
   const { language } = useContext(LanguageContext)
@@ -73,6 +75,8 @@ export default function BookingPage() {
     afternoon: t["timeslot.afternoon"],
     night: t["timeslot.night"],
   }
+    // State to control which disclaimers are shown
+  const [showDisclaimers, setShowDisclaimers] = useState(false);
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
@@ -953,6 +957,95 @@ export default function BookingPage() {
                             </div>
                           </div>
 
+                          <Disclaimer
+                              isOpen={showDisclaimers}
+                              onClose={() => setShowDisclaimers(false)}
+                              title="Terms of Service"
+                              description="Please read these terms carefully before using our service."
+                              content={
+                                <div className="space-y-4">
+                                  {/* Short description */}
+                                  <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+                                    <p className="text-blue-800 font-medium text-sm">
+                                      {t["dialog.short.description"]}
+                                    </p>
+                                  </div>
+
+                                  {/* Long description */}
+                                  <p className="text-sm text-gray-700">
+                                    {t["dialog.long.description"]}
+                                  </p>
+
+                                  {/* Process steps - horizontal layout */}
+                                  <div className="grid grid-cols-2 gap-3 mt-2">
+                                    <div className="flex gap-2 items-start">
+                                      <div className="bg-blue-100 p-1.5 rounded-full text-blue-700 flex-shrink-0">
+                                        <Home className="h-4 w-4" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium text-sm">{t["dialog.step1.title"]}</h4>
+                                        <p className="text-xs text-gray-600">{t["dialog.step1.description"]}</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex gap-2 items-start">
+                                      <div className="bg-blue-100 p-1.5 rounded-full text-blue-700 flex-shrink-0">
+                                        <DollarSign className="h-4 w-4" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium text-sm">{t["dialog.step2.title"]}</h4>
+                                        <p className="text-xs text-gray-600">{t["dialog.step2.description"]}</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex gap-2 items-start">
+                                      <div className="bg-blue-100 p-1.5 rounded-full text-blue-700 flex-shrink-0">
+                                        <Calendar className="h-4 w-4" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium text-sm">{t["dialog.step3.title"]}</h4>
+                                        <p className="text-xs text-gray-600">{t["dialog.step3.description"]}</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex gap-2 items-start">
+                                      <div className="bg-blue-100 p-1.5 rounded-full text-blue-700 flex-shrink-0">
+                                        <ClipboardCheck className="h-4 w-4" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium text-sm">{t["dialog.step4.title"]}</h4>
+                                        <p className="text-xs text-gray-600">{t["dialog.step4.description"]}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Additional information - more compact */}
+                                  <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                      <div className="flex items-start">
+                                        <span className="text-blue-500 mr-1.5">•</span>
+                                        <span>{t["dialog.info.depositApplies"]}</span>
+                                      </div>
+                                      <div className="flex items-start">
+                                        <span className="text-blue-500 mr-1.5">•</span>
+                                        <span>{t["dialog.info.refunds"]}</span>
+                                      </div>
+                                      <div className="flex items-start">
+                                        <span className="text-blue-500 mr-1.5">•</span>
+                                        <span>{t["dialog.info.cancellationPolicy"]}</span>
+                                      </div>
+                                      <div className="flex items-start">
+                                        <span className="text-blue-500 mr-1.5">•</span>
+                                        <span>{t["dialog.info.specialRequirements"]}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              }
+                              showAcceptButton={false}
+                              acceptButtonText="I Understand and Agree"
+                              onAccept={() => {}}
+                          />
                           <RadioGroup value={selectedService} onValueChange={setSelectedService} className="grid gap-6">
                             {getFilteredServices().length > 0 ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -965,7 +1058,10 @@ export default function BookingPage() {
                                         ? "border-blue-500 bg-blue-50 shadow-sm"
                                         : "border-gray-200 hover:border-blue-300 hover:shadow-sm",
                                     )}
-                                    onClick={() => setSelectedService(service.id)}
+                                    onClick={() => {
+                                      setSelectedService(service.id);
+                                      if(service.id === "CUSTOM") setShowDisclaimers(true);
+                                    }}
                                   >
                                     {/* Top row with service name and price */}
                                     <div className="flex items-center justify-between p-4">
@@ -1346,7 +1442,6 @@ export default function BookingPage() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   )

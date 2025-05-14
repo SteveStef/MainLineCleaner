@@ -9,9 +9,8 @@ export const en = {
   companyName: "Dos Chicas",
 
   // Hero section
-  heroTitle: "Professional Cleaning Services for the Main Line",
-  heroDescription:
-    "We provide top-quality residential and commercial cleaning services throughout the Main Line area. Our professional team ensures your space is spotless and sanitized.",
+  heroTitle: "Comprehensive Cleaning Services: Any Job, Any Space",
+  heroDescription: "We provide top-quality cleaning services throughout Pennsylvania, Delaware, and New Jersey. Our professional team ensures your space is spotless and sanitized.",
   ecoFriendly: "Eco-Friendly",
   topRated: "Top-Rated",
   learnMore: "Learn More",
@@ -39,8 +38,7 @@ export const en = {
   // About section
   aboutUs: "About Us",
   trustedProfessionals: "Trusted Cleaning Professionals",
-  aboutDescription:
-    "With over 10 years of experience serving the Main Line area, our team of professional cleaners is dedicated to providing exceptional service. We use eco-friendly products and proven techniques to ensure your space is not only clean but healthy.",
+  aboutDescription: "With over 10 years of experience our team of professional cleaners is dedicated to providing exceptional service. We use eco-friendly products and proven techniques to ensure your space is not only clean but healthy.",
   insuredProfessionals: "Fully insured and bonded professionals",
   ecoProducts: "Eco-friendly cleaning products",
   satisfactionGuaranteed: "Satisfaction guaranteed",
@@ -106,7 +104,7 @@ export const en = {
   customService: "Custom Cleaning",
 
   // Footer
-  footerDescription: "Professional cleaning services for homes and businesses throughout the Main Line area.",
+  footerDescription: "Spotless Homes Across Pennsylvania, Delaware & New Jersey",
   company: "Company",
   careers: "Careers",
   blog: "Blog",
@@ -238,7 +236,7 @@ export const en = {
   "booking_info.item2": "Our professional cleaners bring all necessary equipment and supplies",
   "booking_info.item3": "100% satisfaction guarantee or we'll re-clean for free",
   "trusted.customers": "Trusted by 10,000+ customers",
-  "section.why_choose.title": "Why Choose MainLine Cleaners",
+  "section.why_choose.title": "Why Choose Dos Chicas",
   "why_choose.professional_service.heading": "Professional Service",
   "why_choose.professional_service.description": "Our team of experienced cleaners delivers exceptional quality every time.",
   "why_choose.flexible_scheduling.heading": "Flexible Scheduling",
@@ -383,7 +381,7 @@ export const en = {
 
 
   "shareExperienceHeading": "Share Your Experience",
-  "shareExperienceSubheading": "We value your feedback! Let us know about your experience with MainLine Cleaners.",
+  "shareExperienceSubheading": "We value your feedback! Let us know about your experience with Dos Chicas.",
   "verifiedReviews": "Verified Reviews",
   "topRatedService": "Top-Rated Service",
   "submitReview": "Submit a Review",
@@ -779,6 +777,21 @@ export const en = {
   "thisActionCannotBeUndone": "This action cannot be undone",
   "deleting": "Deleting...",
   "delete": "Delete",
+
+  "dialog.short.description": "Deposit-based custom clean—enter your square footage for an upfront deposit, then we finalize pricing on-site.",
+  "dialog.long.description": "With our Custom Cleaning service, you pay a calculated deposit based on your square footage. Our team then visits your property to determine the final cost and collect any remaining balance—ensuring you only pay for exactly what you need.",
+  "dialog.step1.title": "1. Enter Square Footage",
+  "dialog.step1.description": "Provide your space size for deposit calculation.",
+  "dialog.step2.title": "2. Pay Initial Deposit",
+  "dialog.step2.description": "Secures your booking based on estimated size.",
+  "dialog.step3.title": "3. On-Site Assessment",
+  "dialog.step3.description": "We evaluate the exact scope of work needed.",
+  "dialog.step4.title": "4. Final Pricing & Service",
+  "dialog.step4.description": "Pay remaining balance after assessment.",
+  "dialog.info.depositApplies": "Deposit applies toward final cost",
+  "dialog.info.refunds": "Refunds for smaller-than-estimated scope",
+  "dialog.info.cancellationPolicy": "48-hour cancellation policy",
+  "dialog.info.specialRequirements": "Special requirements may affect pricing",
 
 }
 

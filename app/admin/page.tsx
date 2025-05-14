@@ -302,19 +302,8 @@ export default function AdminDashboard() {
     setClientFormErrors({})
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/client`
-      const token = Cookies.get("token")
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(newClient)
-      })
-
-      if (response.ok) {
+      const response = await baseRequest("POST", "/client", newClient);
+      if (response?.ok) {
         setClientAddSuccess(true)
         getClients()
         setTimeout(() => {
@@ -329,7 +318,7 @@ export default function AdminDashboard() {
           setClientAddSuccess(false)
         }, 1000)
       } else {
-        if(response.status === 400) {
+        if(response?.status === 400) {
           setError("Client with that email already exists");
         } else {
           setError("Something went wrong. Please try again.");
@@ -346,18 +335,8 @@ export default function AdminDashboard() {
     try {
       const selectedClients = clients.filter(client => selectedClientIds.has(client.id));
       const clientIds = selectedClients.map(client => client.id);
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients`
-      const token = Cookies.get("token");
-      const options = {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(clientIds)
-      }
-      const response = await fetch(url, options);
-      if (response.ok) {
+      const response = await baseRequest("DELETE", "/clients", clientIds);
+      if (response?.ok) {
         getClients();
         setSelectedClientIds(new Set());
       } else {
@@ -365,6 +344,7 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.log(err);
+      setError("Something went wrong. Please try again.");
     }
   }
 
@@ -404,34 +384,19 @@ export default function AdminDashboard() {
     try {
       const selectedClients = clients.filter(client => selectedClientIds.has(client.id))
       const emailAddresses = selectedClients.map(client => client.email)
-
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/clients/email`
-      const token = Cookies.get("token")
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          clientEmails: emailAddresses,
-          subject: emailSubject,
-          message: emailBody
-        })
-      });
-
-      if (response.ok) {
-        setEmailSent(true)
-        setTimeout(() => {
-          setEmailSubject("")
-          setEmailBody("")
-          setIsEmailDialogOpen(false)
-          setEmailSent(false)
-        }, 1000)
-      } else {
-        setError("Failed to send emails")
-      }
+      const body = {
+        clientEmails: emailAddresses,
+        subject: emailSubject,
+        message: emailBody
+      };
+      baseRequest("POST", "/clients/email", body);
+      setEmailSent(true)
+      setTimeout(() => {
+        setEmailSubject("")
+        setEmailBody("")
+        setIsEmailDialogOpen(false)
+        setEmailSent(false)
+      }, 1000);
     } catch (err) {
       console.error(err)
       setError("An error occurred while sending emails")
@@ -665,7 +630,7 @@ export default function AdminDashboard() {
         customPrice: tempPricing.customPrice.toFixed(2),
       };
       const response = await baseRequest("PUT", "/update-admin-pricing", body);
-      if (response.ok) {
+      if (response?.ok) {
         setSaveSuccess(true)
         setTimeout(() => {
           setSaveSuccess(false)
@@ -1200,6 +1165,12 @@ export default function AdminDashboard() {
                              {selectedClientIds.size === 1 ? " " + t.client : " " + t.clients}. {t.thisActionCannotBeUndone}
                            </AlertDialogDescription>
                          </AlertDialogHeader>
+                             {/** ← conditional error message */}
+                         {error && (
+                             <div className="px-6 py-2 text-sm text-destructive">
+                               {error}
+                             </div>
+                         )}
                          <AlertDialogFooter>
                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
                            <AlertDialogAction

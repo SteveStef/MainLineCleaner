@@ -153,13 +153,12 @@ export async function tes(text: string) {
 export async function baseRequest(method: "GET" | "POST" | "PUT" | "DELETE", path: string, body?: any) {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}${path}`;
-    const token = Cookies.get("tempauthtoken");
     const options: any = {
       method,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": token ? `Bearer ${token}` : "",
       },
+      credentials: "include",
     };
     if(body && method !== "GET") {
       if(typeof body === "object" || Array.isArray(body)) {

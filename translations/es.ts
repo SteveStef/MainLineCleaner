@@ -9,9 +9,8 @@ export const es = {
   companyName: "Dos Chicas",
 
   // Hero section
-  heroTitle: "Servicios de Limpieza Profesional para Dos Chicas",
-  heroDescription:
-    "Proporcionamos servicios de limpieza residencial y comercial de alta calidad en toda el área de Main Line. Nuestro equipo profesional asegura que su espacio esté impecable y desinfectado.",
+  heroTitle: "Servicios integrales de limpieza: cualquier trabajo, cualquier espacio",
+  heroDescription: "Ofrecemos servicios de limpieza de primera calidad en Pensilvania, Delaware y Nueva Jersey. Nuestro equipo profesional garantiza que tu espacio quede impecable y desinfectado.",
   ecoFriendly: "Ecológico",
   topRated: "Mejor Calificado",
   learnMore: "Más Información",
@@ -40,8 +39,7 @@ export const es = {
   // About section
   aboutUs: "Sobre Nosotros",
   trustedProfessionals: "Profesionales de Limpieza de Confianza",
-  aboutDescription:
-    "Con más de 10 años de experiencia sirviendo al área de Main Line, nuestro equipo de limpiadores profesionales está dedicado a proporcionar un servicio excepcional. Utilizamos productos ecológicos y técnicas probadas para garantizar que su espacio no solo esté limpio, sino también saludable.",
+  aboutDescription: "Con más de 10 años de experiencia, nuestro equipo de limpiadores profesionales está dedicado a brindar un servicio excepcional. Utilizamos productos ecológicos y técnicas comprobadas para garantizar que tu espacio no solo esté limpio, sino también saludable.",
   insuredProfessionals: "Profesionales completamente asegurados y con fianza",
   ecoProducts: "Productos de limpieza ecológicos",
   satisfactionGuaranteed: "Satisfacción garantizada",
@@ -72,7 +70,7 @@ export const es = {
   requestQuote: "Solicitar Presupuesto",
   quoteSuccess: "¡Solicitud de Presupuesto Enviada!",
   quoteSuccessMessage:
-    "Gracias por su interés en MainLine Cleaners. Hemos recibido su solicitud y nos pondremos en contacto con usted dentro de las próximas 24 horas.",
+      "Gracias por su interés en Dos Chicas. Hemos recibido su solicitud y nos pondremos en contacto con usted dentro de las próximas 24 horas.",
   submitAnother: "Enviar Otra Solicitud",
   firstName: "Nombre",
   lastName: "Apellido",
@@ -110,7 +108,7 @@ export const es = {
 
 
   // Footer
-  footerDescription: "Servicios de limpieza profesional para hogares y negocios en toda el área de Main Line.",
+  footerDescription: "Hogares impecables en Pensilvania, Delaware y Nueva Jersey.",
   company: "Empresa",
   careers: "Carreras",
   blog: "Blog",
@@ -244,7 +242,7 @@ export const es = {
   "booking_info.item2": "Nuestros limpiadores profesionales traen todo el equipo y suministros necesarios",
   "booking_info.item3": "Garantía de satisfacción del 100% o volveremos a limpiar gratis",
   "trusted.customers": "Con la confianza de más de 10,000 clientes",
-  "section.why_choose.title": "Por Qué Elegir MainLine Cleaners",
+  "section.why_choose.title": "Por Qué Elegir Dos Chicas",
   "why_choose.professional_service.heading": "Servicio Profesional",
   "why_choose.professional_service.description": "Nuestro equipo de limpiadores experimentados ofrece una calidad excepcional en cada servicio.",
   "why_choose.flexible_scheduling.heading": "Horario Flexible",
@@ -391,7 +389,7 @@ export const es = {
 
 
   "shareExperienceHeading": "Comparte Tu Experiencia",
-  "shareExperienceSubheading": "¡Valoramos tus comentarios! Cuéntanos sobre tu experiencia con MainLine Cleaners.",
+  shareExperienceSubheading: "¡Valoramos tus comentarios! Cuéntanos sobre tu experiencia con Dos Chicas.",
   "verifiedReviews": "Reseñas Verificadas",
   "topRatedService": "Servicio Destacado",
   "submitReview": "Enviar una Reseña",
@@ -782,6 +780,21 @@ export const es = {
   "thisActionCannotBeUndone": "Esta acción no se puede deshacer",
   "deleting": "Eliminando...",
   "delete": "Eliminar",
+
+  "dialog.short.description": "Limpieza personalizada con depósito: ingrese sus metros cuadrados para un depósito inicial, luego finalizamos el precio en el sitio.",
+  "dialog.long.description": "Con nuestro servicio de Limpieza Personalizada, paga un depósito calculado según sus metros cuadrados. Nuestro equipo luego visita su propiedad para determinar el costo final y cobrar cualquier saldo restante, asegurando que solo pague por exactamente lo que necesita.",
+  "dialog.step1.title": "1. Ingrese los metros cuadrados",
+  "dialog.step1.description": "Proporcione el tamaño de su espacio para el cálculo del depósito.",
+  "dialog.step2.title": "2. Pague el depósito inicial",
+  "dialog.step2.description": "Garantiza su reserva según el tamaño estimado.",
+  "dialog.step3.title": "3. Evaluación en el lugar",
+  "dialog.step3.description": "Evaluamos el alcance exacto del trabajo necesario.",
+  "dialog.step4.title": "4. Precio final y servicio",
+  "dialog.step4.description": "Pague el saldo restante después de la evaluación.",
+  "dialog.info.depositApplies": "El depósito se aplica al costo final",
+  "dialog.info.refunds": "Reembolsos si el alcance es menor al estimado",
+  "dialog.info.cancellationPolicy": "Política de cancelación de 48 horas",
+  "dialog.info.specialRequirements": "Los requisitos especiales pueden afectar el precio",
 
 }
 

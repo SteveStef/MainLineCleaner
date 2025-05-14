@@ -88,14 +88,6 @@ export default function Footer() {
                 <Mail className="h-4 w-4 text-cyan-400 mt-0.5" />
                 <span className="text-sm text-slate-300">{t.emailValue}</span>
               </div>
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 text-cyan-400 mt-0.5" />
-                <div className="text-sm text-slate-300">
-                  <p>{t.mondayFriday}</p>
-                  <p>{t.saturday}</p>
-                  <p>{t.sunday}</p>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -127,7 +119,7 @@ export default function Footer() {
         {/* Bottom section with copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-4">
           <p className="text-xs text-slate-400 mb-4 md:mb-0">
-            {new Date().getFullYear()} {t.companyName}. {t.allRightsReserved}
+            {new Date().getFullYear()} {t.companyName}.
           </p>
         </div>
       </div>
