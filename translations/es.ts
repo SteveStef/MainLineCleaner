@@ -55,16 +55,16 @@ export const es = {
   getInTouch: "Póngase en Contacto",
   contactDescription:
     "¿Tiene preguntas o está listo para programar una limpieza? Contáctenos hoy para obtener un presupuesto gratuito.",
-  address: "Dirección",
-  addressValue: "123 Main Line Avenue, Bryn Mawr, PA 19010",
+  address: "Ubicación",
+  addressValue: "Con sede en el área de Main Line de PA",
   phone: "Teléfono",
-  phoneValue: "(610) 555-1234",
+  phoneValue: "(267) 628-8541",
   email: "Correo Electrónico",
-  emailValue: "info@mainlinecleaners.com",
+  emailValue: "doschicas85@gmail.com",
   hours: "Horario",
-  mondayFriday: "Lunes - Viernes: 8am - 6pm",
-  saturday: "Sábado: 9am - 4pm",
-  sunday: "Domingo: Cerrado",
+  mondayFriday: "Lunes - Viernes: 8am - 9pm",
+  saturday: "Sábado: Varía",
+  sunday: "Domingo: Varía",
 
   // Quote form
   requestQuote: "Solicitar Presupuesto",
@@ -177,7 +177,7 @@ export const es = {
 
   // time slot labels
   AFTERNOON: "Tarde, 12:00 PM – 5:00 PM",
-  MORNING: "Mañana, 6:00 AM – 12:00 PM",
+  MORNING: "Mañana, 8:00 AM – 12:00 PM",
   NIGHT: "Noche, 5:00 PM – 9:00 PM",
 
   "step4.instructions": "Por favor, selecciona el tipo de servicio de limpieza que necesitas.",

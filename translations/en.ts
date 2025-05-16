@@ -53,16 +53,16 @@ export const en = {
   contactUs: "Contact Us",
   getInTouch: "Get in Touch",
   contactDescription: "Have questions or ready to schedule a cleaning? Contact us today for a free quote.",
-  address: "Address",
-  addressValue: "123 Main Line Avenue, Bryn Mawr, PA 19010",
+  address: "Location",
+  addressValue: "Based in the Main Line Area of PA",
   phone: "Phone",
-  phoneValue: "(610) 555-1234",
+  phoneValue: "(267) 628-8541",
   email: "Email",
-  emailValue: "info@mainlinecleaners.com",
+  emailValue: "doschicas85@gmail.com",
   hours: "Hours",
-  mondayFriday: "Monday - Friday: 8am - 6pm",
-  saturday: "Saturday: 9am - 4pm",
-  sunday: "Sunday: Closed",
+  mondayFriday: "Monday - Friday: 8am - 9pm",
+  saturday: "Saturday: Varies",
+  sunday: "Sunday: Varies",
 
   // Quote form
   requestQuote: "Request a Quote",
@@ -171,7 +171,7 @@ export const en = {
   "error.zipcode_required": "Zipcode is required",
 
   AFTERNOON: "Afternoon, 12:00 PM – 5:00 PM",
-  MORNING: "Morning, 6:00 AM – 12:00 PM",
+  MORNING: "Morning, 8:00 AM – 12:00 PM",
   NIGHT: "Night, 5:00 PM – 9:00 PM",
 
   "step4.instructions": "Please select the type of cleaning service you need.",

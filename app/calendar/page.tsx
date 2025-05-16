@@ -11,7 +11,7 @@ import {
   Calendar, Clock, User, Mail, Phone, Home,
   MessageSquare, CheckCircle, ChevronLeft, ChevronRight, Sparkles, ClipboardList,
   ArrowRight, ArrowLeft, Check, Award, CreditCard, Info, Loader2, MapPin, Square,
-    DollarSign, ClipboardCheck,
+  DollarSign, ClipboardCheck,
 } from "lucide-react"
 
 import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip"
@@ -148,6 +148,9 @@ export default function BookingPage() {
 
       if (name === "squareFeet") {
         const sf = Number.parseInt(value, 10)
+        if(isNaN(sf) || sf > 999999) {
+          newErrors.squareFeet = "Square footage must be less than 999,999"
+        }
         if (isNaN(sf) || sf < 500) {
           newErrors.squareFeet = "Square footage must be at least 500"
         }
@@ -837,6 +840,7 @@ export default function BookingPage() {
                             onChange={handleInputChange}
                             className={errors.squareFeet ? "border-red-500" : ""}
                             min={"500"}
+                            max={"999999"}
                           />
                           {errors.squareFeet && <p className="text-red-500 text-xs">{errors.squareFeet}</p>}
                         </div>
@@ -1374,7 +1378,7 @@ export default function BookingPage() {
                         isProcessingPayment ||
                         isLoadingPrices ||
                         isLoadingAvailability ||
-                          !userInfo.squareFeet || userInfo.squareFeet < 500
+                          !userInfo.squareFeet || userInfo.squareFeet < 500 || userInfo.squareFeet > 999999
                       }
                       className="sm:w-auto w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                     >

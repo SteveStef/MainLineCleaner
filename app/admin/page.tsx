@@ -2676,9 +2676,6 @@ export default function AdminDashboard() {
 
                       {/* Client Information */}
                       <Card className="p-4 border border-gray-100 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
-                          {t["dialog.appointment.label.client_information"]}
-                        </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="flex items-start gap-2">
                             <div className="mt-0.5 text-gray-400">
@@ -2853,17 +2850,13 @@ export default function AdminDashboard() {
 
                       {/* Notes */}
                       <Card className="p-4 border border-gray-100 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-1.5">
-                          <FileText className="h-4 w-4 text-blue-500" />
-                          {t["dialog.appointment.label.notes"]}
-                        </h3>
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 text-gray-400">
-                            <AlertCircle className="h-3.5 w-3.5" />
+                        <div className="grid grid-cols-3 items-start gap-4">
+                          <div className="col-span-3">
+                            <p className="font-medium">{language === "en" ? "English Notes:" : "Notas en Español:"}</p>
+                            <p className="font-medium break-words whitespace-pre-wrap w-full overflow-hidden text-wrap">
+                              {selectedAppointment && (language === "en" ? selectedAppointment.notes : selectedAppointment.notesES)}
+                            </p>
                           </div>
-                          <p className="font-medium whitespace-pre-wrap break-words">
-                            {selectedAppointment && (language === "en" ? selectedAppointment.notes : selectedAppointment.notesES)}
-                          </p>
                         </div>
                       </Card>
                     </div>
