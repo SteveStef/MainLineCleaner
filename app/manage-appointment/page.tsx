@@ -123,11 +123,12 @@ export default function AppointmentManagerPage() {
           }
 
           const json = await response?.json()
-          setAvailableTimeSlots(json)
+          setAvailableTimeSlots(json);
           const tmp = []
           for (let i = 0; i < json.length; i++) {
             const [year, month, day] = json[i].date.split("-").map(Number)
             const currDate = new Date(year, month - 1, day)
+            //const currDate = new Date(json[i].expirationDate);
             if (!isDateInPast(currDate)) tmp.push(currDate)
           }
           setAvailableDates(tmp)
@@ -246,7 +247,10 @@ export default function AppointmentManagerPage() {
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     for (let i = 0; i < availableTimeSlots.length; i++) {
-      if (areDatesOnSameDay(date, new Date(availableTimeSlots[i].expirationDate))) {
+      const [year, month, day] = availableTimeSlots[i].date.split("-").map(Number)
+      const currDate = new Date(year, month - 1, day);
+      //if (areDatesOnSameDay(date, new Date(availableTimeSlots[i].expirationDate))) {
+      if (areDatesOnSameDay(date, currDate)) {
         setSelectedTimeSlot(availableTimeSlots[i])
       }
     }
