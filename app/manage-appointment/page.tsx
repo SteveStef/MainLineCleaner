@@ -329,15 +329,50 @@ export default function AppointmentManagerPage() {
     return format(date, "EEEE, MMMM d, yyyy")
   }
 
-  // Calculate refund amount (75% of price)
-  const calculateRefundAmount = (amount:string): string => {
+  // Calculate refund amount based on new base cancellation fee policy
+  const calculateRefundAmount = (amount: string): string => {
     if (!appointmentData) return "$0.00"
 
     const percent = parseFloat(amount) / 100.0; // this will make the 95 to 0.95
-    if(!percent) return "$0.00";
+    if (!percent) return "$0.00";
 
-    const priceValue = Number.parseFloat(appointmentData.chargedAmount)
-    return `$${(priceValue * percent).toFixed(2)}`
+    const chargedAmount = Number.parseFloat(appointmentData.chargedAmount)
+    const applicationFee = appointmentData.applicationFee;
+    
+    const paypalFee = appointmentData.paypalFee;
+    const baseCancellationFee = paypalFee + applicationFee;
+    
+    // Calculate refundable amount (total - non-refundable fees)
+    const refundableAmount = chargedAmount - baseCancellationFee;
+    
+    // Apply percentage to refundable portion only
+    const refundAmount = refundableAmount * percent;
+    
+    return `$${Math.max(0, refundAmount).toFixed(2)}`
+  }
+
+  // Calculate base cancellation fee for display
+  const calculateBaseCancellationFee = (): string => {
+    if (!appointmentData) return "$0.00"
+
+    const applicationFee = appointmentData.applicationFee;
+    const paypalFee = appointmentData.paypalFee;
+    const baseCancellationFee = paypalFee + applicationFee;
+    
+    return `$${baseCancellationFee.toFixed(2)}`
+  }
+
+  // Calculate refundable amount for display
+  const calculateRefundableAmount = (): string => {
+    if (!appointmentData) return "$0.00"
+
+    const chargedAmount = Number.parseFloat(appointmentData.chargedAmount)
+    const applicationFee = appointmentData.applicationFee;
+    const paypalFee = appointmentData.paypalFee;
+    const baseCancellationFee = paypalFee + applicationFee;
+    const refundableAmount = chargedAmount - baseCancellationFee;
+    
+    return `$${Math.max(0, refundableAmount).toFixed(2)}`
   }
 
   const handleSelectAction = (action: ActionType) => {
@@ -834,15 +869,23 @@ export default function AppointmentManagerPage() {
                                       ${appointmentData && appointmentData.chargedAmount}
                                     </span>
                                   </div>
+                                  <div className="flex justify-between border-t pt-2">
+                                    <span className="text-muted-foreground text-sm">Base cancellation fee (non-refundable)</span>
+                                    <span className="text-sm text-red-600">-{calculateBaseCancellationFee()}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Refundable amount</span>
+                                    <span className="font-medium">{calculateRefundableAmount()}</span>
+                                  </div>
                                   {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}%)</span>
-                                      <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
+                                    <div className="flex justify-between border-t pt-2">
+                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}% of refundable)</span>
+                                      <span className="font-medium text-green-600">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
                                     </div>
                                   ) : (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}%)</span>
-                                      <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
+                                    <div className="flex justify-between border-t pt-2">
+                                      <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}% of refundable)</span>
+                                      <span className="font-medium text-green-600">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
                                     </div>
                                   )}
                                 </div>
@@ -997,15 +1040,23 @@ export default function AppointmentManagerPage() {
                             <span className="font-medium">${appointmentData?.chargedAmount}</span>
                           </div>
 
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-muted-foreground text-sm">Base cancellation fee (non-refundable)</span>
+                            <span className="text-sm text-red-600">-{calculateBaseCancellationFee()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Refundable amount</span>
+                            <span className="font-medium">{calculateRefundableAmount()}</span>
+                          </div>
                           {isTwoOrMoreDaysAway(appointmentData.appointmentDate) ? (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}%)</span>
-                                <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
+                              <div className="flex justify-between border-t pt-2">
+                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_FULL_REFUND}% of refundable)</span>
+                                <span className="font-medium text-green-600">{calculateRefundAmount(process.env.NEXT_PUBLIC_FULL_REFUND)}</span>
                               </div>
                           ) : (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}%)</span>
-                                <span className="font-medium">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
+                              <div className="flex justify-between border-t pt-2">
+                                <span className="text-muted-foreground">{t["refund.amount.label"]} ({process.env.NEXT_PUBLIC_PARTIAL_REFUND}% of refundable)</span>
+                                <span className="font-medium text-green-600">{calculateRefundAmount(process.env.NEXT_PUBLIC_PARTIAL_REFUND)}</span>
                               </div>
                           )}
                         </div>
