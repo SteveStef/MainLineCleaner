@@ -1,5 +1,7 @@
 "use client"
 
+export const runtime = 'edge';
+
 import { useState, useEffect, useContext } from "react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
