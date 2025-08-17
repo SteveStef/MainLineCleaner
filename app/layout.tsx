@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { LanguageProvider } from "@/contexts/language-context"
 
+export const dynamic = "force-dynamic";
+
 import './globals.css'
 
 export const metadata: Metadata = {
