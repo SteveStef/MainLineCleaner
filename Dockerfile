@@ -24,6 +24,22 @@ RUN npm ci
 
 COPY . .
 
+# Build arguments for NEXT_PUBLIC_ variables (passed from docker-compose)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_API_KEY
+ARG NEXT_PUBLIC_APPLICATION_FEE
+ARG NEXT_PUBLIC_PARTIAL_REFUND
+ARG NEXT_PUBLIC_FULL_REFUND
+ARG NEXT_PUBLIC_PAYPAL_CLIENT_ID
+
+# Set as environment variables for the build process
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_GOOGLE_API_KEY=$NEXT_PUBLIC_GOOGLE_API_KEY
+ENV NEXT_PUBLIC_APPLICATION_FEE=$NEXT_PUBLIC_APPLICATION_FEE
+ENV NEXT_PUBLIC_PARTIAL_REFUND=$NEXT_PUBLIC_PARTIAL_REFUND
+ENV NEXT_PUBLIC_FULL_REFUND=$NEXT_PUBLIC_FULL_REFUND
+ENV NEXT_PUBLIC_PAYPAL_CLIENT_ID=$NEXT_PUBLIC_PAYPAL_CLIENT_ID
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
