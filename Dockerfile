@@ -1,30 +1,31 @@
-# Use the official Node.js 18 Alpine image as the base
-FROM node:18-alpine AS base
+# Use the official Node.js 20 Alpine image as the base
+FROM node:20-alpine AS base
 
-# Install dependencies only when needed
+# -------------------------
+# Dependencies (prod only)
+# -------------------------
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 RUN \
-  if [ -f package-lock.json ]; then npm ci --only=production; \
+  if [ -f package-lock.json ]; then npm ci --omit=dev; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Rebuild the source code only when needed
+# -------------------------
+# Builder (all deps)
+# -------------------------
 FROM base AS builder
 WORKDIR /app
 
-# Install ALL dependencies (including dev dependencies) for building
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 COPY . .
 
-# Build arguments for NEXT_PUBLIC_ variables (passed from docker-compose)
+# Build arguments for NEXT_PUBLIC_ variables
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_GOOGLE_API_KEY
 ARG NEXT_PUBLIC_APPLICATION_FEE
@@ -40,42 +41,37 @@ ENV NEXT_PUBLIC_PARTIAL_REFUND=$NEXT_PUBLIC_PARTIAL_REFUND
 ENV NEXT_PUBLIC_FULL_REFUND=$NEXT_PUBLIC_FULL_REFUND
 ENV NEXT_PUBLIC_PAYPAL_CLIENT_ID=$NEXT_PUBLIC_PAYPAL_CLIENT_ID
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
 RUN npm run build
 
-# Production image, copy all the files and run next
+# -------------------------
+# Runner
+# -------------------------
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Prerender cache dir
+RUN mkdir .next \
+  && chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD ["node", "server.js"]
